@@ -1,0 +1,33 @@
+export type ListingData = {
+  kind: "shop" | "service" | "experience" | "attraction" | "content";
+  category: string;
+  areaId: string;
+  businessName: string;
+  titleKo: string;
+  titleEn: string;
+  summaryKo: string;
+  summaryEn: string;
+  descriptionKo: string;
+  descriptionEn: string;
+  address: string;
+  contact: string;
+  bookingUrl: string;
+  priceMin: number;
+  priceMax: number;
+  duration: number;
+  hours: string;
+  inclusions: string;
+  exclusions: string;
+  cancellation: string;
+  promotion: string;
+  images: string[];
+  imageRights: boolean;
+};
+export type Listing = {
+  id: string;
+  status: "draft" | "pending" | "published" | "rejected" | "archived";
+  data: ListingData;
+  created: string;
+  updated: string;
+  reviewNote: string;
+};
