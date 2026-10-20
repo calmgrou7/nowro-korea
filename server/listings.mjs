@@ -167,6 +167,18 @@ export function saveListing(store, s, body) {
     id = existing?.id ?? randomUUID(),
     now = new Date().toISOString(),
     status = body.submit === true ? "pending" : "draft";
+  const business = store.db
+    .prepare("SELECT data,status FROM business_applications WHERE owner_id=?")
+    .get(s.user_id);
+  if (s.role === "partner" && business) {
+    const registered = JSON.parse(business.data);
+    if (business.status !== "approved") fail("BUSINESS_NOT_APPROVED", 403);
+    if (
+      data.businessName !== registered.businessName ||
+      data.areaId !== registered.areaId
+    )
+      fail("BUSINESS_IDENTITY_MISMATCH", 409);
+  }
   store.db
     .prepare(
       "INSERT INTO listings(id,owner_id,data,status,created,updated,review_note) VALUES(?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data,status=excluded.status,updated=excluded.updated,review_note=excluded.review_note",
@@ -195,7 +207,24 @@ export function reviewListing(store, s, body) {
     .prepare("SELECT * FROM listings WHERE id=? AND status='pending'")
     .get(body.id);
   if (!row) fail("NOT_FOUND", 404);
-  validate(JSON.parse(row.data), true);
+  const data = validate(JSON.parse(row.data), true);
+  const business = store.db
+    .prepare("SELECT data,status FROM business_applications WHERE owner_id=?")
+    .get(row.owner_id);
+  if (body.approved && business) {
+    if (
+      business.status !== "approved" ||
+      store.db.prepare("SELECT role FROM users WHERE id=?").get(row.owner_id)
+        ?.role !== "partner"
+    )
+      fail("BUSINESS_NOT_APPROVED", 403);
+    const current = JSON.parse(business.data);
+    if (
+      current.businessName !== data.businessName ||
+      current.areaId !== data.areaId
+    )
+      fail("BUSINESS_IDENTITY_MISMATCH", 409);
+  }
   const status = body.approved ? "published" : "rejected";
   store.db
     .prepare("UPDATE listings SET status=?,updated=?,review_note=? WHERE id=?")

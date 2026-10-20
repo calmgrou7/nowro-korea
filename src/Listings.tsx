@@ -257,10 +257,12 @@ export function MerchantListings({
   lang,
   role,
   areas,
+  business,
 }: {
   lang: Lang;
   role: string;
   areas: Area[];
+  business?: { businessName: string; areaId: string; address: string } | null;
 }) {
   const L = (en: string, ko: string) => (lang === "ko" ? ko : en);
   const [items, setItems] = useState<Listing[]>([]),
@@ -271,6 +273,15 @@ export function MerchantListings({
     [preview, setPreview] = useState(false),
     [note, setNote] = useState("");
   const load = async () => setItems((await api("operator/listings")).listings);
+  useEffect(() => {
+    if (business && !id)
+      setData((old) => ({
+        ...old,
+        businessName: business.businessName,
+        areaId: business.areaId,
+        address: business.address,
+      }));
+  }, [business?.businessName, business?.areaId, business?.address, id]);
   useEffect(() => {
     load().catch(() =>
       setMessage(
@@ -351,6 +362,7 @@ export function MerchantListings({
       ) : (
         <input
           value={String(data[key])}
+          readOnly={key === "businessName" && !!business}
           required={required}
           maxLength={1000}
           onChange={(e) => update(key, e.target.value as never)}
@@ -376,7 +388,15 @@ export function MerchantListings({
         <button
           className="secondary"
           onClick={() => {
-            setData(empty(areas[0]!.id));
+            setData(
+              business
+                ? {
+                    ...empty(business.areaId),
+                    businessName: business.businessName,
+                    address: business.address,
+                  }
+                : empty(areas[0]!.id),
+            );
             setId(undefined);
             setPreview(false);
             setMessage("");
@@ -426,6 +446,7 @@ export function MerchantListings({
                 {L("Area", "지역")}
                 <select
                   value={data.areaId}
+                  disabled={!!business}
                   onChange={(e) => update("areaId", e.target.value)}
                 >
                   {areas.map((a) => (
@@ -697,7 +718,15 @@ export function MerchantListings({
                 className="secondary"
                 onClick={() => {
                   setId(v.id);
-                  setData(v.data);
+                  setData(
+                    business
+                      ? {
+                          ...v.data,
+                          businessName: business.businessName,
+                          areaId: business.areaId,
+                        }
+                      : v.data,
+                  );
                   setPreview(false);
                   setMessage("");
                 }}

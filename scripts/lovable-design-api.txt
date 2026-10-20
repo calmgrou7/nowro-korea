@@ -1,0 +1,31 @@
+// DESIGN SANDBOX ONLY. This file replaces src/api.ts only in the Lovable handoff copy.
+// Never copy it back into the working NOWRO app. No live network calls, auth or payments.
+import { areas, places, cities, coupons, starterStampAreaIds } from '../shared/catalog';
+import { recommend, calculate } from '../shared/engine';
+let role = 'traveler';
+let consent = { analytics: false, location: false };
+let trips: any[] = [];
+const samples: any[] = [];
+export async function api<T = any>(path: string, body?: any): Promise<T> {
+  let result: any;
+  switch (path) {
+    case 'catalog': result = { areas, places, cities, coupons: coupons.map(c => ({ ...c, paused: false })) }; break;
+    case 'status': result = { mode: 'design-sandbox', ai: false, supabase: false, operatorPreview: true, canTravel: role === 'traveler', authConfigured: false, authEmailMode: 'link', dataBackend: 'design-fixtures', session: { role, authenticated: false, email: null }, retentionDays: 7 }; break;
+    case 'wallet': result = { trips, vouchers: [], stamps: [] }; break;
+    case 'consent': if (body) consent = body; result = consent; break;
+    case 'preview-role': role = body.role; result = { role }; break;
+    case 'operator': result = { places: role === 'admin' ? places : places.filter(p => p.id === 'g-cafe'), proposals: [], coupons: coupons.map(c => ({ ...c, issued: 0, used: 0, paused: false })), audit: [] }; break;
+    case 'listings': result = { listings: [] }; break;
+    case 'operator/listings': result = { listings: samples }; break;
+    case 'operator/rewards': result = { orders: [] }; break;
+    case 'shop': result = { discount: null, register: null, goods: null }; break;
+    case 'rewards': result = { campaign: { id: 'busan-four-areas-v1', requiredAreas: starterStampAreaIds, oneChoice: true }, completedAreas: [], eligible: false, order: null, goods: [{ id: 'tote', en: 'NOWRO tote bag', ko: '나우로 토트백' }, { id: 'pouch', en: 'NOWRO travel pouch', ko: '나우로 여행 파우치' }, { id: 'postcards', en: 'NOWRO Busan postcard set', ko: '나우로 부산 엽서 세트' }] }; break;
+    case 'recommend': result = { routes: recommend(body.conditions, places), engine: 'rules', routing: 'design-preview' }; break;
+    case 'recalculate': { const route = calculate(body.placeIds, body.conditions, places); if (!route) throw new Error('INFEASIBLE_ROUTE'); result = { route }; break; }
+    case 'trips': { const route = calculate(body.placeIds, body.conditions, places); if (!route) throw new Error('INFEASIBLE_ROUTE'); const item = { id: crypto.randomUUID(), data: route, created: new Date().toISOString() }; trips.push(item); result = { id: item.id }; break; }
+    case 'trips/delete': trips = trips.filter(t => t.id !== body.id); result = { ok: true }; break;
+    case 'events': result = { ok: true }; break;
+    default: throw new Error('DESIGN_PREVIEW_ONLY');
+  }
+  return structuredClone(result) as T;
+}

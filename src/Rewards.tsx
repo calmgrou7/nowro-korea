@@ -57,14 +57,17 @@ export function Shop({ lang }: { lang: Lang }) {
 export function CompletionRewards({
   lang,
   version,
+  authenticated,
 }: {
   lang: Lang;
   version: number;
+  authenticated: boolean;
 }) {
   const ko = lang === "ko";
   const [progress, setProgress] = useState<any>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
+    [accepted, setAccepted] = useState(false),
     [choice, setChoice] = useState("goods"),
     [goodsId, setGoodsId] = useState("tote");
   const [shipping, setShipping] = useState({
@@ -79,15 +82,20 @@ export function CompletionRewards({
     email: "",
     consent: false,
   });
-  const refresh = () =>
-    api("rewards")
-      .then(setProgress)
-      .catch(() =>
-        setError(
-          ko ? "보상 정보를 불러오지 못했습니다." : "Unable to load rewards.",
-        ),
+  const refresh = async () => {
+    try {
+      setProgress(await api("rewards"));
+      setError("");
+    } catch {
+      setError(
+        ko
+          ? "보상 정보를 불러오지 못했습니다. 다시 확인해주세요."
+          : "Unable to load rewards. Please retry.",
       );
+    }
+  };
   useEffect(() => {
+    setProgress(null);
     void refresh();
   }, [version]);
   const statuses: Record<string, string> = ko
@@ -124,6 +132,11 @@ export function CompletionRewards({
           : "Requests are currently for testing. Goods, discount terms, shipping fees and payment/delivery connections will be confirmed before launch."}
       </p>
       {error && <p role="alert">{error}</p>}
+      {error && (
+        <button className="secondary" onClick={() => void refresh()}>
+          {ko ? "신청 내역 다시 확인" : "Reload reward status"}
+        </button>
+      )}
       {!progress && !error && <p>{ko ? "불러오는 중…" : "Loading…"}</p>}
       {progress && (
         <>
@@ -164,6 +177,12 @@ export function CompletionRewards({
                   : "One reward choice per campaign."}
               </small>
             </div>
+          ) : accepted ? (
+            <p role="status">
+              {ko
+                ? "신청은 접수되었습니다. 신청 내역을 다시 확인해주세요."
+                : "Your request was received. Reload the reward status to see it."}
+            </p>
           ) : (
             <form
               onSubmit={async (e) => {
@@ -172,13 +191,18 @@ export function CompletionRewards({
                 setError("");
                 try {
                   await api("rewards/claim", { choice, goodsId, shipping });
+                  setAccepted(true);
                   setShipping({
-                    ...shipping,
                     recipient: "",
+                    country: "KR",
+                    postalCode: "",
                     address1: "",
                     address2: "",
+                    city: "",
+                    region: "",
                     phone: "",
                     email: "",
+                    consent: false,
                   });
                   await refresh();
                 } catch (e) {
@@ -306,8 +330,15 @@ export function CompletionRewards({
                         }
                       />
                       {ko
-                        ? "배송 신청을 위한 주소·연락처 수집에 동의합니다. 테스트 정보는 게스트 세션 만료(7일) 시 삭제됩니다."
-                        : "I consent to address/contact collection for delivery requests. Test data is deleted when the guest session expires (7 days)."}
+                        ? "배송 신청을 위한 주소·연락처 수집에 동의합니다. "
+                        : "I consent to address/contact collection for delivery requests. "}
+                      {authenticated
+                        ? ko
+                          ? "회원 신청 정보는 계정에 보관됩니다. 운영 전 보관 기간과 삭제 절차가 확정되어야 합니다."
+                          : "Member requests stay with your account. Retention and deletion procedures must be finalized before launch."
+                        : ko
+                          ? "비회원 신청 정보는 게스트 세션 만료 시 정리됩니다(최대 7일)."
+                          : "Guest request data is cleaned up when the guest session expires (up to 7 days)."}
                     </label>
                   </>
                 )}

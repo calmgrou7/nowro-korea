@@ -28,3 +28,7 @@ services:
       # Set to the service's final HTTPS URL, then match Supabase Auth Site URL.
       - key: PUBLIC_APP_URL
         sync: false
+      - key: ANDROID_APP_ID
+        sync: false
+      - key: ANDROID_SHA256_FINGERPRINTS
+        sync: false

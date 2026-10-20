@@ -6,6 +6,13 @@ import { Store, ServiceError, coupons, areas, cities } from "./store.mjs";
 import { recommend, calculate } from "../shared/engine.ts";
 import { extract } from "./ai.mjs";
 import { AuthService } from "./auth.mjs";
+import { androidAssociation } from "../shared/android-app.mjs";
+import {
+  ownBusiness,
+  submitBusiness,
+  listBusinesses,
+  reviewBusiness,
+} from "./businesses.mjs";
 import {
   testPayment,
   rewardProgress,
@@ -40,6 +47,22 @@ export function createApp(store, options = {}) {
     try {
       if (req.method === "GET" && url.pathname === "/api/health")
         return send(200, { ok: true });
+      if (
+        req.method === "GET" &&
+        url.pathname === "/.well-known/assetlinks.json"
+      ) {
+        try {
+          return send(
+            200,
+            androidAssociation(
+              process.env.ANDROID_APP_ID,
+              process.env.ANDROID_SHA256_FINGERPRINTS,
+            ),
+          );
+        } catch {
+          return send(404, { error: "ANDROID_ASSOCIATION_NOT_CONFIGURED" });
+        }
+      }
       if (!url.pathname.startsWith("/api/")) {
         const root = resolve("dist");
         let file = resolve(root, "." + decodeURIComponent(url.pathname));
@@ -140,6 +163,18 @@ export function createApp(store, options = {}) {
       const route = req.method + " " + url.pathname;
       let out;
       switch (route) {
+        case "GET /api/business/application":
+          out = { application: ownBusiness(store, s) };
+          break;
+        case "POST /api/business/application":
+          out = { application: submitBusiness(store, s, body) };
+          break;
+        case "GET /api/operator/businesses":
+          out = { applications: listBusinesses(store, s) };
+          break;
+        case "POST /api/operator/businesses/review":
+          out = { application: reviewBusiness(store, s, body) };
+          break;
         case "POST /api/auth/request":
           out = await auth.request(s, body);
           break;
@@ -225,6 +260,9 @@ export function createApp(store, options = {}) {
               authenticated: !!auth.account(s),
               email: auth.account(s)?.email || null,
             },
+            canTravel:
+              s.role === "traveler" ||
+              (s.role === "partner" && !!auth.account(s)),
             authConfigured: auth.enabled,
             authEmailMode: auth.redirect ? "link" : "code",
             dataBackend: "sqlite",

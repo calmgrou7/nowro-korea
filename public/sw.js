@@ -1,4 +1,4 @@
-const CACHE = "nowro-shell-v11";
+const CACHE = "nowro-shell-v12";
 self.addEventListener("install", (e) =>
   e.waitUntil(
     caches
@@ -11,6 +11,7 @@ self.addEventListener("install", (e) =>
           "/icon-192.png",
           "/icon-512.png",
           "/manifest.webmanifest",
+          "/offline.html",
         ]),
       ),
   ),
@@ -21,7 +22,9 @@ self.addEventListener("activate", (e) =>
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)),
+          keys
+            .filter((k) => k.startsWith("nowro-shell-") && k !== CACHE)
+            .map((k) => caches.delete(k)),
         ),
       ),
   ),
@@ -31,7 +34,9 @@ self.addEventListener("fetch", (e) => {
   if (
     e.request.method !== "GET" ||
     u.origin !== location.origin ||
-    u.pathname.startsWith("/api/")
+    u.pathname.startsWith("/api/") ||
+    u.pathname.startsWith("/.well-known/") ||
+    (u.search && e.request.mode !== "navigate")
   )
     return;
   e.respondWith(
@@ -39,6 +44,7 @@ self.addEventListener("fetch", (e) => {
       .then((r) => {
         if (
           r.ok &&
+          !u.search &&
           ["document", "script", "style", "image"].includes(
             e.request.destination,
           )
@@ -49,15 +55,9 @@ self.addEventListener("fetch", (e) => {
         return r;
       })
       .catch(() =>
-        caches
-          .match(e.request)
-          .then(
-            (r) =>
-              r ||
-              (e.request.mode === "navigate"
-                ? caches.match("/")
-                : Response.error()),
-          ),
+        e.request.mode === "navigate"
+          ? caches.match("/offline.html").then((r) => r || Response.error())
+          : caches.match(e.request).then((r) => r || Response.error()),
       ),
   );
 });

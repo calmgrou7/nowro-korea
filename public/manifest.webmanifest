@@ -1,10 +1,20 @@
 {
   "name": "NOWRO Korea",
   "short_name": "NOWRO",
+  "id": "/",
+  "lang": "en",
+  "description": "Discover Busan, plan your local trip and collect paid-visit stamps with NOWRO.",
+  "scope": "/",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F6F8FA",
-  "theme_color": "#BEF264",
+  "background_color": "#F7FAF5",
+  "theme_color": "#172026",
+  "categories": ["travel", "lifestyle"],
+  "shortcuts": [
+    { "name": "Explore Busan", "url": "/?tab=MAP" },
+    { "name": "My trips", "url": "/?tab=TRIP" },
+    { "name": "Stamps and rewards", "url": "/?tab=PASSPORT" }
+  ],
   "icons": [
     {
       "src": "/icon-192.png",

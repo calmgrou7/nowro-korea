@@ -12,7 +12,8 @@
     "start": "node --env-file-if-exists=.env server/index.mjs",
     "test": "node --test tests/*.test.mjs",
     "db:backup": "node scripts/database-backup.mjs",
-    "deploy:check": "node scripts/check-deployment.mjs"
+    "deploy:check": "node scripts/check-deployment.mjs",
+    "android:prepare": "node scripts/prepare-android.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.2",

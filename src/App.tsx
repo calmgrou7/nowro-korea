@@ -1,11 +1,4 @@
-import {
-  useState,
-  useEffect,
-  useRef,
-  lazy,
-  Suspense,
-  type ReactNode,
-} from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import {
   ArrowUpRight,
   ArrowRight,
@@ -51,7 +44,10 @@ import { t, initialLanguage, languages, names } from "./i18n";
 import { MerchantListings, PublicListings, ListingDetail } from "./Listings";
 import { Shop, CompletionRewards, AdminRewards } from "./Rewards";
 import { Account } from "./Account";
+import { BusinessApplicationPanel, AdminBusinesses } from "./Businesses";
 import { EmailLinkSignIn } from "./EmailLinkSignIn";
+import { useTabNavigation } from "./AppNavigation";
+import { Modal } from "./Modal";
 import { DistrictDirectory } from "./DistrictDirectory";
 import { starterStampAreaIds } from "../shared/catalog";
 import type { Listing } from "../shared/listings.ts";
@@ -106,74 +102,8 @@ const defaults: Conditions = {
   tripStart: "",
   tripEnd: "",
 };
-function Modal({
-  title,
-  close,
-  children,
-}: {
-  title: string;
-  close: () => void;
-  children: ReactNode;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const previous = document.activeElement as HTMLElement;
-    ref.current?.focus();
-    const key = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-      if (e.key === "Tab") {
-        const elements = ref.current?.querySelectorAll<HTMLElement>(
-          'button:not(:disabled),a[href],input,select,textarea,[tabindex="0"]',
-        );
-        if (!elements?.length) return;
-        const first = elements[0],
-          last = elements[elements.length - 1];
-        if (
-          e.shiftKey &&
-          (document.activeElement === first ||
-            document.activeElement === ref.current)
-        ) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    };
-    document.addEventListener("keydown", key);
-    return () => {
-      document.removeEventListener("keydown", key);
-      previous?.focus();
-    };
-  }, []);
-  return (
-    <div className="overlay" onClick={close}>
-      <div
-        className="modal"
-        ref={ref}
-        tabIndex={-1}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <header>
-          <h2>{title}</h2>
-          <button
-            className="icon-btn"
-            onClick={close}
-            aria-label="Close / 닫기"
-          >
-            <X size={20} />
-          </button>
-        </header>
-        {children}
-      </div>
-    </div>
-  );
-}
 export default function App() {
+  const [tab, setTab] = useTabNavigation();
   const [listing, setListing] = useState<Listing | null>(null);
   useEffect(() => {
     const id = new URLSearchParams(location.search).get("listing");
@@ -186,18 +116,11 @@ export default function App() {
   }, []);
   function openListing(v: Listing) {
     setListing(v);
-    const u = new URL(location.href);
-    u.searchParams.set("listing", v.id);
-    history.replaceState(null, "", u);
   }
   function closeListing() {
     setListing(null);
-    const u = new URL(location.href);
-    u.searchParams.delete("listing");
-    history.replaceState(null, "", u);
   }
   const [lang, setLang] = useState<Lang>(initialLanguage),
-    [tab, setTab] = useState<Tab>("NOW"),
     [catalog, setCatalog] = useState<{
       areas: Area[];
       places: Place[];
@@ -258,13 +181,7 @@ export default function App() {
   const scannedOnce = useRef(false);
   useEffect(() => {
     const scanned = new URLSearchParams(location.search).get("stamp");
-    if (
-      !status ||
-      status.session.role !== "traveler" ||
-      !scanned ||
-      scannedOnce.current
-    )
-      return;
+    if (!status || !status.canTravel || !scanned || scannedOnce.current) return;
     scannedOnce.current = true;
     void action(async () => {
       await api("stamps/claim", { token: scanned });
@@ -281,6 +198,23 @@ export default function App() {
   const name = (p: { name: Record<Lang, string> }) => p.name[lang] || p.name.en;
   const refresh = async () => {
     const [cat, st] = await Promise.all([api("catalog"), api("status")]);
+    // Load private data for the verified session before publishing a new identity to the UI.
+    let records: any, nextConsent: any, nextWallet: any;
+    try {
+      [records, nextConsent, nextWallet] = await Promise.all([
+        st.session.role === "traveler"
+          ? Promise.resolve(null)
+          : api("operator"),
+        api("consent"),
+        st.canTravel
+          ? api("wallet")
+          : Promise.resolve({ trips: [], vouchers: [], stamps: [] }),
+      ]);
+    } catch (error) {
+      setWallet({ trips: [], vouchers: [], stamps: [] });
+      setOperator(null);
+      throw error;
+    }
     setCatalog(cat);
     setC((old) =>
       cat.areas.some((a: Area) => a.id === old.areaId)
@@ -296,17 +230,21 @@ export default function App() {
           },
     );
     setStatus(st);
-    setRole(st.session.role);
-    if (st.session.role === "traveler") setWallet(await api("wallet"));
-    else setOperator(await api("operator"));
+    setRole((old) =>
+      old === "traveler" && st.session.role === "partner" && st.canTravel
+        ? "traveler"
+        : st.session.role,
+    );
+    setWallet(nextWallet);
+    setOperator(records);
+    setConsent({
+      analytics: !!nextConsent.analytics,
+      location: !!nextConsent.location,
+    });
+    return st;
   };
   useEffect(() => {
     refresh().catch(() => setLoadError(true));
-    api("consent")
-      .then((v) =>
-        setConsent({ analytics: !!v.analytics, location: !!v.location }),
-      )
-      .catch(() => {});
   }, []);
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -533,8 +471,17 @@ export default function App() {
   );
   const changeRole = (r: string) =>
     action(async () => {
-      await api("preview-role", { role: r });
-      await refresh();
+      if (status?.operatorPreview) {
+        await api("preview-role", { role: r });
+        await refresh();
+      } else {
+        if (
+          r !== status?.session.role &&
+          !(r === "traveler" && status?.canTravel)
+        )
+          throw new Error("FORBIDDEN");
+        setRole(r);
+      }
       setSettings(false);
       window.scrollTo({ top: 0, behavior: "instant" });
     });
@@ -651,10 +598,24 @@ export default function App() {
                 {T("traveler")}
               </button>
             </div>
-            <p className="notice">{T("operatorNote")}</p>
-            <MerchantListings lang={lang} role={role} areas={catalog.areas} />
+            <p className="notice">
+              {status?.session.authenticated
+                ? lang === "ko"
+                  ? "로그인한 운영 계정입니다. 업체 승인과 상품 게시 심사는 별도로 진행됩니다."
+                  : "Signed-in operator account. Business approval and listing publication are reviewed separately."
+                : T("operatorNote")}
+            </p>
+            {role === "admin" && (
+              <AdminBusinesses lang={lang} areas={catalog.areas} />
+            )}
+            <MerchantListings
+              lang={lang}
+              role={role}
+              areas={catalog.areas}
+              business={operator?.business}
+            />
             {role === "admin" && <AdminRewards lang={lang} />}
-            {operator && (
+            {operator && (role === "admin" || operator.places.length > 0) && (
               <>
                 <div className="operator-grid">
                   <section className="panel">
@@ -1746,7 +1707,13 @@ export default function App() {
                   </div>
                   <Bookmark size={30} />
                 </div>
-                <p className="notice">{T("saved")}</p>
+                <p className="notice">
+                  {T(
+                    status?.session.authenticated
+                      ? "savedAccount"
+                      : "savedGuest",
+                  )}
+                </p>
                 {wallet.trips.length ? (
                   <div className="route-grid">
                     {wallet.trips.map((v: any, i: number) => (
@@ -1923,7 +1890,12 @@ export default function App() {
                     ))}
                   </section>
                 </div>
-                <CompletionRewards lang={lang} version={wallet.stamps.length} />
+                <CompletionRewards
+                  key={status?.session.email || "guest"}
+                  lang={lang}
+                  authenticated={!!status?.session.authenticated}
+                  version={wallet.stamps.length}
+                />
               </section>
             )}
           </>
@@ -1985,6 +1957,7 @@ export default function App() {
         <Modal
           title={lang === "ko" ? listing.data.titleKo : listing.data.titleEn}
           close={closeListing}
+          historyQuery={{ key: "listing", value: listing.id }}
         >
           <ListingDetail data={listing.data} lang={lang} />
           <button
@@ -2276,6 +2249,21 @@ export default function App() {
       {settings && (
         <Modal title={T("settings")} close={() => setSettings(false)}>
           <Account lang={lang} status={status} onChange={refresh} />
+          {status?.session.role !== "admin" && (
+            <BusinessApplicationPanel
+              key={status?.session.email || "guest"}
+              lang={lang}
+              status={status}
+              areas={catalog.areas}
+              onOpenStudio={async () => {
+                const current = await refresh();
+                if (current.session.role !== "partner")
+                  throw new Error("BUSINESS_NOT_APPROVED");
+                setRole("partner");
+                setSettings(false);
+              }}
+            />
+          )}
           <label>
             {T("language")}
             <select

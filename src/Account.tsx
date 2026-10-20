@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "./api";
 import type { Lang } from "../shared/types";
 export function Account({
@@ -15,8 +15,24 @@ export function Account({
   const [email, setEmail] = useState(""),
     [code, setCode] = useState(""),
     [sent, setSent] = useState(false),
+    [useCode, setUseCode] = useState(false),
+    [resendAt, setResendAt] = useState(0),
+    [seconds, setSeconds] = useState(0),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  useEffect(() => {
+    const tick = () =>
+      setSeconds(Math.max(0, Math.ceil((resendAt - Date.now()) / 1000)));
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [resendAt]);
+  const send = async () => {
+    await api("auth/request", { email });
+    setSent(true);
+    setResendAt(Date.now() + 60000);
+  };
+  const verifying = sent && (!linkMode || useCode);
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
     setError("");
@@ -80,13 +96,12 @@ export function Account({
           onSubmit={(e) => {
             e.preventDefault();
             void run(async () => {
-              if (sent) {
+              if (verifying) {
                 await api("auth/verify", { email, code });
                 setCode("");
                 await onChange();
               } else {
-                await api("auth/request", { email });
-                setSent(true);
+                await send();
               }
             });
           }}
@@ -112,14 +127,14 @@ export function Account({
             <p className="notice">
               {linkMode
                 ? ko
-                  ? "메일을 보냈습니다. 받은 메일의 확인·로그인 버튼을 눌러 나우로로 돌아온 뒤, 표시되는 계정을 확인하고 로그인하세요. 메일에 인증번호가 있으면 아래에 입력해도 됩니다."
-                  : "Email sent. Click the confirmation or sign-in button in your email, then confirm your account in NOWRO. If your email contains a code, you can enter it below."
+                  ? "로그인 메일을 요청했습니다. 받은 메일의 버튼을 누르고 나우로에서 본인 계정을 확인해주세요. 메일이 없으면 스팸함을 확인해주세요."
+                  : "Sign-in email requested. Click its button, then confirm your account in NOWRO. Check your spam folder if it does not arrive."
                 : ko
                   ? "메일의 인증번호를 아래에 입력해주세요."
                   : "Enter the code from your email below."}
             </p>
           )}
-          {sent && (
+          {verifying && (
             <label>
               {ko ? "이메일로 받은 인증번호" : "Code from your email"}
               <input
@@ -134,35 +149,76 @@ export function Account({
               />
             </label>
           )}
-          <button type="submit" className="primary" disabled={busy}>
+          <button
+            type="submit"
+            className="primary"
+            disabled={busy || (!verifying && seconds > 0)}
+          >
             {busy
               ? ko
                 ? "처리 중…"
                 : "Working…"
-              : sent
+              : verifying
                 ? ko
                   ? "확인하고 로그인"
                   : "Verify & sign in"
-                : linkMode
-                  ? ko
-                    ? "로그인 메일 받기"
-                    : "Send sign-in email"
-                  : ko
-                    ? "인증번호 받기"
-                    : "Send sign-in code"}
+                : sent && seconds > 0
+                  ? `${ko ? "다시 받기" : "Resend"} (${seconds}s)`
+                  : sent
+                    ? ko
+                      ? "로그인 메일 다시 받기"
+                      : "Resend sign-in email"
+                    : linkMode
+                      ? ko
+                        ? "로그인 메일 받기"
+                        : "Send sign-in email"
+                      : ko
+                        ? "인증번호 받기"
+                        : "Send sign-in code"}
           </button>
+          {!sent && seconds > 0 && (
+            <p className="muted" role="status">
+              {ko
+                ? `${seconds}초 후 다시 요청할 수 있습니다.`
+                : `You can request another email in ${seconds} seconds.`}
+            </p>
+          )}
           {sent && (
-            <button
-              className="text-btn"
-              type="button"
-              disabled={busy}
-              onClick={() => {
-                setSent(false);
-                setCode("");
-              }}
-            >
-              {ko ? "이메일 변경 / 다시 받기" : "Change email / resend"}
-            </button>
+            <>
+              {linkMode && (
+                <button
+                  className="text-btn"
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setUseCode(!useCode);
+                    setCode("");
+                    setError("");
+                  }}
+                >
+                  {useCode
+                    ? ko
+                      ? "메일 버튼으로 로그인"
+                      : "Use email link"
+                    : ko
+                      ? "메일에 인증번호가 있나요?"
+                      : "Does your email include a code?"}
+                </button>
+              )}
+              <button
+                className="text-btn"
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setSent(false);
+                  setCode("");
+                  setUseCode(false);
+                  setError("");
+                }}
+              >
+                {ko ? "이메일 변경" : "Change email"}
+              </button>
+            </>
           )}
         </form>
       )}

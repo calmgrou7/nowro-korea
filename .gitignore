@@ -4,3 +4,9 @@ dist/
 .data/
 test-output/
 .tools/
+android/generated/
+android/release-config.json
+*.keystore
+*.jks
+*.aab
+*.apk

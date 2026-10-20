@@ -14,6 +14,7 @@ import {
 import { calculate } from "../shared/engine.ts";
 import { initializeListings } from "./listings.mjs";
 import { initializeRewards, paidReceipt } from "./rewards.mjs";
+import { initializeBusinesses } from "./businesses.mjs";
 export class ServiceError extends Error {
   constructor(code, status = 400) {
     super(code);
@@ -40,6 +41,7 @@ export class Store {
  CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY,value TEXT NOT NULL);`);
     initializeListings(this.db);
     initializeRewards(this.db);
+    initializeBusinesses(this.db);
     for (const p of fixtures)
       this.db
         .prepare("INSERT OR IGNORE INTO places VALUES (?,?)")
@@ -127,7 +129,13 @@ export class Store {
       throw new ServiceError("FORBIDDEN", 403);
   }
   traveler(s) {
-    if (s.role !== "traveler") throw new ServiceError("TRAVELER_REQUIRED", 403);
+    const memberPartner =
+      s.role === "partner" &&
+      this.db
+        .prepare("SELECT auth_id FROM auth_accounts WHERE user_id=?")
+        .get(s.user_id);
+    if (s.role !== "traveler" && !memberPartner)
+      throw new ServiceError("TRAVELER_REQUIRED", 403);
   }
   wallet(s) {
     this.traveler(s);
@@ -407,6 +415,14 @@ export class Store {
     const ids =
       s.role === "admin" ? this.catalog().map((p) => p.id) : [s.place_id];
     return {
+      business: (() => {
+        const row = this.db
+          .prepare(
+            "SELECT data FROM business_applications WHERE owner_id=? AND status='approved'",
+          )
+          .get(s.user_id);
+        return row ? JSON.parse(row.data) : null;
+      })(),
       places: this.catalog().filter((p) => ids.includes(p.id)),
       proposals: this.db
         .prepare("SELECT * FROM proposals ORDER BY created DESC")
