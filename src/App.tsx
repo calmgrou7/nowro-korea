@@ -35,6 +35,7 @@ import {
   ShieldCheck,
   Search,
   CalendarDays,
+  UserRound,
 } from "lucide-react";
 import QRCode from "qrcode";
 import type { Area, Place, Conditions, Route, Lang } from "../shared/types.ts";
@@ -571,6 +572,14 @@ export default function App() {
             </select>
             <ChevronDown size={13} />
           </label>
+          <button
+            className="icon-btn account-shortcut"
+            aria-label={status?.session.authenticated ? T("account") : T("signIn")}
+            onClick={() => setSettings(true)}
+            title={status?.session.authenticated ? T("account") : T("signIn")}
+          >
+            <UserRound size={20} />
+          </button>
           <button
             className="icon-btn"
             aria-label={T("settings")}

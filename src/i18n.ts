@@ -566,6 +566,8 @@ const copy: Record<string, string[]> = {
     "旅行设置",
     "旅行設定",
   ],
+  account: ["Account", "계정", "アカウント", "账户", "帳戶"],
+  signIn: ["Sign in", "로그인", "ログイン", "登录", "登入"],
   language: ["Language", "언어", "言語", "语言", "語言"],
   privacy: [
     "Privacy & consent",
