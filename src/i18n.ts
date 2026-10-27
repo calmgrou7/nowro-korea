@@ -102,11 +102,11 @@ const copy: Record<string, string[]> = {
     "來韓國旅行，或在國內探索？尋找適合你時間的在地路線。",
   ],
   everyone: [
-    "For every explorer",
-    "모든 여행자를 위해",
-    "すべての旅人へ",
-    "为每位旅行者",
-    "為每位旅行者",
+    "Busan information for every explorer",
+    "모든 여행자를 위한 부산 정보",
+    "すべての旅人のための釜山情報",
+    "为每位旅行者准备的釜山信息",
+    "為每位旅行者準備的釜山資訊",
   ],
   noSignup: [
     "Start without an account",
@@ -350,11 +350,11 @@ const copy: Record<string, string[]> = {
     "範例・未核實",
   ],
   banner: [
-    "Preview content · Sample places and benefits are not valid for on-site use.",
-    "미리보기 콘텐츠 · 샘플 장소와 혜택은 현장에서 사용할 수 없습니다.",
-    "開発プレビュー・場所と特典はサンプル。現地利用不可。",
-    "开发预览；地点及优惠为样例，不能现场使用。",
-    "開發預覽；地點及優惠為範例，不能現場使用。",
+    "Early access · Information is being expanded. Check venue details before visiting.",
+    "얼리 액세스 · 부산 정보를 계속 보강하고 있습니다. 방문 전 장소 정보를 확인해주세요.",
+    "先行公開・情報を拡充中です。訪問前に各施設の最新情報をご確認ください。",
+    "抢先体验；信息正在持续补充，请在到访前确认场所详情。",
+    "搶先體驗；資訊正在持續補充，請在到訪前確認場所詳情。",
   ],
   routes: [
     "Your time, well spent",
