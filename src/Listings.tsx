@@ -35,6 +35,8 @@ const empty = (areaId: string): ListingData => ({
   exclusions: "",
   cancellation: "",
   promotion: "",
+  eventStart: "",
+  eventEnd: "",
   images: [],
   imageRights: false,
 });
@@ -175,6 +177,7 @@ export function PublicListings({
     return (
       (area === "all" || d.areaId === area) &&
       (category === "all" || d.category === category) &&
+      (!d.eventEnd || d.eventEnd >= new Date().toISOString().slice(0, 10)) &&
       query
         .trim()
         .toLowerCase()
@@ -434,7 +437,8 @@ export function MerchantListings({
                     ["service", "Service", "서비스"],
                     ["experience", "Experience", "체험"],
                     ["attraction", "Attraction", "관광지"],
-                    ["content", "Content / event", "콘텐츠·행사"],
+                    ["content", "Content", "콘텐츠"],
+                    ["event", "Local event", "지역 행사"],
                   ].map(([key, en, ko]) => (
                     <option key={key} value={key}>
                       {L(en!, ko!)}
@@ -468,6 +472,7 @@ export function MerchantListings({
                     ["experience", "Experience", "체험"],
                     ["sea", "Ocean", "바다"],
                     ["culture", "Culture", "문화"],
+                    ["event", "Local event", "지역 행사"],
                     ["shopping", "Shopping", "쇼핑"],
                     ["wellness", "Wellness", "웰니스"],
                   ].map(([key, en, ko]) => (
@@ -649,6 +654,12 @@ export function MerchantListings({
               ),
               true,
               true,
+            )}
+            {data.kind === "event" && (
+              <div className="listing-form-grid">
+                {field("eventStart", L("Event start date", "행사 시작일"), true)}
+                {field("eventEnd", L("Event end date", "행사 종료일"), true)}
+              </div>
             )}
             {field("inclusions", L("Included", "포함 사항"), false, true)}
             {field("exclusions", L("Not included", "불포함 사항"), false, true)}

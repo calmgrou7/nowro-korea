@@ -207,6 +207,7 @@ const copy: Record<string, string[]> = {
   food: ["Local food", "음식", "食事", "美食", "美食"],
   cafe: ["Coffee", "카페", "カフェ", "咖啡", "咖啡"],
   culture: ["Culture", "문화", "文化", "文化", "文化"],
+  event: ["Events", "지역 행사", "イベント", "活动", "活動"],
   experience: ["Experiences", "체험", "体験", "体验", "體驗"],
   shopping: ["Shopping", "쇼핑", "買い物", "购物", "購物"],
   wellness: ["Wellness", "웰니스", "ウェルネス", "身心休闲", "身心休閒"],

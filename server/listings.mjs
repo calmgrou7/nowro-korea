@@ -37,6 +37,8 @@ function validate(input, submit) {
     "exclusions",
     "cancellation",
     "promotion",
+    "eventStart",
+    "eventEnd",
   ]) {
     if (
       typeof input[key] !== "string" ||
@@ -46,7 +48,7 @@ function validate(input, submit) {
     d[key] = input[key].trim();
   }
   if (
-    !["shop", "service", "experience", "attraction", "content"].includes(
+    !["shop", "service", "experience", "attraction", "content", "event"].includes(
       input.kind,
     ) ||
     ![
@@ -57,6 +59,7 @@ function validate(input, submit) {
       "shopping",
       "experience",
       "wellness",
+      "event",
     ].includes(input.category) ||
     !areas.some((a) => a.id === input.areaId)
   )
@@ -76,6 +79,10 @@ function validate(input, submit) {
     d[key] = input[key];
   }
   if (d.priceMin > d.priceMax) fail("INVALID_PRICE_RANGE");
+  if (d.eventStart || d.eventEnd) {
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(d.eventStart) || !/^\\d{4}-\\d{2}-\\d{2}$/.test(d.eventEnd) || d.eventEnd < d.eventStart)
+      fail("INVALID_EVENT_DATES");
+  }
   if (d.bookingUrl) {
     let u;
     try {
@@ -146,11 +153,16 @@ export function operatorListings(db, s) {
     .map(expose);
 }
 export function publicListings(db) {
+  const today = new Date().toISOString().slice(0, 10);
   return db
     .prepare(
       "SELECT * FROM listings WHERE status='published' ORDER BY updated DESC",
     )
     .all()
+    .filter((row) => {
+      const data = JSON.parse(row.data);
+      return !data.eventEnd || data.eventEnd >= today;
+    })
     .map(expose);
 }
 export function saveListing(store, s, body) {

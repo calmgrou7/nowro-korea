@@ -34,6 +34,7 @@ import {
   Navigation,
   ShieldCheck,
   Search,
+  CalendarDays,
 } from "lucide-react";
 import QRCode from "qrcode";
 import type { Area, Place, Conditions, Route, Lang } from "../shared/types.ts";
@@ -66,6 +67,7 @@ const icons: Record<string, typeof Waves> = {
   shopping: ShoppingBag,
   experience: Sparkles,
   wellness: Leaf,
+  event: CalendarDays,
 };
 const krw = (n: number) =>
   new Intl.NumberFormat("ko-KR", {
@@ -962,7 +964,7 @@ export default function App() {
                     </button>
                   </form>
                   <div className="quick-categories">
-                    {["cafe", "food", "experience", "sea"].map((category) => {
+                    {["cafe", "food", "experience", "culture", "event"].map((category) => {
                       const Icon = icons[category]!;
                       return (
                         <button

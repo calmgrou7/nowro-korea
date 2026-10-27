@@ -1,5 +1,5 @@
 export type ListingData = {
-  kind: "shop" | "service" | "experience" | "attraction" | "content";
+  kind: "shop" | "service" | "experience" | "attraction" | "content" | "event";
   category: string;
   areaId: string;
   businessName: string;
@@ -20,6 +20,8 @@ export type ListingData = {
   exclusions: string;
   cancellation: string;
   promotion: string;
+  eventStart: string;
+  eventEnd: string;
   images: string[];
   imageRights: boolean;
 };
