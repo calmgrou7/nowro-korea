@@ -106,6 +106,7 @@ const defaults: Conditions = {
 export default function App() {
   const [tab, setTab] = useTabNavigation();
   const [listing, setListing] = useState<Listing | null>(null);
+  const [oauthHandled, setOauthHandled] = useState(false);
   useEffect(() => {
     const id = new URLSearchParams(location.search).get("listing");
     if (id)
@@ -115,6 +116,24 @@ export default function App() {
         )
         .catch(() => {});
   }, []);
+  useEffect(() => {
+    if (oauthHandled) return;
+    const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+    const accessToken = hash.get("access_token");
+    if (!accessToken) return;
+    setOauthHandled(true);
+    void api("auth/oauth", {
+      accessToken,
+      refreshToken: hash.get("refresh_token") || "",
+    })
+      .then(() => {
+        history.replaceState({}, "", location.pathname + location.search);
+        location.reload();
+      })
+      .catch(() => {
+        history.replaceState({}, "", location.pathname + location.search);
+      });
+  }, [oauthHandled]);
   function openListing(v: Listing) {
     setListing(v);
   }

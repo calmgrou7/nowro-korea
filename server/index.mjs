@@ -184,6 +184,12 @@ export function createApp(store, options = {}) {
           out = { authenticated: true };
           break;
         }
+        case "POST /api/auth/oauth": {
+          s = await auth.oauth(s, body);
+          setCookie(s);
+          out = { authenticated: true };
+          break;
+        }
         case "POST /api/auth/link-preview":
           out = await auth.previewLink(s, body);
           break;

@@ -111,6 +111,19 @@ export function Account({
               ? "한국 전화번호 없이 이메일로 로그인하세요. 현재 비회원 기록은 로그인한 계정으로 옮겨집니다."
               : "Sign in by email without a Korean phone number. Your guest records will move to your account."}
           </p>
+          <button
+            type="button"
+            className="secondary"
+            disabled={busy}
+            onClick={() => {
+              window.location.href =
+                "https://rpkvpbdzemesckzizybq.supabase.co/auth/v1/authorize?provider=google&redirect_to=" +
+                encodeURIComponent(window.location.origin + "/");
+            }}
+          >
+            {ko ? "Google로 계속하기" : "Continue with Google"}
+          </button>
+          <p className="muted">{ko ? "또는 이메일로 계속하기" : "or continue with email"}</p>
           <label>
             {ko ? "이메일" : "Email"}
             <input

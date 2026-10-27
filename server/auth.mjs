@@ -180,6 +180,20 @@ export class AuthService {
       throw new ServiceError("AUTH_USER_REJECTED", 401);
     return this.commit(s, user, data.session);
   }
+  async oauth(s, body) {
+    this.require();
+    if (s.role !== "traveler" || this.account(s))
+      throw new ServiceError("ALREADY_SIGNED_IN", 409);
+    if (typeof body?.accessToken !== "string" || body.accessToken.length < 20)
+      throw new ServiceError("AUTH_TOKEN_REJECTED", 401);
+    const checked = await this.provider(() =>
+      this.clientFactory().auth.getUser(body.accessToken),
+    );
+    const user = checked.data?.user;
+    if (checked.error || !user?.id || !user.email || user.is_anonymous)
+      throw new ServiceError("AUTH_TOKEN_REJECTED", 401);
+    return this.commit(s, user, { access_token: body.accessToken, refresh_token: body.refreshToken || "", expires_at: Math.floor(Date.now() / 1000) + 3600 });
+  }
   linkTokens(body) {
     for (const field of ["access_token", "refresh_token"])
       if (
