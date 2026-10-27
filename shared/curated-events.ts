@@ -1,0 +1,21 @@
+import type { Listing } from "./listings.ts";
+
+// Official Visit Busan / district calendar entries checked on 2026-10-27.
+export const curatedEvents: Listing[] = [
+  {
+    id: "event-busan-beer-2026", status: "published", created: "2026-10-27T00:00:00.000Z", updated: "2026-10-27T00:00:00.000Z", reviewNote: "Visit Busan checked 2026-10-27.",
+    data: { kind: "event", category: "event", areaId: "seomyeon", businessName: "Visit Busan", titleKo: "제11회 부산수제맥주축제", titleEn: "Busan Craft Beer Festival 2026", summaryKo: "서면에서 즐기는 세계 맥주와 로컬 축제", summaryEn: "A local beer festival in Seomyeon with global brews", descriptionKo: "세계 맥주와 축제 프로그램을 즐기는 부산 가을 행사입니다.", descriptionEn: "An autumn Busan event featuring global beers and festival programs.", address: "부산진구 서면 스콜", contact: "Visit Busan 1330", bookingUrl: "https://www.visitbusan.net/", priceMin: 0, priceMax: 0, duration: 120, hours: "2026-10-29–2026-10-31", inclusions: "", exclusions: "", cancellation: "", promotion: "Check the official event page before visiting.", images: ["/brand/logo.webp"], imageRights: true, eventStart: "2026-10-29", eventEnd: "2026-10-31" },
+  },
+  {
+    id: "event-geumjeong-temple-2026", status: "published", created: "2026-10-27T00:00:00.000Z", updated: "2026-10-27T00:00:00.000Z", reviewNote: "Visit Busan checked 2026-10-27.",
+    data: { kind: "event", category: "event", areaId: "geumjeong", businessName: "Busan Tourism Organization", titleKo: "가을엔 절로 페스타", titleEn: "Autumn Temple Festa", summaryKo: "홍법사에서 만나는 사찰음식·명상·공연", summaryEn: "Temple food, meditation and live music at Hongbeopsa", descriptionKo: "연등 아래 피크닉과 사찰음식, 싱잉볼 명상, 어쿠스틱 공연을 즐기는 행사입니다.", descriptionEn: "An autumn evening of picnic, temple food, sound meditation and acoustic music.", address: "금정구 두구로 33번길, 홍법사", contact: "Busan Tourism Organization", bookingUrl: "https://visitbusan.net/", priceMin: 0, priceMax: 35000, duration: 300, hours: "15:00–20:00", inclusions: "", exclusions: "", cancellation: "", promotion: "Some programs are free; check the official notice.", images: ["/brand/logo.webp"], imageRights: true, eventStart: "2026-10-30", eventEnd: "2026-10-31" },
+  },
+  {
+    id: "event-busan-fireworks-2026", status: "published", created: "2026-10-27T00:00:00.000Z", updated: "2026-10-27T00:00:00.000Z", reviewNote: "Visit Busan calendar checked 2026-10-27.",
+    data: { kind: "event", category: "event", areaId: "gwangalli", businessName: "Busan Metropolitan City", titleKo: "제21회 부산불꽃축제", titleEn: "21st Busan Fireworks Festival", summaryKo: "광안리 해변에서 펼쳐지는 부산 대표 야간 행사", summaryEn: "Busan's signature night festival at Gwangalli Beach", descriptionKo: "광안대교를 배경으로 열리는 부산 대표 불꽃 행사입니다. 관람 전 교통과 안전 공지를 확인하세요.", descriptionEn: "Busan's signature fireworks event over Gwangan Bridge. Check transport and safety notices before going.", address: "수영구 광안리해수욕장 일원", contact: "Busan 120", bookingUrl: "https://www.visitbusan.net/", priceMin: 0, priceMax: 0, duration: 180, hours: "2026-11-07", inclusions: "", exclusions: "", cancellation: "", promotion: "Large crowds expected — plan public transport early.", images: ["/brand/logo.webp"], imageRights: true, eventStart: "2026-11-07", eventEnd: "2026-11-07" },
+  },
+  {
+    id: "event-haeundae-light-2026", status: "published", created: "2026-10-27T00:00:00.000Z", updated: "2026-10-27T00:00:00.000Z", reviewNote: "Haeundae-gu calendar checked 2026-10-27.",
+    data: { kind: "event", category: "event", areaId: "haeundae", businessName: "Haeundae-gu", titleKo: "제13회 해운대빛축제", titleEn: "13th Haeundae Light Festival", summaryKo: "구남로와 해운대해수욕장을 밝히는 겨울 축제", summaryEn: "A winter light festival across Gunam-ro and Haeundae Beach", descriptionKo: "해운대 구남로와 해수욕장 일원에서 열리는 겨울 야간 축제입니다.", descriptionEn: "A winter night festival illuminating Gunam-ro and Haeundae Beach.", address: "해운대구 구남로 및 해운대해수욕장 일원", contact: "Haeundae-gu 051-749-4014", bookingUrl: "https://www.haeundae.go.kr/", priceMin: 0, priceMax: 0, duration: 120, hours: "2026-11-29–2027-01-18", inclusions: "", exclusions: "", cancellation: "", promotion: "Schedule may change; check the district notice.", images: ["/brand/logo.webp"], imageRights: true, eventStart: "2026-11-29", eventEnd: "2027-01-18" },
+  },
+];

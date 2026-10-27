@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { areas } from "../shared/catalog.ts";
+import { curatedEvents } from "../shared/curated-events.ts";
 
 export function initializeListings(db) {
   db.exec(
@@ -154,7 +155,7 @@ export function operatorListings(db, s) {
 }
 export function publicListings(db) {
   const today = new Date().toISOString().slice(0, 10);
-  return db
+  const saved = db
     .prepare(
       "SELECT * FROM listings WHERE status='published' ORDER BY updated DESC",
     )
@@ -164,6 +165,7 @@ export function publicListings(db) {
       return !data.eventEnd || data.eventEnd >= today;
     })
     .map(expose);
+  return [...curatedEvents.filter((v) => !v.data.eventEnd || v.data.eventEnd >= today), ...saved];
 }
 export function saveListing(store, s, body) {
   authorized(s);
