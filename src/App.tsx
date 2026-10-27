@@ -106,6 +106,7 @@ const defaults: Conditions = {
 export default function App() {
   const [tab, setTab] = useTabNavigation();
   const [listing, setListing] = useState<Listing | null>(null);
+  const [allListings, setAllListings] = useState<Listing[]>([]);
   const [oauthHandled, setOauthHandled] = useState(false);
   useEffect(() => {
     const id = new URLSearchParams(location.search).get("listing");
@@ -136,6 +137,8 @@ export default function App() {
   }, [oauthHandled]);
   function openListing(v: Listing) {
     setListing(v);
+    if (!allListings.length)
+      api("listings").then((response) => setAllListings(response.listings)).catch(() => {});
   }
   function closeListing() {
     setListing(null);
@@ -614,7 +617,7 @@ export default function App() {
             <div className="section-heading">
               <div>
                 <span className="eyebrow">
-                  NOWRO {role === "admin" ? "ADMIN" : "PARTNER"}
+                  NOWRO {role === "admin" ? "ADMIN" : "OPERATOR"}
                 </span>
                 <h1>{T(role)}</h1>
               </div>
@@ -2002,7 +2005,19 @@ export default function App() {
           close={closeListing}
           historyQuery={{ key: "listing", value: listing.id }}
         >
-          <ListingDetail data={listing.data} lang={lang} />
+          <ListingDetail
+            data={listing.data}
+            lang={lang}
+            related={allListings
+              .filter(
+                (item) =>
+                  item.id !== listing.id &&
+                  item.data.areaId === listing.data.areaId &&
+                  item.status === "published",
+              )
+              .slice(0, 8)}
+            onSelectRelated={setListing}
+          />
           <button
             className="text-btn"
             onClick={() =>

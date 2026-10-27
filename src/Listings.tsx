@@ -44,9 +44,13 @@ const empty = (areaId: string): ListingData => ({
 export function ListingDetail({
   data: d,
   lang,
+  related = [],
+  onSelectRelated,
 }: {
   data: ListingData;
   lang: Lang;
+  related?: Listing[];
+  onSelectRelated?: (listing: Listing) => void;
 }) {
   const L = (en: string, ko: string) => (lang === "ko" ? ko : en);
   return (
@@ -136,6 +140,34 @@ export function ListingDetail({
           </a>
         )}
       </div>
+      {related.length > 0 && (
+        <section className="related-listings" aria-label={L("Nearby recommendations", "근처 추천") }>
+          <div className="section-heading compact">
+            <div>
+              <span className="eyebrow">NEARBY PICKS</span>
+              <h3>{L("More around this area", "이 지역 근처에서 더 찾아보기")}</h3>
+            </div>
+          </div>
+          <div className="related-scroller">
+            {related.map((item) => (
+              <button
+                className="related-card"
+                key={item.id}
+                onClick={() => onSelectRelated?.(item)}
+              >
+                <img
+                  src={item.data.images[0]}
+                  alt={text(item.data, lang, "title")}
+                  loading="lazy"
+                />
+                <span className="eyebrow">{item.data.businessName}</span>
+                <strong>{text(item.data, lang, "title")}</strong>
+                <small>{item.data.areaId} · {item.data.category}</small>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
     </article>
   );
 }

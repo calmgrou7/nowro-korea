@@ -83,6 +83,14 @@ html {
   gap: 10px;
   margin: 16px 0;
 }
+
+.related-listings { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+.section-heading.compact { margin-bottom: .75rem; }
+.related-scroller { display: flex; gap: .75rem; overflow-x: auto; padding-bottom: .5rem; scroll-snap-type: x proximity; }
+.related-card { flex: 0 0 150px; display: grid; gap: .35rem; text-align: left; padding: 0; border: 0; background: transparent; color: inherit; scroll-snap-align: start; cursor: pointer; }
+.related-card img { width: 150px; height: 100px; object-fit: cover; border-radius: 12px; background: var(--surface-muted); }
+.related-card strong { font-size: .9rem; line-height: 1.25; }
+.related-card small { color: var(--muted); font-size: .72rem; }
 .listing-actions a {
   text-decoration: none;
 }

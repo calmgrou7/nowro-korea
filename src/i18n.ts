@@ -612,7 +612,7 @@ const copy: Record<string, string[]> = {
     "僅測試帳戶；不是真實商家或管理員登入；公開部署停用。",
   ],
   traveler: ["Traveler", "여행자", "旅行者", "旅行者", "旅行者"],
-  partner: ["Partner", "사업자", "パートナー", "商家", "商家"],
+  partner: ["Content & venue operator", "콘텐츠·상점·식당 담당자", "コンテンツ・店舗担当者", "内容与商家运营", "內容與商家營運"],
   admin: ["Administrator", "운영자", "管理者", "管理员", "管理員"],
   close: ["Close", "닫기", "閉じる", "关闭", "關閉"],
   success: ["Done.", "처리했습니다.", "完了しました。", "已完成。", "已完成。"],
