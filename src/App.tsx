@@ -57,8 +57,6 @@ const tabs = [
   { id: "NOW" as Tab, icon: Compass },
   { id: "MAP" as Tab, icon: Map },
   { id: "TRIP" as Tab, icon: RouteIcon },
-  { id: "PASS" as Tab, icon: Ticket },
-  { id: "PASSPORT" as Tab, icon: BookOpen },
 ];
 const icons: Record<string, typeof Waves> = {
   sea: Waves,
@@ -1526,21 +1524,19 @@ export default function App() {
                     <p className="notice">{T("districtPreparing")}</p>
                   )}
                 </section>
-                <section className="passport-strip">
+                <section className="passport-strip coming-soon-strip">
                   <div className="strip-icon">
                     <BookOpen size={34} />
                   </div>
                   <div>
-                    <span className="eyebrow">NOWRO PASSPORT</span>
-                    <h2>{T("passport")}</h2>
+                    <span className="eyebrow">COMING SOON</span>
+                    <h2>{lang === "ko" ? "스탬프·굿즈는 준비 중이에요" : "Stamps & goods are coming soon"}</h2>
+                    <p className="muted">
+                      {lang === "ko"
+                        ? "지금은 부산의 장소와 로컬 콘텐츠를 먼저 만나보세요."
+                        : "For now, discover Busan places and local stories first."}
+                    </p>
                   </div>
-                  <button
-                    className="secondary"
-                    onClick={() => navigate("PASSPORT")}
-                  >
-                    PASSPORT
-                    <ArrowUpRight size={17} />
-                  </button>
                 </section>
               </>
             )}
@@ -1750,8 +1746,17 @@ export default function App() {
             {tab === "PASS" && (
               <section className="section">
                 <span className="eyebrow">NOWRO PASS</span>
-                <h1>{T("pass")}</h1>
-                <p className="section-intro">{T("passIntro")}</p>
+                <h1>{lang === "ko" ? "혜택·샵" : "Offers & shop"}</h1>
+                <div className="panel coming-soon-panel">
+                  <span className="eyebrow">COMING SOON</span>
+                  <h2>{lang === "ko" ? "할인권과 굿즈 쇼핑몰을 준비하고 있어요" : "Discounts and NOWRO goods are coming soon"}</h2>
+                  <p>{lang === "ko" ? "초기에는 검증된 부산 여행 정보와 상점 콘텐츠를 무료로 제공합니다." : "We are starting with free, carefully checked Busan travel and local business information."}</p>
+                </div>
+                {/* Coupon and shop flows stay below in the source for the next release. */}
+                <div hidden>
+                  <Shop lang={lang} />
+                </div>
+                <div hidden>
                 <Shop lang={lang} />
                 <div className="coupon-grid">
                   {catalog.coupons.map((v) => {
@@ -1814,12 +1819,19 @@ export default function App() {
                     );
                   })}
                 </div>
+                </div>
               </section>
             )}
             {tab === "PASSPORT" && (
               <section className="section">
                 <span className="eyebrow">NOWRO PASSPORT</span>
-                <h1>{T("passport")}</h1>
+                <h1>{lang === "ko" ? "스탬프·보상" : "Stamps & rewards"}</h1>
+                <div className="panel coming-soon-panel">
+                  <span className="eyebrow">COMING SOON</span>
+                  <h2>{lang === "ko" ? "스탬프 투어와 완주 보상을 준비하고 있어요" : "Stamp tours and completion rewards are coming soon"}</h2>
+                  <p>{lang === "ko" ? "현재는 정보 제공과 장소 탐색에 집중하고 있습니다. 실제 운영이 시작되면 이곳에서 안내해드릴게요." : "We are focusing on discovery first. This page will be updated when the real program launches."}</p>
+                </div>
+                <div hidden>
                 <p className="section-intro">{T("stampIntro")}</p>
                 <div className="passport-layout">
                   <div className="passport-book">
@@ -1896,6 +1908,7 @@ export default function App() {
                   authenticated={!!status?.session.authenticated}
                   version={wallet.stamps.length}
                 />
+                </div>
               </section>
             )}
           </>
