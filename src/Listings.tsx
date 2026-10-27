@@ -81,6 +81,11 @@ export function ListingDetail({
         )}
       </p>
       {d.promotion && <p className="listing-promo">{d.promotion}</p>}
+      {d.eventStart && (
+        <p className="listing-promo">
+          {L("Event dates", "행사 기간")}: {d.eventStart} – {d.eventEnd}
+        </p>
+      )}
       <div className="listing-description">{text(d, lang, "description")}</div>
       <dl className="place-details">
         {[
@@ -108,6 +113,16 @@ export function ListingDetail({
             rel="noreferrer"
           >
             {L("Open map", "지도 보기")} ↗
+          </a>
+        )}
+        {d.address && (
+          <a
+            className="secondary"
+            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(d.address)}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {L("Directions", "길찾기")} ↗
           </a>
         )}
         {d.bookingUrl && (
@@ -143,7 +158,8 @@ export function PublicListings({
   regions: Area[];
 }) {
   const [items, setItems] = useState<Listing[]>([]),
-    [failed, setFailed] = useState(false);
+    [failed, setFailed] = useState(false),
+    [month, setMonth] = useState("");
   useEffect(() => {
     let active = true;
     api("listings")
@@ -178,6 +194,7 @@ export function PublicListings({
       (area === "all" || d.areaId === area) &&
       (category === "all" || d.category === category) &&
       (!d.eventEnd || d.eventEnd >= new Date().toISOString().slice(0, 10)) &&
+      (!month || (d.eventStart && d.eventEnd && d.eventStart.slice(0, 7) <= month && d.eventEnd.slice(0, 7) >= month)) &&
       query
         .trim()
         .toLowerCase()
@@ -207,6 +224,18 @@ export function PublicListings({
           </p>
         </div>
       </div>
+      {!home && (
+        <label className="filter-select">
+          {L("Month", "월별 행사")}
+          <select value={month} onChange={(e) => setMonth(e.target.value)}>
+            <option value="">{L("All months", "전체 기간")}</option>
+            <option value="2026-10">2026년 10월</option>
+            <option value="2026-11">2026년 11월</option>
+            <option value="2026-12">2026년 12월</option>
+            <option value="2027-01">2027년 1월</option>
+          </select>
+        </label>
+      )}
       {failed ? (
         <p className="notice">
           {L(
@@ -244,6 +273,9 @@ export function PublicListings({
                   {money(v.data.priceMin)} – {money(v.data.priceMax)}
                 </p>
                 <p>{text(v.data, lang, "summary")}</p>
+                {v.data.eventStart && (
+                  <span className="listing-promo">{v.data.eventStart} – {v.data.eventEnd}</span>
+                )}
                 {v.data.promotion && (
                   <span className="listing-promo">{v.data.promotion}</span>
                 )}
