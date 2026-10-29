@@ -275,6 +275,12 @@ export function createApp(store, options = {}) {
             retentionDays: 7,
           };
           break;
+        case "GET /api/site-content":
+          out = { content: store.siteContent() };
+          break;
+        case "POST /api/operator/site-content":
+          out = { content: store.updateSiteContent(s, body) };
+          break;
         case "GET /api/catalog":
           out = {
             cities,

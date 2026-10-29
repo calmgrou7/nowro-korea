@@ -39,6 +39,13 @@ export class Store {
  CREATE TABLE IF NOT EXISTS consent(user_id TEXT PRIMARY KEY,version TEXT NOT NULL,analytics INTEGER NOT NULL,location INTEGER NOT NULL,updated TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY,user_id TEXT NOT NULL,name TEXT NOT NULL,created TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY,value TEXT NOT NULL);`);
+    this.db.exec(`CREATE TABLE IF NOT EXISTS site_content(
+      id INTEGER PRIMARY KEY CHECK(id=1), hero_title_en TEXT NOT NULL DEFAULT '',
+      hero_title_ko TEXT NOT NULL DEFAULT '', hero_intro_en TEXT NOT NULL DEFAULT '',
+      hero_intro_ko TEXT NOT NULL DEFAULT '', hero_image TEXT NOT NULL DEFAULT '',
+      updated_by TEXT, updated TEXT NOT NULL
+    );`);
+    this.db.prepare("INSERT OR IGNORE INTO site_content(id,updated) VALUES(1,?)").run(new Date().toISOString());
     initializeListings(this.db);
     initializeRewards(this.db);
     initializeBusinesses(this.db);
@@ -58,6 +65,19 @@ export class Store {
     this.secret = this.db
       .prepare("SELECT value FROM config WHERE key=?")
       .get("qr-secret").value;
+  }
+  siteContent() {
+    return this.db.prepare("SELECT * FROM site_content WHERE id=1").get();
+  }
+  updateSiteContent(s, patch) {
+    if (s.role !== "admin") throw new ServiceError("FORBIDDEN", 403);
+    const allowed = ["hero_title_en","hero_title_ko","hero_intro_en","hero_intro_ko","hero_image"];
+    const current = this.siteContent();
+    const next = Object.fromEntries(allowed.map((k) => [k, typeof patch?.[k] === "string" ? patch[k].slice(0, 2000) : current[k]]));
+    this.db.prepare(`UPDATE site_content SET ${allowed.map((k) => `${k}=?`).join(",")},updated_by=?,updated=? WHERE id=1`)
+      .run(...allowed.map((k) => next[k]), s.user_id, new Date().toISOString());
+    this.audit(s.user_id, "site_content_updated", next);
+    return this.siteContent();
   }
   close() {
     this.db.close();

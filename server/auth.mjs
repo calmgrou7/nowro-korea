@@ -24,6 +24,15 @@ export class AuthService {
       ),
     );
     this.enabled = !!(env.SUPABASE_URL && env.SUPABASE_PUBLISHABLE_KEY);
+    // Authorization is server-side only. The allowlist may be overridden in
+    // deployment, while keeping the requested NOWRO master account as the
+    // safe default for this project.
+    this.masterAdmins = new Set(
+      (env.MASTER_ADMIN_EMAILS || "chaeumpartners07@gmail.com")
+        .split(",")
+        .map((v) => this.email(v))
+        .filter(Boolean),
+    );
     this.redirect = env.PUBLIC_APP_URL || null;
     if (this.redirect) {
       const u = new URL(this.redirect);
@@ -265,6 +274,11 @@ export class AuthService {
         .prepare("SELECT user_id FROM auth_accounts WHERE auth_id=?")
         .get(user.id);
       const target = existing?.user_id || s.user_id;
+      if (this.masterAdmins.has(email)) {
+        this.store.db
+          .prepare("UPDATE users SET role='admin' WHERE id=?")
+          .run(target);
+      }
       if (target !== s.user_id) {
         if (
           this.store.db

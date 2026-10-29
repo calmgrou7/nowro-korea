@@ -52,6 +52,7 @@ import { useTabNavigation } from "./AppNavigation";
 import { Modal } from "./Modal";
 import { DistrictDirectory } from "./DistrictDirectory";
 import { starterStampAreaIds } from "../shared/catalog";
+import { AdminDashboard } from "./AdminDashboard";
 import type { Listing } from "../shared/listings.ts";
 const LiveMap = lazy(() => import("./MapView"));
 type Tab = "NOW" | "MAP" | "TRIP" | "PASS" | "PASSPORT";
@@ -636,6 +637,9 @@ export default function App() {
                   : "Signed-in operator account. Business approval and listing publication are reviewed separately."
                 : T("operatorNote")}
             </p>
+            {role === "admin" && (
+              <AdminDashboard />
+            )}
             {role === "admin" && (
               <AdminBusinesses lang={lang} areas={catalog.areas} />
             )}
