@@ -6,6 +6,13 @@ export function AdminDashboard() {
   const [message, setMessage] = useState("");
   useEffect(() => { api("site-content").then((v) => setForm(v.content)).catch(() => {}); }, []);
   const set = (key: string, value: string) => setForm((v: any) => ({ ...v, [key]: value }));
+  function uploadImage(file?: File) {
+    if (!file) return;
+    if (!file.type.startsWith("image/") || file.size > 6_000_000) { setMessage("Choose an image under 6 MB."); return; }
+    const reader = new FileReader();
+    reader.onload = () => set("hero_image", String(reader.result));
+    reader.readAsDataURL(file);
+  }
   async function save() {
     try { await api("operator/site-content", form); setMessage("Saved. The homepage content is now updated."); }
     catch { setMessage("Only the master administrator can save changes."); }
@@ -20,6 +27,7 @@ export function AdminDashboard() {
       <label>Intro (Korean)<textarea value={form.hero_intro_ko || ""} onChange={e => set("hero_intro_ko", e.target.value)} /></label>
     </div>
     <label>Hero image URL<input value={form.hero_image || ""} onChange={e => set("hero_image", e.target.value)} placeholder="https://..." /></label>
+    <label>Or upload an image<input type="file" accept="image/*" onChange={e => uploadImage(e.target.files?.[0])} /></label>
     {form.hero_image && <img className="admin-image-preview" src={form.hero_image} alt="Homepage preview" />}
     <button className="primary" onClick={save}>Save homepage changes</button>{message && <p role="status">{message}</p>}
   </section>;

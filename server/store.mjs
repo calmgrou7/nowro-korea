@@ -73,7 +73,7 @@ export class Store {
     if (s.role !== "admin") throw new ServiceError("FORBIDDEN", 403);
     const allowed = ["hero_title_en","hero_title_ko","hero_intro_en","hero_intro_ko","hero_image"];
     const current = this.siteContent();
-    const next = Object.fromEntries(allowed.map((k) => [k, typeof patch?.[k] === "string" ? patch[k].slice(0, 2000) : current[k]]));
+    const next = Object.fromEntries(allowed.map((k) => [k, typeof patch?.[k] === "string" ? patch[k].slice(0, k === "hero_image" ? 4500000 : 2000) : current[k]]));
     this.db.prepare(`UPDATE site_content SET ${allowed.map((k) => `${k}=?`).join(",")},updated_by=?,updated=? WHERE id=1`)
       .run(...allowed.map((k) => next[k]), s.user_id, new Date().toISOString());
     this.audit(s.user_id, "site_content_updated", next);

@@ -150,7 +150,7 @@ export function createApp(store, options = {}) {
           raw += chunk;
           if (
             Buffer.byteLength(raw) >
-            (url.pathname === "/api/operator/listings/save" ? 4500000 : 32000)
+            (url.pathname === "/api/operator/listings/save" || url.pathname === "/api/operator/site-content" ? 4500000 : 32000)
           )
             throw new ServiceError("TOO_LARGE", 413);
         }
