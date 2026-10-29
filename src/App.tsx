@@ -555,7 +555,9 @@ export default function App() {
           aria-label={`NOWRO Korea · ${T("navNOW")}`}
           onClick={() => {
             navigate("NOW");
-            setRole(status?.session.role || "traveler");
+            // The brand is a true home escape from the operator dashboard.
+            // Keep the authenticated role on the server, but show traveler UI.
+            setRole("traveler");
           }}
         >
           <img
