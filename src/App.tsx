@@ -183,6 +183,7 @@ export default function App() {
       new URLSearchParams(location.search).get("stamp") || "",
     ),
     [operator, setOperator] = useState<any>(null),
+    [siteContent, setSiteContent] = useState<any>(null),
     [role, setRole] = useState("traveler"),
     [voucherCode, setVoucherCode] = useState(""),
     [spend, setSpend] = useState(7000),
@@ -199,6 +200,9 @@ export default function App() {
     [report, setReport] = useState(false),
     [reportText, setReportText] = useState("");
   const T = (key: string) => t(key, lang);
+  useEffect(() => {
+    api("site-content").then((v) => setSiteContent(v.content)).catch(() => {});
+  }, []);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [tab]);
@@ -1022,8 +1026,8 @@ export default function App() {
                       <span className="status-dot" />
                       YOUR KOREA. RIGHT NOW.
                     </span>
-                    <h2>{T("hero")}</h2>
-                    <p>{T("intro")}</p>
+                    <h2>{siteContent?.[lang === "ko" ? "hero_title_ko" : "hero_title_en"] || T("hero")}</h2>
+                    <p>{siteContent?.[lang === "ko" ? "hero_intro_ko" : "hero_intro_en"] || T("intro")}</p>
                     <div className="hero-tags">
                       <span>
                         <Users size={15} />
@@ -1045,7 +1049,7 @@ export default function App() {
                   </div>
                   <div className="hero-image">
                     <img
-                      src={scenery.gwangalli!.src}
+                      src={siteContent?.hero_image || scenery.gwangalli!.src}
                       alt={scenery.gwangalli!.alt}
                       fetchPriority="high"
                     />
