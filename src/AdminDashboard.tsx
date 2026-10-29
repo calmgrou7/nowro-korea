@@ -4,8 +4,10 @@ import { api } from "./api";
 export function AdminDashboard() {
   const [form, setForm] = useState<any>({});
   const [message, setMessage] = useState("");
-  useEffect(() => { api("site-content").then((v) => setForm(v.content)).catch(() => {}); }, []);
+  const [preview, setPreview] = useState(false);
+  useEffect(() => { api("site-content").then((v) => { const draft = localStorage.getItem("nowro-site-draft"); setForm(draft ? { ...v.content, ...JSON.parse(draft) } : v.content); }).catch(() => {}); }, []);
   const set = (key: string, value: string) => setForm((v: any) => ({ ...v, [key]: value }));
+  function saveDraft() { localStorage.setItem("nowro-site-draft", JSON.stringify(form)); setMessage("Draft saved on this device."); }
   function uploadImage(file?: File) {
     if (!file) return;
     if (!file.type.startsWith("image/") || file.size > 6_000_000) { setMessage("Choose an image under 6 MB."); return; }
@@ -39,6 +41,8 @@ export function AdminDashboard() {
     <label>Hero image URL<input value={form.hero_image || ""} onChange={e => set("hero_image", e.target.value)} placeholder="https://..." /></label>
     <label>Or upload an image<input type="file" accept="image/*" onChange={e => uploadImage(e.target.files?.[0])} /></label>
     {form.hero_image && <img className="admin-image-preview" src={form.hero_image} alt="Homepage preview" />}
-    <button className="primary" onClick={save}>Save homepage changes</button>{message && <p role="status">{message}</p>}
+    <div className="button-row"><button className="secondary" onClick={saveDraft}>Save draft</button><button className="secondary" onClick={() => setPreview(v => !v)}>{preview ? "Close preview" : "Preview"}</button><button className="primary" onClick={save}>Publish changes</button></div>
+    {preview && <div className="panel admin-preview"><span className="eyebrow">HOMEPAGE PREVIEW</span><h2>{form.hero_title_en || "Your Korea. Right Now."}</h2><p>{form.hero_intro_en || "Discover Busan with NOWRO."}</p>{form.hero_image && <img src={form.hero_image} alt="Preview" />}</div>}
+    {message && <p role="status">{message}</p>}
   </section>;
 }
