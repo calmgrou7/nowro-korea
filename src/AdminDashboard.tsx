@@ -10,12 +10,22 @@ export function AdminDashboard() {
     if (!file) return;
     if (!file.type.startsWith("image/") || file.size > 6_000_000) { setMessage("Choose an image under 6 MB."); return; }
     const reader = new FileReader();
-    reader.onload = () => set("hero_image", String(reader.result));
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale); canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        set("hero_image", canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = String(reader.result);
+    };
     reader.readAsDataURL(file);
   }
   async function save() {
     try { await api("operator/site-content", form); setMessage("Saved. The homepage content is now updated."); }
-    catch { setMessage("Only the master administrator can save changes."); }
+    catch (error: any) { setMessage(error?.message === "TOO_LARGE" ? "Image is too large. Choose a smaller image." : "Could not save. Please sign in again as the master administrator."); }
   }
   return <section className="panel admin-dashboard">
     <div className="section-heading"><div><span className="eyebrow">MASTER CMS</span><h2>Homepage control center</h2></div></div>
