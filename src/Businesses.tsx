@@ -19,6 +19,14 @@ const labels = (ko: boolean) =>
 function errorText(error: unknown, ko: boolean) {
   const code = (error as Error).message;
   const messages: Record<string, [string, string]> = {
+    INVALID_BUSINESS_WEBSITE: [
+      "Enter a full HTTPS URL, such as https://example.com, or leave this optional field blank.",
+      "https://example.com 형식의 전체 주소를 입력하거나 선택사항이므로 비워두세요.",
+    ],
+    INVALID_BUSINESS_APPLICATION: [
+      "Please check the required fields. The service description must be at least 20 characters.",
+      "필수 항목을 확인해주세요. 서비스 소개는 20자 이상 입력해야 합니다.",
+    ],
     BUSINESS_ALREADY_SUBMITTED: [
       "An application is already under review. Reload its status.",
       "이미 심사 중인 신청이 있습니다. 상태를 다시 확인해주세요.",
@@ -221,6 +229,10 @@ export function BusinessApplicationPanel({
                         onChange={(event) =>
                           setData({ ...data, [key]: event.target.value })
                         }
+                        onBlur={(event) => {
+                          if (key === "website" && event.target.value && !/^https:\/\//i.test(event.target.value))
+                            setData({ ...data, website: `https://${event.target.value}` });
+                        }}
                       />
                     </label>
                   ))}
