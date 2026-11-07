@@ -12,9 +12,11 @@ import {
 } from "../server/businesses.mjs";
 import {
   saveListing,
-  publicListings,
+  publicListings as allPublicListings,
   reviewListing,
 } from "../server/listings.mjs";
+import { curatedEvents } from '../shared/curated-events.ts';
+const publicListings = db => allPublicListings(db).filter(row => !curatedEvents.some(event => event.id === row.id));
 
 const data = {
   businessName: "Review workshop",

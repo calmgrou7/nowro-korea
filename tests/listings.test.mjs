@@ -6,11 +6,14 @@ import { createApp } from "../server/index.mjs";
 import { areas } from "../shared/catalog.ts";
 import {
   operatorListings,
-  publicListings,
+  publicListings as allPublicListings,
   saveListing,
   reviewListing,
   archiveListing,
 } from "../server/listings.mjs";
+import { curatedEvents } from '../shared/curated-events.ts';
+const providerOnly = rows => rows.filter(row => !curatedEvents.some(event => event.id === row.id));
+const publicListings = db => providerOnly(allPublicListings(db));
 const photo =
   "data:image/png;base64," +
   readFileSync(new URL("../public/icon-192.png", import.meta.url)).toString(
@@ -193,7 +196,7 @@ test("HTTP listing routes enforce session role, CSRF and validation error status
     ).json();
     assert.ok(saved.id);
     assert.equal(
-      (await (await fetch(url + "listings")).json()).listings.length,
+      providerOnly((await (await fetch(url + "listings")).json()).listings).length,
       0,
     );
     await post("preview-role", { role: "admin" });
@@ -207,7 +210,7 @@ test("HTTP listing routes enforce session role, CSRF and validation error status
       ).status,
       200,
     );
-    const pub = (await (await fetch(url + "listings")).json()).listings;
+    const pub = providerOnly((await (await fetch(url + "listings")).json()).listings);
     assert.equal(pub.length, 1);
     assert.equal(pub[0].owner_id, undefined);
   } finally {
