@@ -14,7 +14,11 @@ export function openApiSources() {
 
 const cache = new Map();
 const pending = new Map();
-export async function fetchOpenApi(type) {
+export async function fetchOpenApi(type, params = {}) {
+  if (type === 'theatre') {
+    if (!/^\d{1,20}$/.test(params.res_no || '')) return { items: [], status: 'performance_id_required', configured: Boolean(process.env.BUSAN_THEATRE_API_KEY) };
+    return loadOpenApi(type, { res_no: params.res_no }).catch(() => ({ items: [], status: 'temporarily_unavailable' }));
+  }
   const cached = cache.get(type);
   if (cached && Date.now() - cached.at < (cached.value.status === 'ok' ? 3600000 : 60000)) return cached.value;
   if (pending.has(type)) return pending.get(type);
@@ -31,15 +35,16 @@ export async function fetchOpenApi(type) {
   pending.set(type, request);
   return request;
 }
-async function loadOpenApi(type) {
+async function loadOpenApi(type, params = {}) {
   const source = SOURCES[type];
   if (!source) throw new Error("UNKNOWN_OPEN_API");
   const serviceKey = process.env[source.key];
   if (!serviceKey) return { source: { id: type, name: source.name, endpoint: source.endpoint, configured: false }, items: [], configured: false };
-  const operations = { foodie: 'getFoodieKr', ocean: 'getMaritimeKr', festivals: 'getFestivalKr', exhibitions: 'getBusanCultureExhibit', kor: 'areaBasedList2', eng: 'areaBasedList2' };
+  const operations = { theatre: 'getBusanCulturePlayDetail', foodie: 'getFoodieKr', ocean: 'getMaritimeKr', festivals: 'getFestivalKr', exhibitions: 'getBusanCultureExhibit', kor: 'areaBasedList2', eng: 'areaBasedList2' };
   if (!operations[type]) return { source: { id: type, name: source.name }, items: [], configured: true, status: 'verification_pending' };
   const tourism = type === 'kor' || type === 'eng';
   const query = new URLSearchParams({ [tourism ? 'serviceKey' : 'ServiceKey']: serviceKey, numOfRows: "30", pageNo: "1", ...(tourism ? { MobileOS: 'ETC', MobileApp: 'NOWRO', _type: 'json', areaCode: '6' } : { resultType: 'json' }) });
+  if (params.res_no) query.set('res_no', params.res_no);
   const response = await fetch(`${source.endpoint}/${operations[type]}?${query}`, { signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error(`OPEN_API_${response.status}`);
   const payload = await response.json();
