@@ -7,6 +7,7 @@ import { recommend, calculate } from "../shared/engine.ts";
 import { extract } from "./ai.mjs";
 import { AuthService } from "./auth.mjs";
 import { androidAssociation } from "../shared/android-app.mjs";
+import { fetchOpenApi, openApiSources } from "./busan-openapi.mjs";
 import {
   ownBusiness,
   submitBusiness,
@@ -162,6 +163,10 @@ export function createApp(store, options = {}) {
       }
       const route = req.method + " " + url.pathname;
       let out;
+      if (req.method === "GET" && url.pathname.startsWith("/api/openapi/")) {
+        const type = url.pathname.slice("/api/openapi/".length);
+        if (type !== "sources") out = await fetchOpenApi(type, Object.fromEntries(url.searchParams));
+      }
       switch (route) {
         case "GET /api/business/application":
           out = { application: ownBusiness(store, s) };
@@ -277,6 +282,9 @@ export function createApp(store, options = {}) {
           break;
         case "GET /api/site-content":
           out = { content: store.siteContent() };
+          break;
+        case "GET /api/openapi/sources":
+          out = { sources: openApiSources() };
           break;
         case "POST /api/operator/site-content":
           out = { content: store.updateSiteContent(s, body) };
