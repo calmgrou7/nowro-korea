@@ -184,6 +184,7 @@ export default function App() {
     ),
     [operator, setOperator] = useState<any>(null),
     [siteContent, setSiteContent] = useState<any>(null),
+    [openApiSources, setOpenApiSources] = useState<any[]>([]),
     [role, setRole] = useState("traveler"),
     [voucherCode, setVoucherCode] = useState(""),
     [spend, setSpend] = useState(7000),
@@ -202,6 +203,7 @@ export default function App() {
   const T = (key: string) => t(key, lang);
   useEffect(() => {
     api("site-content").then((v) => setSiteContent(v.content)).catch(() => {});
+    api("openapi/sources").then((v) => setOpenApiSources(v.sources || [])).catch(() => {});
   }, []);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -1086,6 +1088,23 @@ export default function App() {
                       <br />
                       FEEL MORE.<span>↗</span>
                     </div>
+                  </div>
+                </section>
+                <section className="data-sources" aria-label={lang === "ko" ? "공식 데이터 출처" : "Official data sources"}>
+                  <div className="section-heading">
+                    <div>
+                      <span className="eyebrow">OFFICIAL DATA</span>
+                      <h2>{lang === "ko" ? "공식 관광 데이터" : "Official tourism data"}</h2>
+                    </div>
+                    <span className="muted">{lang === "ko" ? "부산에서 전국으로" : "Busan to all of Korea"}</span>
+                  </div>
+                  <div className="source-grid">
+                    {openApiSources.slice(0, 6).map((source) => (
+                      <a className="source-card" key={source.id} href={source.endpoint} target="_blank" rel="noreferrer">
+                        <strong>{source.name}</strong>
+                        <span>{source.configured ? (lang === "ko" ? "연결됨" : "Connected") : (lang === "ko" ? "공식 API 출처" : "Official API source")}</span>
+                      </a>
+                    ))}
                   </div>
                 </section>
                 <section
