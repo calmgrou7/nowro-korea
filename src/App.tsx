@@ -585,7 +585,7 @@ export default function App() {
         <div className="top-actions">
           <span className="city">
             <MapPin size={15} />
-            {name(catalog.cities[0])}
+            {name(catalog.cities[0])} · Korea
           </span>
           <label className="language-select">
             <span className="sr-only">{T("language")}</span>
