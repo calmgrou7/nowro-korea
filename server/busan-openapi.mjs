@@ -20,10 +20,11 @@ export async function fetchOpenApi(type, params = {}) {
   const operations = { foodie: 'getFoodieKr', exhibitions: 'getBusanCultureExhibit', kor: 'areaBasedList2', eng: 'areaBasedList2' };
   if (!operations[type]) return { source: { id: type, name: source.name }, items: [], configured: true, status: 'verification_pending' };
   const tourism = type === 'kor' || type === 'eng';
-  const query = new URLSearchParams({ [tourism ? 'serviceKey' : 'ServiceKey']: serviceKey, resultType: "json", numOfRows: "30", pageNo: "1", ...(tourism ? { MobileOS: 'ETC', MobileApp: 'NOWRO', _type: 'json', areaCode: '6' } : {}) });
+  const query = new URLSearchParams({ [tourism ? 'serviceKey' : 'ServiceKey']: serviceKey, numOfRows: "30", pageNo: "1", ...(tourism ? { MobileOS: 'ETC', MobileApp: 'NOWRO', _type: 'json', areaCode: '6' } : { resultType: 'json' }) });
   const response = await fetch(`${source.endpoint}/${operations[type]}?${query}`, { signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error(`OPEN_API_${response.status}`);
   const payload = await response.json();
+  if (payload.resultCode && !['00', '0000'].includes(String(payload.resultCode))) throw new Error('OPEN_API_REQUEST_REJECTED');
   const body = payload?.response?.body || Object.values(payload)[0] || payload;
   const items = body?.items?.item || body?.items || body?.item || [];
   return { source: { id: type, name: source.name, endpoint: source.endpoint, configured: true }, items: Array.isArray(items) ? items : [items], configured: true };
