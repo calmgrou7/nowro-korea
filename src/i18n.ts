@@ -16,9 +16,9 @@ const copy: Record<string, string[]> = {
     "此区郡的场所与商家内容正在准备中。审核通过的商家内容将在此显示。",
     "此區郡的場所與商家內容正在準備中。審核通過的商家內容將在此顯示。",
   ],
-  navNOW: ["Home", "홈", "ホーム", "首页", "首頁"],
-  navMAP: ["Explore", "탐색", "探す", "探索", "探索"],
-  navTRIP: ["Saved", "저장", "保存", "收藏", "收藏"],
+  navNOW: ["Today", "오늘", "今日", "今天", "今天"],
+  navMAP: ["Map", "지도", "地図", "地图", "地圖"],
+  navTRIP: ["Routes", "코스", "ルート", "路线", "路線"],
   navPASS: ["Offers & Shop", "혜택·샵", "特典", "优惠", "優惠"],
   navPASSPORT: ["Stamps & rewards", "스탬프·보상", "スタンプ・特典", "印章与奖励", "印章與獎勵"],
   quickFind: [
