@@ -53,6 +53,7 @@ import { Modal } from "./Modal";
 import { DistrictDirectory } from "./DistrictDirectory";
 import { starterStampAreaIds } from "../shared/catalog";
 import { AdminDashboard } from "./AdminDashboard";
+import { OfficialPlaces } from "./OfficialPlaces";
 import type { Listing } from "../shared/listings.ts";
 const LiveMap = lazy(() => import("./MapView"));
 type Tab = "NOW" | "MAP" | "TRIP" | "PASS" | "PASSPORT";
@@ -1090,6 +1091,7 @@ export default function App() {
                     </div>
                   </div>
                 </section>
+                <OfficialPlaces lang={lang} />
                 <section className="data-sources" aria-label={lang === "ko" ? "공식 데이터 출처" : "Official data sources"}>
                   <div className="section-heading">
                     <div>
