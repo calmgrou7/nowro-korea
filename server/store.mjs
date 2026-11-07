@@ -67,10 +67,11 @@ export class Store {
       .get("qr-secret").value;
   }
   siteContent() {
-    return this.db.prepare("SELECT * FROM site_content WHERE id=1").get();
+    return { ...this.db.prepare("SELECT * FROM site_content WHERE id=1").get(), news_title: this.db.prepare("SELECT value FROM config WHERE key='news_title'").get()?.value || '', news_body: this.db.prepare("SELECT value FROM config WHERE key='news_body'").get()?.value || '', news_image: this.db.prepare("SELECT value FROM config WHERE key='news_image'").get()?.value || '' };
   }
   updateSiteContent(s, patch) {
     if (s.role !== "admin") throw new ServiceError("FORBIDDEN", 403);
+    for (const key of ['news_title', 'news_body', 'news_image']) if (typeof patch?.[key] === 'string') this.db.prepare('INSERT OR REPLACE INTO config(key,value) VALUES(?,?)').run(key, patch[key].slice(0, key === 'news_body' ? 6000 : 2000));
     const allowed = ["hero_title_en","hero_title_ko","hero_intro_en","hero_intro_ko","hero_image"];
     const current = this.siteContent();
     const next = Object.fromEntries(allowed.map((k) => [k, typeof patch?.[k] === "string" ? patch[k].slice(0, k === "hero_image" ? 4500000 : 2000) : current[k]]));

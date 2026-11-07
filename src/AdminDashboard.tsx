@@ -41,6 +41,10 @@ export function AdminDashboard() {
     <label>Hero image URL<input value={form.hero_image || ""} onChange={e => set("hero_image", e.target.value)} placeholder="https://..." /></label>
     <label>Or upload an image<input type="file" accept="image/*" onChange={e => uploadImage(e.target.files?.[0])} /></label>
     {form.hero_image && <img className="admin-image-preview" src={form.hero_image} alt="Homepage preview" />}
+    <h3>새로운 소식 · 공지사항</h3>
+    <label>공지 제목<input value={form.news_title || ''} onChange={e => set('news_title', e.target.value)} /></label>
+    <label>공지 내용<textarea value={form.news_body || ''} onChange={e => set('news_body', e.target.value)} /></label>
+    <label>공지 이미지 URL<input value={form.news_image || ''} onChange={e => set('news_image', e.target.value)} placeholder="https://..." /></label>
     <div className="button-row"><button className="secondary" onClick={saveDraft}>Save draft</button><button className="secondary" onClick={() => setPreview(v => !v)}>{preview ? "Close preview" : "Preview"}</button><button className="primary" onClick={save}>Publish changes</button></div>
     {preview && <div className="panel admin-preview"><span className="eyebrow">HOMEPAGE PREVIEW</span><h2>{form.hero_title_en || "Your Korea. Right Now."}</h2><p>{form.hero_intro_en || "Discover Busan with NOWRO."}</p>{form.hero_image && <img src={form.hero_image} alt="Preview" />}</div>}
     {message && <p role="status">{message}</p>}

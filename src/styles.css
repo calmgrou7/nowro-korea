@@ -29,6 +29,12 @@ html {
 .quick-discovery {
   margin-bottom: 24px;
 }
+.home-sections { display: flex; flex-direction: column; }
+.home-sections > .planner { order: -3; }
+.home-sections > .hero { order: -2; }
+.home-sections > .quick-discovery { display: none; }
+.home-sections > .provider-listings { display: none; }
+.home-sections .data-sources small { font-size: 11px; }
 .merchant-listings {
   margin-bottom: 32px;
 }

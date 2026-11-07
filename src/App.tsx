@@ -968,7 +968,7 @@ export default function App() {
         ) : (
           <>
             {tab === "NOW" && (
-              <>
+              <div className="home-sections">
                 <section
                   className="quick-discovery"
                   aria-label={T("quickFind")}
@@ -1092,6 +1092,7 @@ export default function App() {
                   </div>
                 </section>
                 <OfficialPlaces lang={lang} />
+                {siteContent?.news_title && <section className="section news-board"><h2>{lang === 'ko' ? '새로운 소식' : 'News'}</h2><article className="source-card">{siteContent.news_image?.startsWith('https://') && <img src={siteContent.news_image} alt="" style={{width:'100%',maxHeight:320,objectFit:'cover'}} />}<h3>{siteContent.news_title}</h3><p style={{whiteSpace:'pre-line'}}>{siteContent.news_body}</p></article></section>}
                 <section hidden className="data-sources" aria-label={lang === "ko" ? "공식 데이터 출처" : "Official data sources"}>
                   <div className="section-heading">
                     <div>
@@ -1602,7 +1603,7 @@ export default function App() {
                     </p>
                   </div>
                 </section>
-              </>
+              </div>
             )}
             {tab === "MAP" && (
               <section className="section">
