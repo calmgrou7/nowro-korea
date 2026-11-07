@@ -30,7 +30,7 @@ async function loadOpenApi(type) {
   if (!source) throw new Error("UNKNOWN_OPEN_API");
   const serviceKey = process.env[source.key];
   if (!serviceKey) return { source: { id: type, name: source.name, endpoint: source.endpoint, configured: false }, items: [], configured: false };
-  const operations = { foodie: 'getFoodieKr', exhibitions: 'getBusanCultureExhibit', kor: 'areaBasedList2', eng: 'areaBasedList2' };
+  const operations = { foodie: 'getFoodieKr', ocean: 'getMaritimeKr', festivals: 'getFestivalKr', exhibitions: 'getBusanCultureExhibit', kor: 'areaBasedList2', eng: 'areaBasedList2' };
   if (!operations[type]) return { source: { id: type, name: source.name }, items: [], configured: true, status: 'verification_pending' };
   const tourism = type === 'kor' || type === 'eng';
   const query = new URLSearchParams({ [tourism ? 'serviceKey' : 'ServiceKey']: serviceKey, numOfRows: "30", pageNo: "1", ...(tourism ? { MobileOS: 'ETC', MobileApp: 'NOWRO', _type: 'json', areaCode: '6' } : { resultType: 'json' }) });
