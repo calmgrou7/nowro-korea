@@ -7,16 +7,17 @@ export function OfficialPlaces({ lang }: { lang: string }) {
   const [category, setCategory] = useState('places');
   const [query, setQuery] = useState('');
   const [limit, setLimit] = useState(6);
+  const [retry, setRetry] = useState(0);
   useEffect(() => { setQuery(''); setLimit(6); }, [category, lang]);
   const matched = items.filter(item => [item.title, item.MAIN_TITLE, item.addr1, item.ADDR1, item.GUGUN_NM, item.PLACE].join(' ').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
-  useEffect(() => { let active = true; setItems([]); setLoading(true); setFailed(false); api('openapi/' + (category === 'places' ? (lang === 'ko' ? 'kor' : 'eng') : category)).then(v => { if(active) { setItems(Array.isArray(v.items) ? v.items : []); setFailed(v.status === 'temporarily_unavailable'); } }).catch(() => { if(active) setFailed(true); }).finally(() => { if(active) setLoading(false); }); return () => { active = false; }; }, [lang, category]);
+  useEffect(() => { let active = true; setItems([]); setLoading(true); setFailed(false); api('openapi/' + (category === 'places' ? (lang === 'ko' ? 'kor' : 'eng') : category)).then(v => { if(active) { setItems(Array.isArray(v.items) ? v.items : []); setFailed(v.status === 'temporarily_unavailable'); } }).catch(() => { if(active) setFailed(true); }).finally(() => { if(active) setLoading(false); }); return () => { active = false; }; }, [lang, category, retry]);
   return <section className="data-sources"><h2>{lang === 'ko' ? '부산 공식 관광정보' : 'Explore Busan'}</h2>
     <div className="quick-categories">{[['places','관광지','Places'],['foodie','푸디투어','Food tours'],['ocean','체험','Experiences'],['festivals','축제 안내','Festival guide']].map(([id,ko,en]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{lang === 'ko' ? ko : en}</button>)}</div>
     <p>{category === 'places' ? (lang === 'ko' ? '출처: 한국관광공사' : 'Source: Korea Tourism Organization') : (lang === 'ko' ? '출처: 부산광역시 · 공식 원문' : 'Source: Busan Metropolitan City · Korean original')}</p>
     {category === 'festivals' && <p className="notice">{lang === 'ko' ? '축제 소개 자료입니다. 지난 연도 일정이 포함될 수 있으므로 올해 개최 일정은 주최기관에서 확인해주세요.' : 'Festival reference guide. Dates may refer to past editions; confirm current dates with the organizer.'}</p>}
     {loading && <p role="status">{lang === 'ko' ? '관광정보를 불러오는 중입니다.' : 'Loading places…'}</p>}
     <label>{lang === 'ko' ? '이 목록에서 장소·지역 찾기' : 'Find a place or neighborhood in this list'}<input type="search" value={query} onChange={e => { setQuery(e.target.value); setLimit(6); }} /></label>
-    {failed && <p role="status">{lang === 'ko' ? '정보를 불러오지 못했습니다. 잠시 후 다시 방문해주세요.' : 'Information is temporarily unavailable.'}</p>}
+    {failed && <div role="status"><p>{lang === 'ko' ? '정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' : 'Information is temporarily unavailable. Please try again shortly.'}</p><button onClick={() => setRetry(v => v + 1)}>{lang === 'ko' ? '다시 불러오기' : 'Try again'}</button></div>}
     {!loading && !failed && !items.length && <p>{lang === 'ko' ? '현재 제공된 정보가 없습니다.' : 'No information is currently available.'}</p>}
     {!loading && items.length > 0 && !matched.length && <p role="status">{lang === 'ko' ? '검색 결과가 없습니다.' : 'No matching places.'}</p>}
     <div className="source-grid">{matched.slice(0, limit).map((original) => { const item = { ...original, UC_SEQ: original.contentid || original.UC_SEQ, MAIN_TITLE: original.title || original.MAIN_TITLE, SUBTITLE: original.addr1 || original.ADDR1 || original.PLACE, MAIN_IMG_NORMAL: original.firstimage || original.MAIN_IMG_NORMAL, ITEMCNTNTS: original.ITEMCNTNTS || original.addr2 }; return <article className="source-card" key={item.UC_SEQ}>

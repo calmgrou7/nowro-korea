@@ -1104,7 +1104,7 @@ export default function App() {
                     {openApiSources.slice(0, 6).map((source) => (
                       <a className="source-card" key={source.id} href={source.endpoint} target="_blank" rel="noreferrer">
                         <strong>{source.name}</strong>
-                        <span>{source.configured ? (lang === "ko" ? "연결됨" : "Connected") : (lang === "ko" ? "공식 API 출처" : "Official API source")}</span>
+                        <span>{lang === "ko" ? "공식 데이터 출처" : "Official data source"}</span>
                       </a>
                     ))}
                   </div>
