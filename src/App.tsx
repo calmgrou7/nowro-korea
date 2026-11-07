@@ -1092,7 +1092,7 @@ export default function App() {
                   </div>
                 </section>
                 <OfficialPlaces lang={lang} />
-                <section className="data-sources" aria-label={lang === "ko" ? "공식 데이터 출처" : "Official data sources"}>
+                <section hidden className="data-sources" aria-label={lang === "ko" ? "공식 데이터 출처" : "Official data sources"}>
                   <div className="section-heading">
                     <div>
                       <span className="eyebrow">OFFICIAL DATA</span>
@@ -1580,11 +1580,11 @@ export default function App() {
                   />
                   <div className="places-grid">
                     {catalog.places
-                      .filter((p) => p.areaId === c.areaId)
+                      .filter((p) => p.areaId === c.areaId && !p.sample)
                       .slice(0, 4)
                       .map(placeCard)}
                   </div>
-                  {!catalog.places.some((p) => p.areaId === c.areaId) && (
+                  {!catalog.places.some((p) => p.areaId === c.areaId && !p.sample) && (
                     <p className="notice">{T("districtPreparing")}</p>
                   )}
                 </section>
