@@ -52,7 +52,7 @@ export function validateConditions(c: Conditions) {
     c.budget > 10000000 ||
     !["walk", "transit", "car"].includes(c.transport) ||
     !Array.isArray(c.interests) ||
-    c.interests.length > 7 ||
+    c.interests.length > 8 ||
     c.interests.some(
       (x) =>
         ![
@@ -63,6 +63,7 @@ export function validateConditions(c: Conditions) {
           "experience",
           "shopping",
           "wellness",
+          "event",
         ].includes(x),
     ) ||
     typeof c.startAt !== "string" ||

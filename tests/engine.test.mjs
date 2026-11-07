@@ -19,6 +19,10 @@ const base = {
   tripStart: "",
   tripEnd: "",
 };
+test('all eight visible interests including events are valid route inputs', () => {
+  assert.doesNotThrow(() => recommend({ ...base, minutes: 360, budget: 160000, interests: ['sea','cafe','food','culture','shopping','experience','wellness','event'] }, places));
+  assert.throws(() => recommend({ ...base, interests: ['unknown'] }, places), /INVALID_CONDITIONS/);
+});
 test("all four time modes satisfy time, return, buffer, budget and registered IDs", () => {
   for (const minutes of [120, 240, 360, 540]) {
     const c = { ...base, minutes, returnPoint: base.origin };

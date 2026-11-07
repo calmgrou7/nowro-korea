@@ -305,7 +305,7 @@ export default function App() {
       const code = (e as Error).message;
       setToast(
         T(
-          code === "INFEASIBLE_ROUTE"
+          code === "INFEASIBLE_ROUTE" || code === "INVALID_CONDITIONS"
             ? "invalidRoute"
             : /ALREADY|EXPIRED|REPLAY|SOLD_OUT|PAUSED|INVALID_QR/.test(code)
               ? "duplicate"
