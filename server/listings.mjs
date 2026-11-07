@@ -41,6 +41,7 @@ function validate(input, submit) {
     "eventStart",
     "eventEnd",
   ]) {
+    if ((key === 'eventStart' || key === 'eventEnd') && input[key] === undefined) { d[key] = ''; continue; }
     if (
       typeof input[key] !== "string" ||
       input[key].length > (key.startsWith("description") ? 6000 : 1000)
@@ -81,7 +82,7 @@ function validate(input, submit) {
   }
   if (d.priceMin > d.priceMax) fail("INVALID_PRICE_RANGE");
   if (d.eventStart || d.eventEnd) {
-    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(d.eventStart) || !/^\\d{4}-\\d{2}-\\d{2}$/.test(d.eventEnd) || d.eventEnd < d.eventStart)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d.eventStart) || !/^\d{4}-\d{2}-\d{2}$/.test(d.eventEnd) || d.eventEnd < d.eventStart)
       fail("INVALID_EVENT_DATES");
   }
   if (d.bookingUrl) {
