@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Area, Lang } from "../shared/types.ts";
 import type { Listing, ListingData } from "../shared/listings.ts";
 import { api } from "./api";
+import { curatedEvents } from "../shared/curated-events";
 const money = (v: number) =>
   new Intl.NumberFormat("ko-KR", {
     style: "currency",
@@ -225,7 +226,7 @@ export function PublicListings({
     return (
       (area === "all" || d.areaId === area) &&
       (category === "all" || d.category === category) &&
-      (!d.eventEnd || d.eventEnd >= new Date().toISOString().slice(0, 10)) &&
+      (!d.eventEnd || d.eventEnd >= new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10)) &&
       (!month || (d.eventStart && d.eventEnd && d.eventStart.slice(0, 7) <= month && d.eventEnd.slice(0, 7) >= month)) &&
       query
         .trim()
@@ -250,8 +251,8 @@ export function PublicListings({
           </h2>
           <p>
             {L(
-              "Provider listings · reviewed for publication",
-              "업체 등록 콘텐츠 · 게시 승인 완료",
+              "Editorial guides and approved provider listings",
+              "편집 가이드 및 승인된 업체 콘텐츠",
             )}
           </p>
         </div>
@@ -296,7 +297,7 @@ export function PublicListings({
                   alt={text(v.data, lang, "title")}
                   loading="lazy"
                 />
-                <span>{L("Provider listing", "업체 등록")}</span>
+                <span>{curatedEvents.some(event => event.id === v.id) ? L("Editorial guide", "편집 가이드") : L("Provider listing", "업체 등록")}</span>
               </div>
               <div className="card-copy">
                 <span className="eyebrow">{v.data.businessName}</span>

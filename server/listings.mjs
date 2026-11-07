@@ -154,7 +154,7 @@ export function operatorListings(db, s) {
     .map(expose);
 }
 export function publicListings(db) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
   const saved = db
     .prepare(
       "SELECT * FROM listings WHERE status='published' ORDER BY updated DESC",
