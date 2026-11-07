@@ -165,7 +165,7 @@ export function createApp(store, options = {}) {
       let out;
       if (req.method === "GET" && url.pathname.startsWith("/api/openapi/")) {
         const type = url.pathname.slice("/api/openapi/".length);
-        if (type !== "sources") out = await fetchOpenApi(type, Object.fromEntries(url.searchParams));
+        if (type !== "sources") return send(200, await fetchOpenApi(type));
       }
       switch (route) {
         case "GET /api/business/application":

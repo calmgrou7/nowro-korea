@@ -17,11 +17,14 @@ export async function fetchOpenApi(type, params = {}) {
   if (!source) throw new Error("UNKNOWN_OPEN_API");
   const serviceKey = process.env[source.key];
   if (!serviceKey) return { source: { id: type, name: source.name, endpoint: source.endpoint, configured: false }, items: [], configured: false };
-  const query = new URLSearchParams({ serviceKey, resultType: "json", numOfRows: "100", pageNo: "1", ...params });
-  const response = await fetch(`${source.endpoint}?${query}`);
+  const operations = { foodie: 'getFoodieKr', exhibitions: 'getBusanCultureExhibit', kor: 'areaBasedList2', eng: 'areaBasedList2' };
+  if (!operations[type]) return { source: { id: type, name: source.name }, items: [], configured: true, status: 'verification_pending' };
+  const tourism = type === 'kor' || type === 'eng';
+  const query = new URLSearchParams({ [tourism ? 'serviceKey' : 'ServiceKey']: serviceKey, resultType: "json", numOfRows: "30", pageNo: "1", ...(tourism ? { MobileOS: 'ETC', MobileApp: 'NOWRO', _type: 'json', areaCode: '6' } : {}) });
+  const response = await fetch(`${source.endpoint}/${operations[type]}?${query}`, { signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error(`OPEN_API_${response.status}`);
   const payload = await response.json();
-  const body = payload?.getFoodieInfo?.body || payload?.getFestivalInfo?.body || payload?.response?.body || payload;
-  const items = body?.items?.item || body?.items || [];
+  const body = payload?.response?.body || Object.values(payload)[0] || payload;
+  const items = body?.items?.item || body?.items || body?.item || [];
   return { source: { id: type, name: source.name, endpoint: source.endpoint, configured: true }, items: Array.isArray(items) ? items : [items], configured: true };
 }
