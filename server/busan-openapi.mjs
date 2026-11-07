@@ -12,7 +12,20 @@ export function openApiSources() {
   return Object.entries(SOURCES).map(([id, source]) => ({ id, name: source.name, endpoint: source.endpoint, configured: Boolean(process.env[source.key]) }));
 }
 
-export async function fetchOpenApi(type, params = {}) {
+const cache = new Map();
+const pending = new Map();
+export async function fetchOpenApi(type) {
+  const cached = cache.get(type);
+  if (cached && Date.now() - cached.at < 3600000) return cached.value;
+  if (pending.has(type)) return pending.get(type);
+  const request = loadOpenApi(type).then(value => {
+    if (value.status === 'ok') cache.set(type, { at: Date.now(), value });
+    return value;
+  }).catch(() => cached ? { ...cached.value, stale: true } : ({ items: [], status: 'temporarily_unavailable', configured: Boolean(process.env[SOURCES[type]?.key]) })).finally(() => pending.delete(type));
+  pending.set(type, request);
+  return request;
+}
+async function loadOpenApi(type) {
   const source = SOURCES[type];
   if (!source) throw new Error("UNKNOWN_OPEN_API");
   const serviceKey = process.env[source.key];
@@ -24,8 +37,9 @@ export async function fetchOpenApi(type, params = {}) {
   const response = await fetch(`${source.endpoint}/${operations[type]}?${query}`, { signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error(`OPEN_API_${response.status}`);
   const payload = await response.json();
-  if (payload.resultCode && !['00', '0000'].includes(String(payload.resultCode))) throw new Error('OPEN_API_REQUEST_REJECTED');
+  const code = payload.resultCode || payload.response?.header?.resultCode;
+  if (code && !['00', '0000'].includes(String(code))) throw new Error('OPEN_API_REQUEST_REJECTED');
   const body = payload?.response?.body || Object.values(payload)[0] || payload;
   const items = body?.items?.item || body?.items || body?.item || [];
-  return { source: { id: type, name: source.name, endpoint: source.endpoint, configured: true }, items: Array.isArray(items) ? items : [items], configured: true };
+  return { source: { id: type, name: source.name, endpoint: source.endpoint, configured: true }, items: Array.isArray(items) ? items : [items], configured: true, status: 'ok', updatedAt: new Date().toISOString() };
 }
