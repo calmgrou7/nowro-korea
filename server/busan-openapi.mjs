@@ -16,12 +16,18 @@ const cache = new Map();
 const pending = new Map();
 export async function fetchOpenApi(type) {
   const cached = cache.get(type);
-  if (cached && Date.now() - cached.at < 3600000) return cached.value;
+  if (cached && Date.now() - cached.at < (cached.value.status === 'ok' ? 3600000 : 60000)) return cached.value;
   if (pending.has(type)) return pending.get(type);
   const request = loadOpenApi(type).then(value => {
     if (value.status === 'ok') cache.set(type, { at: Date.now(), value });
     return value;
-  }).catch(() => cached ? { ...cached.value, stale: true } : ({ items: [], status: 'temporarily_unavailable', configured: Boolean(process.env[SOURCES[type]?.key]) })).finally(() => pending.delete(type));
+  }).catch(error => {
+    const reason = error.name === 'TimeoutError' ? 'upstream_timeout' : error.message === 'OPEN_API_REQUEST_REJECTED' ? 'upstream_rejected' : 'upstream_unavailable';
+    if (cached?.value.status === 'ok') return { ...cached.value, stale: true };
+    const value = { items: [], status: 'temporarily_unavailable', reason, configured: Boolean(process.env[SOURCES[type]?.key]) };
+    cache.set(type, { at: Date.now(), value });
+    return value;
+  }).finally(() => pending.delete(type));
   pending.set(type, request);
   return request;
 }
