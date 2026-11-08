@@ -9,6 +9,8 @@ test('event end dates handle provider formats and shortened ranges without treat
  assert.equal(eventEndDate({USAGE_DAY_WEEK_AND_TIME:'10:00 ~ 18:00, 매년 7월'}),null);
  assert.equal(eventEndDate({eventenddate:'20260230'}),null);
  assert.equal(eventEndDate({op_at:'Y',op_ed_dt:'2020-01-01'}),null);
+ assert.equal(eventEndDate({ITEMCNTNTS:'행사 일시: 2026. 6. 19.(금) ~ 6. 20.(토) 장소: 부산항'}),'2026-06-20');
+ assert.equal(eventEndDate({ITEMCNTNTS:'2000. 1. 1. 설립된 상설 체험입니다.'}),null);
 });
 test('events remain active through the end date in Korea and undated listings are retained',()=>{
  const item={eventenddate:'20261108'};

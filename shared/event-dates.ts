@@ -33,7 +33,11 @@ export function eventEndDate(item: any): string | null {
     return dates.sort().at(-1)!;
   }
   const compact = text.match(/^\s*(20\d{2})(\d{2})(\d{2})\s*$/);
-  return compact ? validDate(compact[1], compact[2], compact[3]) : null;
+  if(compact)return validDate(compact[1],compact[2],compact[3]);
+  // Some festival feeds omit the schedule field but explicitly publish a date range in the description.
+  const description=String(item.ITEMCNTNTS||'').replace(/<[^>]*>/g,' ');
+  const range=description.match(/20\d{2}[.\-/년]\s*\d{1,2}[.\-/월]\s*\d{1,2}[.일\s]*(?:\([^)]*\))?\s*[~～–—]\s*(?:20\d{2}[.\-/년]\s*)?\d{1,2}[.\-/월]\s*\d{1,2}/);
+  return range?eventEndDate({USAGE_DAY_WEEK_AND_TIME:range[0]}):null;
 }
 export function eventExpired(item: any, now = new Date()) {
   const end = eventEndDate(item);
