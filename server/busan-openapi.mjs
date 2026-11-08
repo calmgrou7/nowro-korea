@@ -14,6 +14,22 @@ export function openApiSources() {
 
 const cache = new Map();
 const pending = new Map();
+let heroCache;
+export async function festivalHero() {
+  if (heroCache && Date.now() - heroCache.at < 3600000) return heroCache.value;
+  const feed = await fetchOpenApi('festivals');
+  for (const item of (feed.items || []).slice(0, 5)) {
+    try {
+      const url = new URL(item.MAIN_IMG_NORMAL, 'https://www.visitbusan.net');
+      if (url.protocol !== 'https:' || url.hostname !== 'www.visitbusan.net') continue;
+      const response = await fetch(url, { method:'HEAD', redirect:'error', signal:AbortSignal.timeout(4000) });
+      if (!response.ok || !response.headers.get('content-type')?.startsWith('image/')) continue;
+      const value = { image: url.href, title: item.MAIN_TITLE, source:'https://www.visitbusan.net/', checkedAt:new Date().toISOString(), archival:true };
+      heroCache = {at:Date.now(),value}; return value;
+    } catch {}
+  }
+  return {image:null};
+}
 export async function fetchOpenApi(type, params = {}) {
   if (type === 'theatre') {
     if (!/^\d{1,20}$/.test(params.res_no || '')) return { items: [], status: 'performance_id_required', configured: Boolean(process.env.BUSAN_THEATRE_API_KEY) };

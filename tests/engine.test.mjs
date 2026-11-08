@@ -30,6 +30,10 @@ test('a requested place is included in every recommendation or produces no route
   assert.ok(routes.length > 0);
   assert.ok(routes.every(route => route.stops.some(stop => stop.placeId === id)));
   assert.deepEqual(recommend({ ...base, requiredPlaceId: 'missing' }, places), []);
+  const requiredPlaceIds = initial[0].stops.slice(0, 2).map(stop => stop.placeId);
+  const selected = recommend({...base, requiredPlaceIds}, places);
+  assert.ok(selected.length);
+  assert.ok(selected.every(route => requiredPlaceIds.every(id => route.stops.some(stop => stop.placeId === id))));
 });
 test("all four time modes satisfy time, return, buffer, budget and registered IDs", () => {
   for (const minutes of [120, 240, 360, 540]) {

@@ -39,6 +39,7 @@ export function validateConditions(c: Conditions) {
     !c ||
     typeof c.areaId !== "string" ||
     (c.requiredPlaceId !== undefined && typeof c.requiredPlaceId !== 'string') ||
+    (c.requiredPlaceIds !== undefined && (!Array.isArray(c.requiredPlaceIds) || c.requiredPlaceIds.length > 4 || c.requiredPlaceIds.some(id => typeof id !== 'string'))) ||
     typeof c.diet !== "string" ||
     typeof c.children !== "boolean" ||
     typeof c.accessible !== "boolean" ||
@@ -201,7 +202,7 @@ export function recommend(c: Conditions, catalog: Place[]): Route[] {
     )
     .sort(
       (a, b) =>
-        Number(b.id === c.requiredPlaceId) - Number(a.id === c.requiredPlaceId) ||
+        Number(b.id === c.requiredPlaceId || c.requiredPlaceIds?.includes(b.id)) - Number(a.id === c.requiredPlaceId || c.requiredPlaceIds?.includes(a.id)) ||
         Number(c.interests.includes(b.category)) -
           Number(c.interests.includes(a.category)) ||
         distance(c.origin, a.point) - distance(c.origin, b.point),
@@ -218,6 +219,7 @@ export function recommend(c: Conditions, catalog: Place[]): Route[] {
   walk([]);
   return result
     .filter(r => !c.requiredPlaceId || r.stops.some(s => s.placeId === c.requiredPlaceId))
+    .filter(r => !c.requiredPlaceIds?.length || c.requiredPlaceIds.every(id => r.stops.some(s => s.placeId === id)))
     .sort((a, b) => score(b) - score(a))
     .filter(
       (r, i, all) =>

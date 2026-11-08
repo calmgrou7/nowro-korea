@@ -39,6 +39,7 @@ export type Place = {
 };
 export type Conditions = {
   requiredPlaceId?: string;
+  requiredPlaceIds?: string[];
   areaId: string;
   origin: Point;
   minutes: number;

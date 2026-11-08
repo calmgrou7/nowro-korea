@@ -54,6 +54,7 @@ import { DistrictDirectory } from "./DistrictDirectory";
 import { starterStampAreaIds } from "../shared/catalog";
 import { AdminDashboard } from "./AdminDashboard";
 import { OfficialPlaces } from "./OfficialPlaces";
+import { SavedPlaces } from './SavedPlaces';
 import type { Listing } from "../shared/listings.ts";
 const LiveMap = lazy(() => import("./MapView"));
 type Tab = "NOW" | "MAP" | "TRIP" | "PASS" | "PASSPORT";
@@ -109,6 +110,8 @@ export default function App() {
   const [tab, setTab] = useTabNavigation();
   const [listing, setListing] = useState<Listing | null>(null);
   const [allListings, setAllListings] = useState<Listing[]>([]);
+  const [festivalCover, setFestivalCover] = useState<any>(null);
+  useEffect(() => { api('festival-hero').then(setFestivalCover).catch(()=>{}); }, []);
   const [oauthHandled, setOauthHandled] = useState(false);
   useEffect(() => {
     const id = new URLSearchParams(location.search).get("listing");
@@ -321,7 +324,7 @@ export default function App() {
   }
   function areaChange(id: string) {
     const a = catalog?.areas.find((a) => a.id === id);
-    if (a) setC((old) => ({ ...old, areaId: id, origin: a.point, requiredPlaceId: undefined }));
+    if (a) setC((old) => ({ ...old, areaId: id, origin: a.point, requiredPlaceId: undefined, requiredPlaceIds: undefined }));
   }
   async function generate(conditions = c) {
     await action(async () => {
@@ -343,12 +346,20 @@ export default function App() {
   }
   function openPlanner(item?: any) {
     if (item?.UC_SEQ) {
-      const chosen = catalog?.places.find(p => p.id === 'kto-' + item.UC_SEQ);
+      const chosen = catalog?.places.find(p => p.id === item.routePlaceId);
       if (!chosen) { setToast(lang === 'ko' ? '이 장소는 위치 정보 확인 후 코스에 추가할 수 있습니다. 현재는 지도에서 위치를 확인해주세요.' : 'This place is not available for route planning yet. Please check its location on the map.'); return; }
-      setC(old => ({ ...old, areaId: chosen.areaId, origin: chosen.point, requiredPlaceId: chosen.id }));
+      setC(old => ({ ...old, areaId: chosen.areaId, origin: chosen.point, requiredPlaceId: chosen.id, requiredPlaceIds: undefined }));
     }
     setTab('NOW');
     setTimeout(() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+  function planSaved(items: any[]) {
+    const chosen = items.map(item => catalog?.places.find(p => p.id === item.routePlaceId));
+    if (chosen.some(p => !p)) { setToast(lang === 'ko' ? '일부 항목은 위치·일정 확인이 필요해 아직 코스로 계산할 수 없습니다. 해당 항목을 해제해주세요.' : 'Some items are not route-ready. Deselect items whose location or schedule is unverified.'); return; }
+    const points = chosen as Place[];
+    if (new Set(points.map(p => p.areaId)).size !== 1) { setToast(lang === 'ko' ? '현재는 같은 구·군의 장소끼리 코스를 만들 수 있습니다.' : 'Select places in the same district.'); return; }
+    setC(old => ({...old, areaId: points[0].areaId, origin: points[0].point, requiredPlaceId: undefined, requiredPlaceIds: points.map(p=>p.id)}));
+    openPlanner();
   }
   function gps() {
     if (!consent.location) {
@@ -1066,31 +1077,32 @@ export default function App() {
                   </div>
                   <div className="hero-image">
                     <img
-                      src={siteContent?.hero_image || scenery.gwangalli!.src}
-                      alt={scenery.gwangalli!.alt}
+                      src={festivalCover?.image || '/brand/logo.webp'}
+                      alt={festivalCover?.title || 'NOWRO'}
+                      style={!festivalCover?.image ? {objectFit:'contain',padding:'20%',background:'#e5e7e9'} : undefined}
+                      onError={() => setFestivalCover(null)}
                       fetchPriority="high"
                     />
                     <div className="image-label">
                       <span>
                         <MapPin size={14} />
-                        {name(catalog.areas.find((a) => a.id === "gwangalli")!)}
-                        , {name(catalog.cities[0])}
+                        {festivalCover?.title || (lang === 'ko' ? '부산 축제 이미지 준비 중' : 'Busan festival cover')}
                       </span>
                       <small>
                         <a
-                          href={scenery.gwangalli!.source}
+                          href={festivalCover?.source || 'https://www.visitbusan.net/'}
                           target="_blank"
                           rel="noreferrer"
                         >
-                          Photo: Masterhatch
+                          {lang === 'ko' ? '사진: 부산광역시 축제 API · 자료 이미지' : 'Photo: Busan festival API · archive image'}
                         </a>{" "}
                         ·{" "}
                         <a
-                          href={scenery.gwangalli!.licenseUrl}
+                          href="https://www.data.go.kr/data/15063500/openapi.do"
                           target="_blank"
                           rel="noreferrer"
                         >
-                          CC BY-SA 4.0
+                          {lang === 'ko' ? '공식 출처' : 'Official source'}
                         </a>
                         <br />
                         {T("photoChanges")}
@@ -1128,6 +1140,7 @@ export default function App() {
                   aria-label={T("plan")}
                 >
                   {c.requiredPlaceId && <p className="notice">{lang === 'ko' ? '포함할 장소: ' : 'Include: '}{catalog.places.find(p => p.id === c.requiredPlaceId)?.name[lang] || c.requiredPlaceId}<button className="text-btn" onClick={() => update('requiredPlaceId', undefined)}>{lang === 'ko' ? '선택 해제' : 'Clear'}</button></p>}
+                  {!!c.requiredPlaceIds?.length && <p className="notice">{lang === 'ko' ? '선택한 장소: ' : 'Selected places: '}{c.requiredPlaceIds.map(id=>catalog.places.find(p=>p.id===id)?.name[lang] || id).join(' · ')}<button className="text-btn" onClick={()=>update('requiredPlaceIds',undefined)}>{lang === 'ko' ? '선택 해제' : 'Clear'}</button></p>}
                   <div className="planner-heading">
                     <div>
                       <span className="eyebrow">YOUR NEXT MOVE</span>
@@ -1623,6 +1636,7 @@ export default function App() {
             )}
             {tab === "TRIP" && (
               <section className="section">
+                <SavedPlaces lang={lang} onPlan={planSaved} />
                 <div className="section-heading">
                   <div>
                     <span className="eyebrow">YOUR PLANS, IN ONE PLACE</span>

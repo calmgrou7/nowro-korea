@@ -7,7 +7,7 @@ import { recommend, calculate } from "../shared/engine.ts";
 import { extract } from "./ai.mjs";
 import { AuthService } from "./auth.mjs";
 import { androidAssociation } from "../shared/android-app.mjs";
-import { fetchOpenApi, openApiSources } from "./busan-openapi.mjs";
+import { fetchOpenApi, openApiSources, festivalHero } from "./busan-openapi.mjs";
 import { syncTourismCatalog } from './tourism-catalog.mjs';
 import {
   ownBusiness,
@@ -49,6 +49,7 @@ export function createApp(store, options = {}) {
     try {
       if (req.method === "GET" && url.pathname === "/api/health")
         return send(200, { ok: true });
+      if (req.method === 'GET' && url.pathname === '/api/festival-hero') return send(200, await festivalHero());
       if (
         req.method === "GET" &&
         url.pathname === "/.well-known/assetlinks.json"

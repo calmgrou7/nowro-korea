@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from './api';
 import { Modal } from './Modal';
+import { savePlace, readSavedPlaces } from './SavedPlaces';
 function TourismImage({ src, title, lang }: { src?: string; title: string; lang: string }) {
   const valid = /^https?:\/\//.test(src || '') || /^\/images\//.test(src || '');
   const [failed, setFailed] = useState(false);
@@ -16,6 +17,8 @@ export function OfficialPlaces({ lang, onPlan }: { lang: string; onPlan?: (item?
   const [query, setQuery] = useState('');
   const [limit, setLimit] = useState(6);
   const [retry, setRetry] = useState(0);
+  const [savedIds, setSavedIds] = useState<string[]>(() => readSavedPlaces().map(p => String(p.UC_SEQ || p.contentid)));
+  useEffect(() => { const update = () => setSavedIds(readSavedPlaces().map(p => String(p.UC_SEQ || p.contentid))); window.addEventListener('nowro-saved', update); return () => window.removeEventListener('nowro-saved', update); }, []);
   const [selected, setSelected] = useState<any>(null);
   const [listings, setListings] = useState<any[]>([]);
   useEffect(() => { api('listings').then(v => setListings(v.listings || [])).catch(() => {}); }, []);
@@ -31,10 +34,11 @@ export function OfficialPlaces({ lang, onPlan }: { lang: string; onPlan?: (item?
     {failed && <div role="status"><p>{lang === 'ko' ? '정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' : 'Information is temporarily unavailable. Please try again shortly.'}</p><button onClick={() => setRetry(v => v + 1)}>{lang === 'ko' ? '다시 불러오기' : 'Try again'}</button></div>}
     {!loading && !failed && !items.length && <p>{lang === 'ko' ? '현재 제공된 정보가 없습니다.' : 'No information is currently available.'}</p>}
     {!loading && items.length > 0 && !matched.length && <p role="status">{lang === 'ko' ? '검색 결과가 없습니다.' : 'No matching places.'}</p>}
-    <div className="source-grid">{matched.slice(0, limit).map((original) => { const item = { ...original, UC_SEQ: original.contentid || original.UC_SEQ, MAIN_TITLE: original.title || original.MAIN_TITLE, SUBTITLE: original.addr1 || original.ADDR1 || original.PLACE, MAIN_IMG_NORMAL: original.firstimage || original.MAIN_IMG_NORMAL, ITEMCNTNTS: original.ITEMCNTNTS || original.addr2 }; return <article className="source-card" key={item.UC_SEQ}>
+    <div className="source-grid">{matched.slice(0, limit).map((original) => { const item = { ...original, UC_SEQ: category + '-' + (original.contentid || original.UC_SEQ), routePlaceId: category === 'places' ? 'kto-' + original.contentid : null, MAIN_TITLE: original.title || original.MAIN_TITLE, SUBTITLE: original.addr1 || original.ADDR1 || original.PLACE, MAIN_IMG_NORMAL: original.firstimage || original.MAIN_IMG_NORMAL, ITEMCNTNTS: original.ITEMCNTNTS || original.addr2 }; return <article className="source-card" key={item.UC_SEQ}>
       <TourismImage src={item.MAIN_IMG_NORMAL} title={item.MAIN_TITLE || item.TITLE} lang={lang} />
       <h3>{item.MAIN_TITLE || item.TITLE}</h3><p>{item.SUBTITLE || item.PLACE}</p>
       <button onClick={() => setSelected(item)}>{lang === 'ko' ? '상세 정보 보기' : 'View details'}</button>
+      <button aria-pressed={savedIds.includes(String(item.UC_SEQ))} onClick={() => savePlace(item)}>{savedIds.includes(String(item.UC_SEQ)) ? (lang === 'ko' ? '저장됨 ✓' : 'Saved ✓') : (lang === 'ko' ? '저장' : 'Save')}</button>
       {onPlan && <button onClick={() => onPlan(item)}>{lang === 'ko' ? '이 장소 포함 코스' : 'Route with this place'}</button>}
       {item.ITEMCNTNTS && <details><summary>{lang === 'ko' ? '소개 보기' : 'Read description'}</summary><p>{item.ITEMCNTNTS}</p></details>}
       {original.USAGE_DAY_WEEK_AND_TIME && <details><summary>{lang === 'ko' ? '운영시간·일정' : 'Hours and dates'}</summary><p>{original.USAGE_DAY_WEEK_AND_TIME}</p></details>}
