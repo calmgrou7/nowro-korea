@@ -289,6 +289,25 @@ export function createApp(store, options = {}) {
         case 'GET /api/boards':
           out = {posts:boardPosts(store)};
           break;
+        case 'GET /api/performances': {
+          const ids = JSON.parse(store.db.prepare("SELECT value FROM config WHERE key='performance_ids'").get()?.value || '[]');
+          const feeds = await Promise.all(ids.map(res_no => fetchOpenApi('theatre', {res_no})));
+          const today = new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+          const items = feeds.flatMap(feed=>feed.items || []).filter(item=>item.title && (item.op_at === 'Y' || !item.op_ed_dt || item.op_ed_dt >= today));
+          out = {items,status:!ids.length?'setup_required':feeds.some(feed=>feed.status === 'ok')?'ok':'temporarily_unavailable'};
+          break;
+        }
+        case 'GET /api/operator/performance-ids':
+          if(s.role!=='admin') throw new ServiceError('FORBIDDEN',403);
+          out = {ids:JSON.parse(store.db.prepare("SELECT value FROM config WHERE key='performance_ids'").get()?.value || '[]')};
+          break;
+        case 'POST /api/operator/performance-ids':
+          if(s.role!=='admin') throw new ServiceError('FORBIDDEN',403);
+          if(!Array.isArray(body.ids) || body.ids.length>5 || body.ids.some(id=>typeof id!=='string'||!/^\d{1,20}$/.test(id))) throw new ServiceError('INVALID_PERFORMANCE_IDS',400);
+          store.db.prepare('INSERT OR REPLACE INTO config(key,value) VALUES(?,?)').run('performance_ids',JSON.stringify([...new Set(body.ids)]));
+          store.audit(s.user_id,'performance_ids_updated',{count:body.ids.length});
+          out = {ok:true};
+          break;
         case 'GET /api/operator/boards':
           if(s.role!=='admin') throw new ServiceError('FORBIDDEN',403);
           out = {posts:boardPosts(store,true)};
