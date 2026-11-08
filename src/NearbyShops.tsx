@@ -1,4 +1,5 @@
 import { PlaceMaps } from "./PlaceMaps";
+import { locationNeedsReview } from "../shared/location-quality";
 import { visitorText } from "./visitor-copy";
 import { useEffect, useState } from "react";
 import { api } from "./api";
@@ -27,6 +28,7 @@ export function NearbyShops({
   const originalLat = Number(item.mapy || item.LAT),
     originalLng = Number(item.mapx || item.LNG);
   const hasOriginalPoint =
+    !locationNeedsReview(item) && !item.locationNeedsReview &&
     Number.isFinite(originalLat) &&
     Number.isFinite(originalLng) &&
     originalLat >= 34 &&

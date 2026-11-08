@@ -1,4 +1,5 @@
 import { fetchOpenApi } from "./busan-openapi.mjs";
+import { locationNeedsReview } from "../shared/location-quality.ts";
 const normalize = (v) =>
   String(v || "")
     .replace(/\([^)]*\)/g, "")
@@ -21,6 +22,7 @@ export async function locationCandidates(title) {
   const items = rows
     .filter((p) => normalize(p.MAIN_TITLE || p.title) === normalize(title))
     .flatMap((p) => {
+      if (locationNeedsReview(p)) return [];
       const lat = Number(p.LAT || p.mapy),
         lng = Number(p.LNG || p.mapx);
       if (

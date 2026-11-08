@@ -2211,6 +2211,7 @@ export default function App() {
           <div className="timeline">
             {selected.stops.map((s, i) => {
               const p = catalog.places.find((p) => p.id === s.placeId)!;
+              if (!p) return <p key={s.placeId} className="muted">{lang === 'ko' ? '장소 정보 재확인이 필요합니다. 코스를 다시 만들어주세요.' : 'This place needs rechecking. Please rebuild your route.'}</p>;
               return (
                 <div className="timeline-stop" key={s.placeId}>
                   <span className="stop-number">{i + 1}</span>

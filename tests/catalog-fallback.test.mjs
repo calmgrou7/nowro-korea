@@ -1,7 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Store,areas} from '../server/store.mjs';
-import {syncTourismCatalog} from '../server/tourism-catalog.mjs';
+import {syncTourismCatalog,ingestPublicContent} from '../server/tourism-catalog.mjs';
+import {locationNeedsReview} from '../shared/location-quality.ts';
+
+test('conflicting address districts are withheld and removed from previously imported route candidates',()=>{
+ const store=new Store(),area=areas.find(a=>a.name.ko==='수영구');
+ try {const item={UC_SEQ:90001,MAIN_TITLE:'검수 체험',ADDR1:'부산광역시 수영구 해변로 1',GUGUN_NM:'수영구',LAT:area.point.lat,LNG:area.point.lng};
+ assert.equal(locationNeedsReview(item),false);ingestPublicContent(store,areas,'ocean',[item]);assert.ok(store.catalog().some(p=>p.id==='busan-ocean-90001'));
+ const result=ingestPublicContent(store,areas,'ocean',[{...item,ADDR1:'부산광역시 사상구 삼락동 1'}]);assert.equal(result[0].locationNeedsReview,true);assert.equal(result[0].routePlaceId,null);assert.ok(!store.catalog().some(p=>p.id==='busan-ocean-90001'));
+ assert.equal(locationNeedsReview({ADDR1:'부산광역시 사상구 삼락동',GUGUN_NM:'부산'}),false);
+ assert.equal(locationNeedsReview({ADDR1:'수영구 광안리 해운대구 해변',GUGUN_NM:'수영구'}),true);
+ }finally{store.close();}
+});
 import {calculate} from '../shared/engine.ts';
 import {recommendationResponse} from '../server/recommendation.mjs';
 import {koreaInput,koreaISO} from '../shared/korea-time.ts';

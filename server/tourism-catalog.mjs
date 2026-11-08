@@ -1,5 +1,6 @@
 import { fetchOpenApi } from "./busan-openapi.mjs";
 import { eventEndDate } from "../shared/event-dates.ts";
+import { locationNeedsReview } from "../shared/location-quality.ts";
 export async function syncTourismCatalog(store, areas, load=fetchOpenApi) {
   await Promise.any([
     load('kor').then(feed=>{if(feed.status!=='ok'||!ingestTourismPlaces(store,areas,feed.items||[]).length)throw Error('NO_READY_PLACES');}),
@@ -101,6 +102,13 @@ export function ingestPublicContent(store, areas, type, items) {
   if (!["festivals", "ocean", "exhibitions", "kopis"].includes(type))
     return items;
   return items.map((item) => {
+    if (locationNeedsReview(item)) {
+      const sourceId = type === 'kopis' ? item.kopisId : item.UC_SEQ;
+      const id = type === 'kopis' ? 'kopis-' + sourceId : 'busan-' + type + '-' + sourceId;
+      const previous = JSON.parse(store.db.prepare("SELECT value FROM config WHERE key='tourism_catalog'").get()?.value || '[]');
+      store.db.prepare('INSERT OR REPLACE INTO config(key,value) VALUES(?,?)').run('tourism_catalog', JSON.stringify(previous.filter(p => p.id !== id)));
+      return {...item, routePlaceId: null, locationNeedsReview: true};
+    }
     const lat = Number(item.LAT),
       lng = Number(item.LNG);
     const address = String(item.ADDR1 || item.PLACE || "");
