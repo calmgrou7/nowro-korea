@@ -1,12 +1,395 @@
-import { useEffect, useState } from 'react';
-import { api } from './api';
-import { Modal } from './Modal';
-const boards=[{id:'guide',title:'NOWRO 이용가이드',en:'NOWRO guide',description:'탐색부터 저장, 나만의 코스까지',image:'/brand/logo.webp'},{id:'busan',title:'부산여행을 시작하세요',en:'Start your Busan trip',description:'부산의 동네와 여행 소식을 만나보세요',image:'/images/gwangalli.webp'},{id:'partners',title:'파트너를 구합니다',en:'Become a partner',description:'지역의 매력을 함께 소개할 파트너',image:'/brand/logo.webp'}];
-export function Boards({lang}:{lang:string}) {
- const [posts,setPosts]=useState<any[]>([]),[board,setBoard]=useState<any>(null),[post,setPost]=useState<any>(null),[failed,setFailed]=useState(false);
- useEffect(()=>{api('boards').then(v=>setPosts(v.posts)).catch(()=>setFailed(true));},[]);
- return <section id="about-nowro" className="section boards-section"><h2>{lang==='ko'?'나우로 소개':'About NOWRO'}</h2><div className="source-grid">{boards.map(b=><button key={b.id} className="board-card" onClick={()=>{setBoard(b);setPost(null);}}><div className={'board-cover '+(b.id!=='busan'?'board-logo':'')}><img src={b.image} alt="" /></div><div><h3>{lang==='ko'?b.title:b.en}</h3><p>{lang==='ko'?b.description:'Read stories, updates and useful information.'}</p><span>{lang==='ko'?'게시판 보기 →':'Open board →'}</span></div></button>)}</div>
- {board&&<Modal title={lang==='ko'?board.title:board.en} close={()=>{setBoard(null);setPost(null);}}>{failed?<p role="alert">{lang==='ko'?'글을 불러오지 못했습니다. 새로고침해주세요.':'Unable to load posts. Please reload.'}</p>:post?<article><button className="text-btn" onClick={()=>setPost(null)}>{lang==='ko'?'← 글 목록':'← Posts'}</button><h2>{post.title}</h2><time>{post.updated.slice(0,10)}</time>{post.image&&<img src={post.image} alt="" style={{width:'100%',borderRadius:16}} />}<p style={{whiteSpace:'pre-line'}}>{post.body}</p></article>:<><p>{lang==='ko'?board.description:'News and guides from NOWRO.'}</p>{!posts.some(p=>p.board===board.id)&&<p>{lang==='ko'?'등록된 게시글이 없습니다. 소식을 준비하고 있습니다.':'No posts yet. Updates are coming soon.'}</p>}{posts.filter(p=>p.board===board.id).map(p=><button className="board-post-row" key={p.id} onClick={()=>setPost(p)}><strong>{p.title}</strong><time>{p.updated.slice(0,10)}</time></button>)}</>}</Modal>}</section>;
+import { useEffect, useState } from "react";
+import { api } from "./api";
+const boards = [
+  {
+    id: "guide",
+    title: "NOWRO 이용가이드",
+    en: "NOWRO guide",
+    description: "탐색부터 저장, 나만의 코스까지",
+    enDescription: "Discover, save and build your own route.",
+    image: "/brand/logo.webp",
+    body: "1. 어디를 찾아볼까요?\n축제·공연·전시·체험을 둘러보고 상세페이지에서 주소와 일정, 공식 안내를 확인하세요.\n\n2. 마음에 드는 장소 저장하기\n북마크를 눌러 장소를 모아보세요. 저장한 장소는 현재 브라우저에 보관됩니다. 기기를 바꾸거나 브라우저 데이터를 삭제하면 유지되지 않을 수 있습니다.\n\n3. 나만의 코스 만들기\n여행 지역, 시간, 예산과 관심사를 선택하거나 저장한 장소를 코스에 포함하세요. 이동 시간과 비용은 계획용 추정치이며 예약이나 실제 영업을 보장하지 않습니다.\n\n4. 방문 전 확인하기\n행사 일정·운영시간·입장료는 변경될 수 있으므로 공식 안내에서 다시 확인하세요.",
+    enBody:
+      "1. Discover\nBrowse festivals, performances, exhibitions and experiences. Open the details for addresses, dates and official links.\n\n2. Save your favorites\nUse the bookmark to collect places in this browser. Saved places may not carry over to another device or survive cleared browser data.\n\n3. Build your route\nChoose your area, time, budget and interests, or include saved places. Travel times and costs are estimates for planning, not bookings or confirmation that a venue is open.\n\n4. Check before visiting\nConfirm dates, opening hours and admission with the official venue.",
+  },
+  {
+    id: "busan",
+    title: "부산여행을 시작하세요",
+    en: "Start your Busan trip",
+    description: "부산의 동네와 여행 소식을 만나보세요",
+    enDescription: "Find your neighborhood and your next experience.",
+    image: "/images/gwangalli.webp",
+    body: "바다와 골목, 오늘의 부산.\n나우로는 부산을 시작으로 한국의 여행 정보를 연결합니다.\n\n오늘의 행사부터\n홈에서 축제·공연·전시·체험을 살펴보고 여행 날짜에 맞는 일정을 확인해보세요.\n\n동네를 더 깊이\n지역별가이드에서 부산 16개 구·군의 관광지와 음식점, 미식 여행 이야기를 찾아보세요.\n\n여행 동선을 함께\n상세페이지의 지도와 주변 맛집·카페·쇼핑 정보를 참고해 이동을 계획하세요. 주변 장소는 좌표와 공공데이터 제공 범위에 따라 표시됩니다.\n\n정보의 기준\n공공 관광정보와 직접 등록된 콘텐츠를 함께 소개합니다. 각 상세페이지 하단의 출처와 공식 안내를 확인하세요.",
+    enBody:
+      "By the sea and through the neighborhoods of Busan.\nNOWRO connects travel information across Korea, starting with Busan.\n\nStart with events\nExplore festivals, performances, exhibitions and experiences on Home. Check the dates for your visit.\n\nExplore locally\nLocal guides introduce attractions, dining and food stories across Busan’s 16 districts.\n\nConnect your stops\nUse maps and nearby dining, cafés and shopping on detail pages. Availability depends on coordinates and the public data provided.\n\nKnow your sources\nWe feature public tourism information and contributed content. Check the source and official link on each detail page.",
+  },
+  {
+    id: "partners",
+    title: "파트너를 구합니다",
+    en: "Become a partner",
+    description: "지역의 매력을 함께 소개할 파트너",
+    enDescription: "Help travelers discover your local story.",
+    image: "/brand/logo.webp",
+    body: "부산의 매력을 함께 소개해주세요.\n음식점·카페·상점 운영자, 체험 크리에이터, 문화시설과 행사 담당자를 기다립니다.\n\n어떤 내용을 등록하나요?\n방문객에게 필요한 장소 소개, 주소, 일정, 이용 안내와 사용 권한이 있는 사진을 준비해주세요. 외국인 여행객도 이해할 수 있는 영문 설명을 함께 준비하면 좋습니다.\n\n어떻게 참여하나요?\n로그인 후 전문가·상점 등록 메뉴에서 업체 승인 신청을 진행하세요. 담당자 및 업체 확인 후 제공되는 관리 화면에서 콘텐츠를 등록하고 심사를 요청할 수 있습니다.\n\n게시 전 확인\n신청과 콘텐츠 등록은 즉시 공개를 의미하지 않습니다. 관리자 검토 및 승인 후 노출됩니다. 변경된 영업정보나 종료된 행사는 담당자가 최신 정보로 관리해주세요.\n\n앞으로의 연결\n상점 상품·예약·광고 서비스는 단계적으로 준비하는 기능입니다. 현재 이 안내는 입점 계약이나 유료 광고 신청을 대신하지 않습니다.",
+    enBody:
+      "Share your local story with travelers.\nWe welcome restaurant, café and shop owners, experience creators, cultural venues and event organizers.\n\nPrepare your information\nAdd a useful description, address, dates, visitor information and photos you have permission to use. English descriptions help international travelers.\n\nApply to participate\nSign in and apply through the expert / business registration menu. After ownership review, use the management area to submit content for approval.\n\nBefore publication\nApplications and submissions are reviewed before they appear publicly. Keep opening information and event dates up to date.\n\nFuture services\nProducts, reservations and advertising are planned in stages. This guide is not an entry contract or a paid advertising application.",
+  },
+];
+export function Boards({
+  lang,
+  page = false,
+}: {
+  lang: string;
+  page?: boolean;
+}) {
+  const [posts, setPosts] = useState<any[]>([]),
+    [failed, setFailed] = useState(false),
+    [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState(
+    () => new URLSearchParams(location.search),
+  );
+  const L = (ko: string, en: string) => (lang === "ko" ? ko : en);
+  useEffect(() => {
+    const back = () => setQuery(new URLSearchParams(location.search));
+    addEventListener("popstate", back);
+    return () => removeEventListener("popstate", back);
+  }, []);
+  useEffect(() => {
+    let active = true;
+    api("boards")
+      .then((v) => {
+        if (active) setPosts(v.posts || []);
+      })
+      .catch(() => {
+        if (active) setFailed(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  const board = page
+    ? boards.find((b) => b.id === query.get("board"))
+    : undefined;
+  const selected = posts.find(
+    (p) => p.board === board?.id && p.id === query.get("post"),
+  );
+  const go = (id?: string, post?: string) => {
+    const url = new URL(location.href);
+    url.searchParams.set("tab", "ABOUT");
+    url.searchParams.delete("board");
+    url.searchParams.delete("post");
+    if (id) url.searchParams.set("board", id);
+    if (post) url.searchParams.set("post", post);
+    history.pushState(null, "", url);
+    setQuery(new URLSearchParams(url.search));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const cards = (
+    <div className="source-grid">
+      {boards.map((b) => (
+        <a
+          key={b.id}
+          className="board-card"
+          href={"?tab=ABOUT&board=" + b.id}
+          onClick={
+            page
+              ? (e) => {
+                  e.preventDefault();
+                  go(b.id);
+                }
+              : undefined
+          }
+        >
+          <div
+            className={"board-cover " + (b.id !== "busan" ? "board-logo" : "")}
+          >
+            <img src={b.image} alt="" />
+          </div>
+          <div>
+            <h3>{L(b.title, b.en)}</h3>
+            <p>{L(b.description, b.enDescription)}</p>
+            <span>{L("게시판 보기 →", "Open board →")}</span>
+          </div>
+        </a>
+      ))}
+    </div>
+  );
+  if (!page)
+    return (
+      <section id="about-nowro" className="section boards-section">
+        <div className="section-heading">
+          <h2>{L("나우로 소개", "About NOWRO")}</h2>
+          <a href="?tab=ABOUT">{L("나우로 알아보기 →", "Meet NOWRO →")}</a>
+        </div>
+        {cards}
+      </section>
+    );
+  return (
+    <section className="section about-page">
+      <nav
+        className="about-breadcrumb"
+        aria-label={L("현재 위치", "Breadcrumb")}
+      >
+        <a href="?">{L("홈", "Home")}</a>
+        <span>/</span>
+        {board ? (
+          <>
+            <button className="text-btn" onClick={() => go()}>
+              {L("나우로 소개", "About NOWRO")}
+            </button>
+            <span>/</span>
+            <span>{L(board.title, board.en)}</span>
+          </>
+        ) : (
+          <span>{L("나우로 소개", "About NOWRO")}</span>
+        )}
+      </nav>
+      {!board ? (
+        <>
+          <div className="about-hero">
+            <span className="eyebrow">YOUR KOREA. RIGHT NOW.</span>
+            <h1>
+              {L(
+                "한국의 오늘을, 나만의 여행으로.",
+                "Your Korea. Your next discovery.",
+              )}
+            </h1>
+            <p>
+              {L(
+                "나우로는 지금 만날 수 있는 행사와 동네의 매력을 발견하고, 마음에 드는 장소를 모아 나만의 여행 동선을 만드는 여행 가이드입니다.",
+                "NOWRO helps you discover local events and neighborhoods, save places you love and plan your own journey.",
+              )}
+            </p>
+            <span>
+              {L(
+                "부산에서 시작해, 한국 곳곳으로.",
+                "Starting in Busan. Growing across Korea.",
+              )}
+            </span>
+          </div>
+          <div className="about-values">
+            {[
+              [
+                L("발견", "Discover"),
+                L(
+                  "축제·공연·전시·체험을 한곳에서",
+                  "Events, exhibitions and experiences in one place",
+                ),
+              ],
+              [
+                L("연결", "Connect"),
+                L(
+                  "동네의 관광지부터 주변 맛집과 카페까지",
+                  "From local sights to nearby dining and cafés",
+                ),
+              ],
+              [
+                L("나만의 여행", "Make it yours"),
+                L(
+                  "저장한 장소와 시간에 맞춘 코스",
+                  "Saved places and routes that fit your time",
+                ),
+              ],
+            ].map(([title, body]) => (
+              <article key={title}>
+                <h2>{title}</h2>
+                <p>{body}</p>
+              </article>
+            ))}
+          </div>
+          <h2>{L("나우로와 함께 시작하기", "Start with NOWRO")}</h2>
+          {cards}
+        </>
+      ) : (
+        <>
+          <header className="board-heading">
+            <span className="eyebrow">NOWRO JOURNAL</span>
+            <h1>{L(board.title, board.en)}</h1>
+            <p>{L(board.description, board.enDescription)}</p>
+          </header>
+          <nav
+            className="quick-categories"
+            aria-label={L("게시판 선택", "Choose a board")}
+          >
+            {boards.map((b) => (
+              <button
+                key={b.id}
+                aria-pressed={b.id === board.id}
+                onClick={() => go(b.id)}
+              >
+                {L(b.title, b.en)}
+              </button>
+            ))}
+          </nav>
+          {selected ? (
+            <article className="about-post">
+              <button className="text-btn" onClick={() => go(board.id)}>
+                {L("← 글 목록", "← Posts")}
+              </button>
+              <h2>{selected.title}</h2>
+              <time>{selected.updated?.slice(0, 10)}</time>
+              {selected.image && <img src={selected.image} alt="" />}
+              <p>{selected.body}</p>
+            </article>
+          ) : (
+            <>
+              <article className="about-post">
+                <span className="board-pinned">
+                  {L("기본 안내", "Getting started")}
+                </span>
+                <h2>{L(board.title, board.en)}</h2>
+                <p>{L(board.body, board.enBody)}</p>
+              </article>
+              <h2>{L("게시판 소식", "Board updates")}</h2>
+              {loading ? (
+                <p role="status">
+                  {L("게시글을 불러오고 있습니다.", "Loading posts…")}
+                </p>
+              ) : failed ? (
+                <p role="alert">
+                  {L(
+                    "추가 게시글을 불러오지 못했습니다. 새로고침해주세요.",
+                    "Unable to load additional posts. Please reload.",
+                  )}
+                </p>
+              ) : posts.some((p) => p.board === board.id) ? (
+                posts
+                  .filter((p) => p.board === board.id)
+                  .map((p) => (
+                    <a
+                      className="board-post-row"
+                      key={p.id}
+                      href={
+                        "?tab=ABOUT&board=" +
+                        board.id +
+                        "&post=" +
+                        encodeURIComponent(p.id)
+                      }
+                      onClick={(e) => {
+                        e.preventDefault();
+                        go(board.id, p.id);
+                      }}
+                    >
+                      <strong>{p.title}</strong>
+                      <time>{p.updated?.slice(0, 10)}</time>
+                    </a>
+                  ))
+              ) : (
+                <p className="muted">
+                  {L(
+                    "새로운 소식이 등록되면 이곳에서 확인할 수 있습니다.",
+                    "New updates will appear here when published.",
+                  )}
+                </p>
+              )}
+            </>
+          )}
+        </>
+      )}
+    </section>
+  );
 }
-const empty={id:'',board:'guide',title:'',body:'',image:'',published:false};
-export function BoardAdmin(){const [posts,setPosts]=useState<any[]>([]),[form,setForm]=useState(empty),[message,setMessage]=useState('');const load=()=>api('operator/boards').then(v=>setPosts(v.posts));useEffect(()=>{load().catch(()=>setMessage('게시판을 불러오지 못했습니다.'));},[]);return <section className="panel"><h2>나우로 소개 · 게시판 관리</h2><button onClick={()=>setForm(empty)}>새 글 작성</button><div>{posts.map(p=><button className="board-post-row" key={p.id} onClick={()=>setForm(p)}>{p.title} · {p.published?'게시 중':'초안'}</button>)}</div><label>게시판<select value={form.board} onChange={e=>setForm({...form,board:e.target.value})}>{boards.map(b=><option key={b.id} value={b.id}>{b.title}</option>)}</select></label><label>제목<input value={form.title} maxLength={150} onChange={e=>setForm({...form,title:e.target.value})}/></label><label>본문<textarea rows={8} value={form.body} maxLength={12000} onChange={e=>setForm({...form,body:e.target.value})}/></label><label>이미지 주소 (선택)<input value={form.image} onChange={e=>setForm({...form,image:e.target.value})} placeholder="https://..."/></label><label><input type="checkbox" checked={form.published} onChange={e=>setForm({...form,published:e.target.checked})}/>공개 게시 (해제하면 비공개)</label><button className="primary" onClick={async()=>{try{await api('operator/boards/save',{...form,id:form.id||undefined});await load();setForm(empty);setMessage('저장되었습니다.');}catch{setMessage('저장 실패: 제목·본문·이미지 주소와 관리자 로그인을 확인해주세요.');}}}>저장</button><p role="status">{message}</p></section>}
+const empty = {
+  id: "",
+  board: "guide",
+  title: "",
+  body: "",
+  image: "",
+  published: false,
+};
+export function BoardAdmin() {
+  const [posts, setPosts] = useState<any[]>([]),
+    [form, setForm] = useState(empty),
+    [message, setMessage] = useState("");
+  const load = () => api("operator/boards").then((v) => setPosts(v.posts));
+  useEffect(() => {
+    load().catch(() => setMessage("게시판을 불러오지 못했습니다."));
+  }, []);
+  return (
+    <section className="panel">
+      <h2>나우로 소개 · 게시판 관리</h2>
+      <button onClick={() => setForm(empty)}>새 글 작성</button>
+      <div>
+        {posts.map((p) => (
+          <button
+            className="board-post-row"
+            key={p.id}
+            onClick={() => setForm(p)}
+          >
+            {p.title} · {p.published ? "게시 중" : "초안"}
+          </button>
+        ))}
+      </div>
+      <label>
+        게시판
+        <select
+          value={form.board}
+          onChange={(e) => setForm({ ...form, board: e.target.value })}
+        >
+          {boards.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.title}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        제목
+        <input
+          value={form.title}
+          maxLength={150}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+        />
+      </label>
+      <label>
+        본문
+        <textarea
+          rows={8}
+          value={form.body}
+          maxLength={12000}
+          onChange={(e) => setForm({ ...form, body: e.target.value })}
+        />
+      </label>
+      <label>
+        이미지 주소 (선택)
+        <input
+          value={form.image}
+          onChange={(e) => setForm({ ...form, image: e.target.value })}
+          placeholder="https://..."
+        />
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={form.published}
+          onChange={(e) => setForm({ ...form, published: e.target.checked })}
+        />
+        공개 게시 (해제하면 비공개)
+      </label>
+      <button
+        className="primary"
+        onClick={async () => {
+          try {
+            await api("operator/boards/save", {
+              ...form,
+              id: form.id || undefined,
+            });
+            await load();
+            setForm(empty);
+            setMessage("저장되었습니다.");
+          } catch {
+            setMessage(
+              "저장 실패: 제목·본문·이미지 주소와 관리자 로그인을 확인해주세요.",
+            );
+          }
+        }}
+      >
+        저장
+      </button>
+      <p role="status">{message}</p>
+    </section>
+  );
+}

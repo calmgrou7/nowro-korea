@@ -149,7 +149,26 @@ html {
 .tourism-image figcaption { position: absolute; bottom: 10px; left: 10px; right: 10px; color: white; background: #172026cc; padding: 6px 9px; border-radius: 8px; font-size: 11px; line-height: 1.4; }
 .tourism-placeholder { width: 100%; aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; background: #e5e7e9; border-radius: 16px; }
 .tourism-placeholder img { width: 48%; max-width: 190px; height: auto; aspect-ratio: auto; object-fit: contain; border-radius: 0; mix-blend-mode: multiply; opacity: .25; filter: grayscale(1); }
-.board-card { padding:0; overflow:hidden; border:1px solid var(--border); border-radius:20px; background:white; text-align:left; color:var(--ink); cursor:pointer; }
+.board-card { display:block; text-decoration:none; padding:0; overflow:hidden; border:1px solid var(--border); border-radius:20px; background:white; text-align:left; color:var(--ink); cursor:pointer; }
+.about-page { max-width:1080px; margin:0 auto; padding-bottom:36px; }
+.about-breadcrumb { display:flex; flex-wrap:wrap; align-items:center; gap:10px; font-size:13px; margin-bottom:20px; color:var(--muted); }
+.about-hero { background:#172026; color:white; border-radius:22px; padding:36px; margin-bottom:24px; }
+.about-hero .eyebrow { color:#c5f542; }
+.about-hero h1 { font-size:clamp(28px,4vw,44px); letter-spacing:-.04em; line-height:1.2; margin:14px 0; }
+.about-hero p { max-width:680px; line-height:1.75; color:#e1e7e7; }
+.about-hero > span:last-child { font-size:13px; color:#c5f542; }
+.about-values { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-bottom:28px; }
+.about-values article { border:1px solid var(--border); background:white; padding:18px; border-radius:16px; }
+.about-values h2 { font-size:18px; margin:0 0 8px; }
+.about-values p,.board-heading p { color:var(--muted); font-size:14px; line-height:1.6; }
+.board-heading h1 { font-size:clamp(26px,4vw,36px); letter-spacing:-.035em; margin:10px 0; }
+.about-post { background:white; border:1px solid var(--border); border-radius:18px; padding:24px; margin:20px 0; }
+.about-post p { white-space:pre-line; line-height:1.85; font-size:15px; letter-spacing:-.015em; }
+.about-post img { width:100%; max-height:480px; object-fit:contain; border-radius:12px; margin-top:16px; }
+.about-post time { font-size:12px; color:var(--muted); }
+.board-pinned { display:inline-block; background:#edf7d7; color:#32451e; font-size:12px; padding:5px 10px; border-radius:20px; }
+.about-page .board-post-row { color:var(--ink); text-decoration:none; }
+@media(max-width:600px) { .about-hero { padding:24px 20px; } .about-values { grid-template-columns:1fr; gap:8px; } .about-values article { padding:14px 16px; } .about-post { padding:20px 16px; } }
 .board-cover { height:155px; background:#e5e7e9; }
 .board-cover img { width:100%; height:100%; object-fit:cover; }
 .board-logo { display:flex; align-items:center; justify-content:center; }

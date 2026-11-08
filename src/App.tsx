@@ -58,7 +58,7 @@ import { SavedPlaces } from './SavedPlaces';
 import { Boards } from './Boards';
 import type { Listing } from "../shared/listings.ts";
 const LiveMap = lazy(() => import("./MapView"));
-type Tab = "NOW" | "MAP" | "TRIP" | "PASS" | "PASSPORT";
+type Tab = "NOW" | "MAP" | "TRIP" | "PASS" | "PASSPORT" | "ABOUT";
 const tabs = [
   { id: "NOW" as Tab, icon: Compass },
   { id: "MAP" as Tab, icon: Map },
@@ -601,12 +601,12 @@ export default function App() {
         </button>
         {role === "traveler" && (
           <nav className="desktop-nav" aria-label="Main navigation">
-            {[{id:'NOW' as Tab, ko:'홈', en:'Home'}, {id:'NOW' as Tab, ko:'여행코스', en:'Routes'}, {id:'MAP' as Tab, ko:'지역별가이드', en:'Local guides'}, {id:'NOW' as Tab, ko:'나우로소개', en:'About NOWRO'}].map(({id,ko,en},index) => (
+            {[{id:'NOW' as Tab, ko:'홈', en:'Home'}, {id:'NOW' as Tab, ko:'여행코스', en:'Routes'}, {id:'MAP' as Tab, ko:'지역별가이드', en:'Local guides'}, {id:'ABOUT' as Tab, ko:'나우로소개', en:'About NOWRO'}].map(({id,ko,en},index) => (
               <button
                 key={ko}
-                className={index === 0 && tab === id ? "active" : ""}
-                onClick={() => { if(index === 1) openPlanner(); else if(index === 3) { setTab('NOW'); setTimeout(()=>document.getElementById('about-nowro')?.scrollIntoView({behavior:'smooth'}),100); } else navigate(id); }}
-                aria-current={tab === id ? "page" : undefined}
+                className={index !== 1 && tab === id ? "active" : ""}
+                onClick={() => { if(index === 1) openPlanner(); else navigate(id); }}
+                aria-current={index !== 1 && tab === id ? "page" : undefined}
               >
                 {lang === 'ko' ? ko : en}
               </button>
@@ -1643,6 +1643,7 @@ export default function App() {
                 </section>
               </div>
             )}
+            {tab === "ABOUT" && <Boards lang={lang} page />}
             {tab === "MAP" && (
               <section className="section official-explore"><h1>{lang === 'ko' ? '지역별 가이드' : 'Local guides'}</h1><DistrictDirectory areas={catalog.areas} lang={lang} onSelect={id => { areaChange(id); setToast(lang === 'ko' ? '여행코스 지역이 선택되었습니다. 아래 목록 검색에 지역명을 입력해 장소를 찾아보세요.' : 'Route district selected. Search for the neighborhood in the list below.'); }} /><OfficialPlaces lang={lang} onPlan={openPlanner} regional /></section>
             )}
