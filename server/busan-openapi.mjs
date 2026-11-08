@@ -1,3 +1,4 @@
+import { loadExhibitions } from './exhibitions.mjs';
 const SOURCES = {
   foodie: { name: "Busan Foodie Tour", endpoint: "https://apis.data.go.kr/6260000/FoodieService", key: "BUSAN_FOODIE_API_KEY" },
   exhibitions: { name: "Busan Culture Exhibitions", endpoint: "https://apis.data.go.kr/6260000/BusanCultureExhibitService", key: "BUSAN_EXHIBIT_API_KEY" },
@@ -47,9 +48,9 @@ export async function fetchOpenApi(type, params = {}) {
     if (value.status === 'ok') cache.set(type, { at: Date.now(), value });
     return value;
   }).catch(error => {
-    const reason = error.name === 'TimeoutError' ? 'upstream_timeout' : error.message === 'OPEN_API_REQUEST_REJECTED' ? 'upstream_rejected' : 'upstream_unavailable';
+    const reason = error.reason || (error.name === 'TimeoutError' ? 'upstream_timeout' : error.message === 'OPEN_API_REQUEST_REJECTED' ? 'upstream_rejected' : 'upstream_unavailable');
     if (cached?.value.status === 'ok') return { ...cached.value, stale: true };
-    const value = { items: [], status: 'temporarily_unavailable', reason, configured: Boolean(process.env[SOURCES[type]?.key]) };
+    const value = { items: [], status: 'temporarily_unavailable', reason, ...(error.providerCode?{providerCode:error.providerCode}:{}),...(error.httpStatus?{upstreamHttpStatus:error.httpStatus}:{}), configured: Boolean(process.env[SOURCES[type]?.key]) };
     cache.set(type, { at: Date.now(), value });
     return value;
   }).finally(() => pending.delete(type));
@@ -61,6 +62,7 @@ async function loadOpenApi(type, params = {}) {
   if (!source) throw new Error("UNKNOWN_OPEN_API");
   const serviceKey = process.env[source.key];
   if (!serviceKey) return { source: { id: type, name: source.name, endpoint: source.endpoint, configured: false }, items: [], configured: false };
+  if(type==='exhibitions')return loadExhibitions(serviceKey);
   const operations = { theatre: 'getBusanCulturePlayDetail', foodie: 'getFoodieKr', ocean: 'getMaritimeKr', festivals: 'getFestivalKr', exhibitions: 'getBusanCultureExhibit', kor: 'areaBasedList2', eng: 'areaBasedList2' };
   if (!operations[type]) return { source: { id: type, name: source.name }, items: [], configured: true, status: 'verification_pending' };
   const tourism = type === 'kor' || type === 'eng';
