@@ -9,6 +9,7 @@ export function pageMetadata(url: URL) {
       "부산 지역별 가이드 · Local guides | NOWRO Korea",
       "Explore attractions, dining and neighborhoods across Busan’s 16 districts with NOWRO Korea.",
     ],
+    ROUTES: ['여행코스 · Route planner | NOWRO Korea','Plan your Busan route around selected places, available time, budget and travel preferences.'],
     ABOUT: [
       "나우로 소개 · About NOWRO | NOWRO Korea",
       "Discover NOWRO Korea, learn how to plan your trip, explore Busan and become a local partner.",
@@ -34,7 +35,7 @@ export function pageMetadata(url: URL) {
       ? boards[board]
       : entries[tab] || entries.NOW;
   const canonical = new URL("https://nowrokorea.com/");
-  if (tab === "MAP" || tab === "ABOUT") canonical.searchParams.set("tab", tab);
+  if (tab === "MAP" || tab === "ABOUT" || tab === 'ROUTES') canonical.searchParams.set("tab", tab);
   if (tab === "ABOUT" && boards[board])
     canonical.searchParams.set("board", board);
   const noindex =

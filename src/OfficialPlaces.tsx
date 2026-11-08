@@ -57,8 +57,8 @@ export function OfficialPlaces({
   regional = false,
 }: {
   lang: string;
-  onPlan?: (item?: any) => void;
-  onPlanMany?: (items: any[]) => void;
+  onPlan?: (item?: any) => void | boolean | Promise<void | boolean>;
+  onPlanMany?: (items: any[]) => void | boolean | Promise<void | boolean>;
   districtNames?: string[];
   onClearDistrict?: () => void;
   regional?: boolean;
@@ -536,15 +536,15 @@ export function OfficialPlaces({
           <NearbyShops
             item={selected}
             lang={lang}
-            onPlan={(item) => {
-              setSelected(null);
-              onPlan?.(item);
+            onPlan={async (item) => {
+              const ok=await onPlan?.(item);
+              if(ok!==false)setSelected(null);
             }}
             onPlanMany={
               onPlanMany
-                ? (items) => {
-                    setSelected(null);
-                    onPlanMany(items);
+                ? async (items) => {
+                    const ok=await onPlanMany(items);
+                    if(ok!==false)setSelected(null);
                   }
                 : undefined
             }

@@ -189,6 +189,29 @@ html {
 .nearby-route-builder input { width:18px; height:18px; }
 .nearby-route-builder small { display:block; line-height:1.5; }
 .nearby-route-builder .primary { display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+.planner-entry { background:var(--ink); color:white; padding:24px; }
+.planner-entry h2 { margin:10px 0; }
+.planner-entry .eyebrow { color:var(--lime); }
+.planner-entry p { max-width:650px; color:#e3e8ea; }
+.planner-entry .primary,.home-saved .primary { display:inline-flex; align-items:center; gap:8px; }
+.routes-page { margin-top:0; }
+.routes-page > .planner { margin:18px 0 24px; }
+.journey-steps { display:flex; flex-wrap:wrap; counter-reset:journey; list-style:none; gap:10px; padding:0; margin:16px 0; }
+.journey-steps li { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); }
+.journey-steps li:before { counter-increment:journey; content:counter(journey); display:grid; place-items:center; width:25px; height:25px; border-radius:50%; background:var(--lime-soft); color:var(--ink); font-weight:700; }
+.route-benefits { margin-top:24px; }
+.route-benefits h2 { display:flex; align-items:center; gap:8px; }
+.route-benefits .section-heading { margin-bottom:10px; }
+.route-benefits details { border-top:1px solid var(--border); padding-top:14px; }
+.route-benefits ol { list-style:none; padding:0; display:grid; gap:12px; }
+.route-benefits li { display:flex; align-items:flex-start; gap:8px; font-size:14px; }
+.route-benefits li svg { flex-shrink:0; margin-top:3px; }
+.routes-page #results { scroll-margin-top:24px; }
+.route-date-row { display:grid; grid-template-columns:minmax(220px,300px) 1fr; align-items:end; gap:16px; margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid var(--border); }
+.route-date-row label { display:grid; gap:7px; }
+.route-date-row p { margin:0; font-size:13px; }
+@media(max-width:720px) { .route-date-row { grid-template-columns:1fr; gap:8px; } }
+@media(max-width:720px) { .planner-entry { padding:20px; } .routes-page > .planner { padding:18px; } .journey-steps { gap:8px 14px; } .journey-steps li { font-size:12px; } }
 .about-page .board-post-row { color:var(--ink); text-decoration:none; }
 @media(max-width:600px) { .about-hero { padding:24px 20px; } .about-values { grid-template-columns:1fr; gap:8px; } .about-values article { padding:14px 16px; } .about-post { padding:20px 16px; } }
 .board-cover { height:155px; background:#e5e7e9; }

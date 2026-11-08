@@ -1,4 +1,4 @@
-export const appTabs = ["NOW", "MAP", "TRIP", "PASS", "PASSPORT", "ABOUT"] as const;
+export const appTabs = ["NOW", "MAP", "ROUTES", "TRIP", "PASS", "PASSPORT", "ABOUT"] as const;
 export type AppTab = (typeof appTabs)[number];
 export function readAppTab(search: string): AppTab {
   const value = new URLSearchParams(search).get("tab");

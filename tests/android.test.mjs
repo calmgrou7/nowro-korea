@@ -32,6 +32,10 @@ test("Play association validates certificates and cannot emit placeholder trust"
 });
 
 test("Android app shortcuts restore valid tabs and retain deep-link parameters", () => {
+  assert.equal(readAppTab('?tab=ROUTES'),'ROUTES');
+  const routeUrl=appTabUrl('https://nowro.example/?tab=ABOUT&board=guide','ROUTES');
+  assert.equal(routeUrl.searchParams.get('tab'),'ROUTES');
+  assert.equal(routeUrl.searchParams.has('board'),false);
   assert.equal(readAppTab("?tab=PASSPORT"), "PASSPORT");
   assert.equal(readAppTab("?tab=not-a-page"), "NOW");
   const changed = appTabUrl(

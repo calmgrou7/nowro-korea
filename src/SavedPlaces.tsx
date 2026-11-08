@@ -79,8 +79,8 @@ export function SavedPlaces({
       {!items.length && (
         <p>
           {L(
-            "탐색에서 마음에 드는 장소나 행사를 저장해주세요.",
-            "Save a place or event from Explore.",
+            "홈이나 지역가이드에서 마음에 드는 장소·행사를 저장해주세요.",
+            "Save a place or event from Home or Local guides.",
           )}
         </p>
       )}

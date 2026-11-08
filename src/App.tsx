@@ -54,15 +54,17 @@ import { DistrictDirectory } from "./DistrictDirectory";
 import { starterStampAreaIds } from "../shared/catalog";
 import { AdminDashboard } from "./AdminDashboard";
 import { OfficialPlaces } from "./OfficialPlaces";
-import { SavedPlaces } from './SavedPlaces';
-import { Boards } from './Boards';
-import { eventExpired } from '../shared/event-dates';
+import { SavedPlaces } from "./SavedPlaces";
+import { Boards } from "./Boards";
+import { RouteBenefits } from "./RouteBenefits";
+import { eventExpired } from "../shared/event-dates";
 import type { Listing } from "../shared/listings.ts";
 const LiveMap = lazy(() => import("./MapView"));
-type Tab = "NOW" | "MAP" | "TRIP" | "PASS" | "PASSPORT" | "ABOUT";
+type Tab = "NOW" | "MAP" | "ROUTES" | "TRIP" | "PASS" | "PASSPORT" | "ABOUT";
 const tabs = [
   { id: "NOW" as Tab, icon: Compass },
   { id: "MAP" as Tab, icon: Map },
+  { id: "ROUTES" as Tab, icon: RouteIcon },
   { id: "TRIP" as Tab, icon: Bookmark },
 ];
 const icons: Record<string, typeof Waves> = {
@@ -110,11 +112,15 @@ const defaults: Conditions = {
 };
 export default function App() {
   const [tab, setTab] = useTabNavigation();
-  const [guideDistrict,setGuideDistrict]=useState('');
+  const [guideDistrict, setGuideDistrict] = useState("");
   const [listing, setListing] = useState<Listing | null>(null);
   const [allListings, setAllListings] = useState<Listing[]>([]);
   const [festivalCover, setFestivalCover] = useState<any>(null);
-  useEffect(() => { api('festival-hero').then(setFestivalCover).catch(()=>{}); }, []);
+  useEffect(() => {
+    api("festival-hero")
+      .then(setFestivalCover)
+      .catch(() => {});
+  }, []);
   const [oauthHandled, setOauthHandled] = useState(false);
   useEffect(() => {
     const id = new URLSearchParams(location.search).get("listing");
@@ -146,7 +152,9 @@ export default function App() {
   function openListing(v: Listing) {
     setListing(v);
     if (!allListings.length)
-      api("listings").then((response) => setAllListings(response.listings)).catch(() => {});
+      api("listings")
+        .then((response) => setAllListings(response.listings))
+        .catch(() => {});
   }
   function closeListing() {
     setListing(null);
@@ -209,12 +217,13 @@ export default function App() {
     [reportText, setReportText] = useState("");
   const T = (key: string) => t(key, lang);
   useEffect(() => {
-    api("site-content").then((v) => setSiteContent(v.content)).catch(() => {});
-    api("openapi/sources").then((v) => setOpenApiSources(v.sources || [])).catch(() => {});
+    api("site-content")
+      .then((v) => setSiteContent(v.content))
+      .catch(() => {});
+    api("openapi/sources")
+      .then((v) => setOpenApiSources(v.sources || []))
+      .catch(() => {});
   }, []);
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, [tab]);
   const scannedOnce = useRef(false);
   useEffect(() => {
     const scanned = new URLSearchParams(location.search).get("stamp");
@@ -292,6 +301,7 @@ export default function App() {
   useEffect(() => {
     try {
       sessionStorage.setItem("nowro-conditions", JSON.stringify(c));
+      setRoutes(null);
     } catch {}
   }, [c]);
   useEffect(() => {
@@ -323,21 +333,45 @@ export default function App() {
     }
   }
   function update<K extends keyof Conditions>(key: K, v: Conditions[K]) {
+    setRoutes(null);
     setC((old) => ({ ...old, [key]: v }));
   }
   function areaChange(id: string) {
+    setRoutes(null);
     const a = catalog?.areas.find((a) => a.id === id);
-    if (a) setC((old) => ({ ...old, areaId: id, origin: a.point, requiredPlaceId: undefined, requiredPlaceIds: undefined }));
+    if (a)
+      setC((old) => ({
+        ...old,
+        areaId: id,
+        origin: a.point,
+        requiredPlaceId: undefined,
+        requiredPlaceIds: undefined,
+      }));
   }
   async function generate(conditions = c) {
-    if (catalog?.places.some(p => p.planningEstimate) && !conditions.allowPlanningEstimates) { setToast(lang === 'ko' ? '운영정보 미확인 장소를 포함한 계획용 코스에 동의해주세요.' : 'Please allow planning estimates for places with unverified hours and fees.'); return; }
+    if (
+      catalog?.places.some((p) => p.planningEstimate) &&
+      !conditions.allowPlanningEstimates
+    ) {
+      setToast(
+        lang === "ko"
+          ? "운영정보 미확인 장소를 포함한 계획용 코스에 동의해주세요."
+          : "Please allow planning estimates for places with unverified hours and fees.",
+      );
+      return;
+    }
     await action(async () => {
       const data = await api("recommend", { conditions });
-      const updatedCatalog = await api('catalog');
+      const updatedCatalog = await api("catalog");
       setCatalog(updatedCatalog);
-      if (updatedCatalog.places.some((p: Place) => p.planningEstimate)) setToast(lang === 'ko' ? '공식 API 장소 기반 예상 코스입니다. 운영시간·요금·예약 여부는 방문 전 확인해주세요.' : 'Route uses official API places. Hours, fees and reservations require venue confirmation.');
+      if (updatedCatalog.places.some((p: Place) => p.planningEstimate))
+        setToast(
+          lang === "ko"
+            ? "공식 API 장소 기반 예상 코스입니다. 운영시간·요금·예약 여부는 방문 전 확인해주세요."
+            : "Route uses official API places. Hours, fees and reservations require venue confirmation.",
+        );
       setRoutes(data.routes);
-      setTab("NOW");
+      setTab("ROUTES");
       api("events", { name: "recommend" }).catch(() => {});
       setTimeout(
         () =>
@@ -350,26 +384,73 @@ export default function App() {
   }
   async function openPlanner(item?: any) {
     if (item?.UC_SEQ) {
-      const refreshed = await api('catalog').catch(()=>catalog);
-      if(refreshed)setCatalog(refreshed);
-      const chosen = refreshed?.places.find((p: Place) => p.id === item.routePlaceId);
-      if (!chosen) { setToast(lang === 'ko' ? '이 장소는 위치 정보 확인 후 코스에 추가할 수 있습니다. 현재는 지도에서 위치를 확인해주세요.' : 'This place is not available for route planning yet. Please check its location on the map.'); return; }
-      setC(old => ({ ...old, areaId: chosen.areaId, origin: chosen.point, requiredPlaceId: chosen.id, requiredPlaceIds: undefined }));
+      const refreshed = await api("catalog").catch(() => catalog);
+      if (refreshed) setCatalog(refreshed);
+      const chosen = refreshed?.places.find(
+        (p: Place) => p.id === item.routePlaceId,
+      );
+      if (!chosen) {
+        setToast(
+          lang === "ko"
+            ? "이 장소는 위치 정보 확인 후 코스에 추가할 수 있습니다. 현재는 지도에서 위치를 확인해주세요."
+            : "This place is not available for route planning yet. Please check its location on the map.",
+        );
+        return false;
+      }
+      setC((old) => ({
+        ...old,
+        areaId: chosen.areaId,
+        origin: chosen.point,
+        requiredPlaceId: chosen.id,
+        requiredPlaceIds: undefined,
+      }));
+      setRoutes(null);
     }
-    setTab('NOW');
-    setTimeout(() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    setTab("ROUTES");
+    window.scrollTo({ top: 0, behavior: "instant" });
+    return true;
   }
   async function planSaved(items: any[]) {
-    if(!items.length||items.length>4)return;
-    if(items.some(item=>eventExpired(item))) {setToast(lang==='ko'?'종료된 일정은 코스에 포함할 수 없습니다. 해당 항목을 해제해주세요.':'Ended events cannot be included in a route. Please deselect them.');return;}
-    const refreshed = await api('catalog').catch(()=>catalog);
-    if(refreshed)setCatalog(refreshed);
-    const chosen = items.map(item => refreshed?.places.find((p: Place) => p.id === item.routePlaceId));
-    if (chosen.some(p => !p)) { setToast(lang === 'ko' ? '일부 항목은 위치·일정 확인이 필요해 아직 코스로 계산할 수 없습니다. 해당 항목을 해제해주세요.' : 'Some items are not route-ready. Deselect items whose location or schedule is unverified.'); return; }
+    if (!items.length || items.length > 4) return false;
+    if (items.some((item) => eventExpired(item))) {
+      setToast(
+        lang === "ko"
+          ? "종료된 일정은 코스에 포함할 수 없습니다. 해당 항목을 해제해주세요."
+          : "Ended events cannot be included in a route. Please deselect them.",
+      );
+      return false;
+    }
+    const refreshed = await api("catalog").catch(() => catalog);
+    if (refreshed) setCatalog(refreshed);
+    const chosen = items.map((item) =>
+      refreshed?.places.find((p: Place) => p.id === item.routePlaceId),
+    );
+    if (chosen.some((p) => !p)) {
+      setToast(
+        lang === "ko"
+          ? "일부 항목은 위치·일정 확인이 필요해 아직 코스로 계산할 수 없습니다. 해당 항목을 해제해주세요."
+          : "Some items are not route-ready. Deselect items whose location or schedule is unverified.",
+      );
+      return false;
+    }
     const points = chosen as Place[];
-    if (new Set(points.map(p => p.areaId)).size !== 1) { setToast(lang === 'ko' ? '현재는 같은 구·군의 장소끼리 코스를 만들 수 있습니다.' : 'Select places in the same district.'); return; }
-    setC(old => ({...old, areaId: points[0].areaId, origin: points[0].point, requiredPlaceId: undefined, requiredPlaceIds: points.map(p=>p.id)}));
-    openPlanner();
+    if (new Set(points.map((p) => p.areaId)).size !== 1) {
+      setToast(
+        lang === "ko"
+          ? "현재는 같은 구·군의 장소끼리 코스를 만들 수 있습니다."
+          : "Select places in the same district.",
+      );
+      return false;
+    }
+    setC((old) => ({
+      ...old,
+      areaId: points[0].areaId,
+      origin: points[0].point,
+      requiredPlaceId: undefined,
+      requiredPlaceIds: points.map((p) => p.id),
+    }));
+    setRoutes(null);
+    return openPlanner();
   }
   function gps() {
     if (!consent.location) {
@@ -525,7 +606,11 @@ export default function App() {
       </div>
       <small>
         {clock(r.startAt)}–{clock(r.endAt)} · {T(r.conditions.transport)} ·{" "}
-        {r.sample ? T("sample") : (lang === 'ko' ? '계획용 예상 · 영업·요금 미확인' : 'Planning estimate · hours and fees unverified')}
+        {r.sample
+          ? T("sample")
+          : lang === "ko"
+            ? "계획용 예상 · 영업·요금 미확인"
+            : "Planning estimate · hours and fees unverified"}
       </small>
       <button className="secondary full" onClick={() => setSelected(r)}>
         {T("view")}
@@ -578,6 +663,415 @@ export default function App() {
         <p>{T("loading")}</p>
       </main>
     );
+  const plannerView = (
+    <section id="planner" className="planner" aria-label={T("plan")}>
+      {c.requiredPlaceId && (
+        <p className="notice">
+          {lang === "ko" ? "포함할 장소: " : "Include: "}
+          {catalog.places.find((p) => p.id === c.requiredPlaceId)?.name[lang] ||
+            c.requiredPlaceId}
+          <button
+            className="text-btn"
+            onClick={() => update("requiredPlaceId", undefined)}
+          >
+            {lang === "ko" ? "선택 해제" : "Clear"}
+          </button>
+        </p>
+      )}
+      {catalog.places.some((p) => p.planningEstimate) && (
+        <label className="notice">
+          <input
+            type="checkbox"
+            checked={!!c.allowPlanningEstimates}
+            onChange={(e) => update("allowPlanningEstimates", e.target.checked)}
+          />
+          {lang === "ko"
+            ? "운영시간·요금·예약 여부 미확인 장소를 계획용 코스에 포함합니다. 방문 가능 여부와 실제 비용은 직접 확인해야 합니다."
+            : "Include places with unverified hours, fees and reservations in a planning-only route. Confirm availability and actual costs before visiting."}
+        </label>
+      )}
+      {!!c.requiredPlaceIds?.length && (
+        <p className="notice">
+          {lang === "ko" ? "선택한 장소: " : "Selected places: "}
+          {c.requiredPlaceIds
+            .map(
+              (id) => catalog.places.find((p) => p.id === id)?.name[lang] || id,
+            )
+            .join(" · ")}
+          <button
+            className="text-btn"
+            onClick={() => update("requiredPlaceIds", undefined)}
+          >
+            {lang === "ko" ? "선택 해제" : "Clear"}
+          </button>
+        </p>
+      )}
+      <div className="planner-heading">
+        <div>
+          <span className="eyebrow">YOUR NEXT MOVE</span>
+          <h2>{T("plan")}</h2>
+        </div>
+        <span className="no-login">
+          <ShieldCheck size={15} />
+          {T("noSignup")}
+        </span>
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          generate();
+        }}
+      >
+        <div className="route-date-row"><label>{T('startAt')}<input type="datetime-local" required value={koreaInput(c.startAt)} onChange={e=>{if(e.target.value)update('startAt',koreaISO(e.target.value));}}/></label><p className="muted">{lang==='ko'?'부산 현지 시간(UTC+9)입니다. 행사를 포함했다면 해당 행사 기간에 맞는 날짜를 선택하세요.':'Busan local time (UTC+9). If your route includes an event, choose a date within its scheduled period.'}</p></div>
+        <div className="planner-grid">
+          <div className="form-block">
+            <label htmlFor="area">
+              <MapPin size={17} />
+              {T("where")}
+            </label>
+            <select
+              id="area"
+              value={c.areaId}
+              onChange={(e) => areaChange(e.target.value)}
+            >
+              {catalog.areas.map((a) => (
+                <option value={a.id} key={a.id}>
+                  {lang === "ko" ? a.name.ko : `${name(a)} / ${a.name.ko}`}
+                </option>
+              ))}
+            </select>
+            {area && <small className="muted">{area.aliases[lang]}</small>}
+            {!catalog.places.some((p) => p.areaId === c.areaId) && (
+              <p className="notice">{T("districtPreparing")}</p>
+            )}
+            <button
+              type="button"
+              className="text-btn"
+              disabled={busy}
+              onClick={gps}
+            >
+              <LocateFixed size={14} />
+              {T("gps")}
+            </button>
+          </div>
+          <div className="form-block time-block">
+            <label>
+              <Clock size={17} />
+              {T("time")}
+            </label>
+            <div className="time-options">
+              {[
+                ["two", 120],
+                ["four", 240],
+                ["half", 360],
+                ["day", 540],
+              ].map(([key, n]) => (
+                <button
+                  type="button"
+                  aria-pressed={c.minutes === n}
+                  className={c.minutes === n ? "chosen" : ""}
+                  key={key}
+                  onClick={() => update("minutes", n as number)}
+                >
+                  {T(key as string)}
+                </button>
+              ))}
+            </div>
+            <label className="compact-label">
+              {T("minutes")}
+              <input
+                aria-label={T("minutes")}
+                type="number"
+                min="30"
+                max="720"
+                value={c.minutes}
+                onChange={(e) => update("minutes", Number(e.target.value))}
+              />
+            </label>
+          </div>
+          <div className="form-block">
+            <label htmlFor="budget">
+              <Wallet size={17} />
+              {T("budget")}
+            </label>
+            <div className="budget-input">
+              <span>₩</span>
+              <input
+                id="budget"
+                type="number"
+                min="0"
+                max="10000000"
+                step="1000"
+                value={c.budget}
+                onChange={(e) => update("budget", Number(e.target.value))}
+              />
+              <span>KRW</span>
+            </div>
+          </div>
+        </div>
+        <div className="planner-bottom">
+          <div>
+            <label>{T("interests")}</label>
+            <div className="interest-chips">
+              {Object.entries(icons).map(([id, Icon]) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={c.interests.includes(id)}
+                  className={c.interests.includes(id) ? "chosen" : ""}
+                  onClick={() => toggleInterest(id)}
+                >
+                  <Icon size={15} />
+                  {T(id)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <button className="primary main-cta" disabled={busy}>
+            {busy ? T("loading") : T("go")}
+            <ArrowUpRight size={21} />
+          </button>
+        </div>
+        <p className="cost-note">{T("costNote")}</p>
+        <details className="advanced">
+          <summary>
+            {T("advanced")}
+            <ChevronDown size={15} />
+          </summary>
+          <div className="advanced-grid">
+            <label>
+              {T("companion")}
+              <select
+                value={c.companion}
+                onChange={(e) => update("companion", e.target.value)}
+              >
+                {["solo", "couple", "friends", "family"].map((x) => (
+                  <option key={x} value={x}>
+                    {T(x)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              {T("transport")}
+              <select
+                value={c.transport}
+                onChange={(e) =>
+                  update("transport", e.target.value as Conditions["transport"])
+                }
+              >
+                {["walk", "transit", "car"].map((x) => (
+                  <option key={x} value={x}>
+                    {T(x)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              {T("lat")}
+              <input
+                type="number"
+                step="any"
+                min="-90"
+                max="90"
+                value={c.origin.lat}
+                onChange={(e) =>
+                  update("origin", {
+                    ...c.origin,
+                    lat: Number(e.target.value),
+                  })
+                }
+              />
+            </label>
+            <label>
+              {T("lng")}
+              <input
+                type="number"
+                step="any"
+                min="-180"
+                max="180"
+                value={c.origin.lng}
+                onChange={(e) =>
+                  update("origin", {
+                    ...c.origin,
+                    lng: Number(e.target.value),
+                  })
+                }
+              />
+            </label>
+            <label>
+              {T("diet")}
+              <select
+                value={c.diet}
+                onChange={(e) => update("diet", e.target.value)}
+              >
+                <option value="">{T("none")}</option>
+                <option value="vegetarian">Vegetarian / 채식</option>
+                <option value="halal">Halal / 할랄</option>
+              </select>
+            </label>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={c.children}
+                onChange={(e) => update("children", e.target.checked)}
+              />
+              {T("children")}
+            </label>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={c.accessible}
+                onChange={(e) => update("accessible", e.target.checked)}
+              />
+              {T("accessible")}
+            </label>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={!!c.returnPoint}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setC((old) => ({
+                    ...old,
+                    returnPoint: checked ? { ...old.origin } : null,
+                    deadline: checked ? old.deadline : null,
+                  }));
+                }}
+              />
+              {T("returnTo")}
+            </label>
+            {c.returnPoint && (
+              <>
+                <label>
+                  {T("lat")}
+                  <input
+                    type="number"
+                    step="any"
+                    min="-90"
+                    max="90"
+                    value={c.returnPoint.lat}
+                    onChange={(e) =>
+                      update("returnPoint", {
+                        ...c.returnPoint!,
+                        lat: Number(e.target.value),
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  {T("lng")}
+                  <input
+                    type="number"
+                    step="any"
+                    min="-180"
+                    max="180"
+                    value={c.returnPoint.lng}
+                    onChange={(e) =>
+                      update("returnPoint", {
+                        ...c.returnPoint!,
+                        lng: Number(e.target.value),
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  {T("deadline")}
+                  <input
+                    type="datetime-local"
+                    value={c.deadline ? koreaInput(c.deadline) : ""}
+                    onChange={(e) =>
+                      update(
+                        "deadline",
+                        e.target.value ? koreaISO(e.target.value) : null,
+                      )
+                    }
+                  />
+                </label>
+              </>
+            )}
+            <label>
+              {T("tripDates")}
+              <div className="inline">
+                <input
+                  aria-label="Trip start"
+                  type="date"
+                  value={c.tripStart}
+                  onChange={(e) => update("tripStart", e.target.value)}
+                />
+                <input
+                  aria-label="Trip end"
+                  type="date"
+                  min={c.tripStart}
+                  value={c.tripEnd}
+                  onChange={(e) => update("tripEnd", e.target.value)}
+                />
+              </div>
+            </label>
+          </div>
+        </details>
+      </form>
+      <details className="natural">
+        <summary>
+          <Sparkles size={15} />
+          {T("natural")}
+        </summary>
+        <p className="muted">{T("aiPrivacy")}</p>
+        <textarea
+          value={natural}
+          maxLength={500}
+          onChange={(e) => setNatural(e.target.value)}
+          placeholder="Gwangalli, 4 hours, ocean and coffee, under KRW 60,000."
+          aria-label={T("natural")}
+        />
+        <button
+          className="secondary"
+          disabled={busy || natural.length < 2}
+          onClick={() =>
+            action(async () => {
+              const data = await api("ai/extract", {
+                text: natural,
+              });
+              setExtracted(data.conditions);
+              if (!data.conditions) setToast(T("aiOff"));
+            })
+          }
+        >
+          {T("extract")}
+        </button>
+        {extracted && (
+          <div className="extracted">
+            <p>
+              {extracted.areaId || c.areaId} · {extracted.minutes ?? c.minutes}{" "}
+              min · {krw(extracted.budget ?? c.budget)} ·{" "}
+              {extracted.interests.map((x: string) => T(x)).join(", ")}
+            </p>
+            <button
+              className="secondary"
+              onClick={() => {
+                setC((old) => ({
+                  ...old,
+                  areaId: extracted.areaId || old.areaId,
+                  origin:
+                    catalog.areas.find((a) => a.id === extracted.areaId)
+                      ?.point || old.origin,
+                  minutes: extracted.minutes ?? old.minutes,
+                  budget: extracted.budget ?? old.budget,
+                  interests: extracted.interests.length
+                    ? extracted.interests
+                    : old.interests,
+                }));
+                setExtracted(null);
+              }}
+            >
+              {T("apply")}
+              <Check size={15} />
+            </button>
+          </div>
+        )}
+      </details>
+    </section>
+  );
   return (
     <>
       <EmailLinkSignIn lang={lang} onChange={refresh} />
@@ -605,14 +1099,20 @@ export default function App() {
         </button>
         {role === "traveler" && (
           <nav className="desktop-nav" aria-label="Main navigation">
-            {[{id:'NOW' as Tab, ko:'홈', en:'Home'}, {id:'NOW' as Tab, ko:'여행코스', en:'Routes'}, {id:'MAP' as Tab, ko:'지역별가이드', en:'Local guides'}, {id:'ABOUT' as Tab, ko:'나우로소개', en:'About NOWRO'}].map(({id,ko,en},index) => (
+            {[
+              { id: "NOW" as Tab, ko: "홈", en: "Home" },
+              { id: "MAP" as Tab, ko: "지역가이드", en: "Local guides" },
+              { id: "ROUTES" as Tab, ko: "코스", en: "Routes" },
+              { id: "TRIP" as Tab, ko: "저장", en: "Saved" },
+              { id: "ABOUT" as Tab, ko: "나우로 소개", en: "About NOWRO" },
+            ].map(({ id, ko, en }) => (
               <button
                 key={ko}
-                className={index !== 1 && tab === id ? "active" : ""}
-                onClick={() => { if(index === 1) openPlanner(); else navigate(id); }}
-                aria-current={index !== 1 && tab === id ? "page" : undefined}
+                className={tab === id ? "active" : ""}
+                onClick={() => navigate(id)}
+                aria-current={tab === id ? "page" : undefined}
               >
-                {lang === 'ko' ? ko : en}
+                {lang === "ko" ? ko : en}
               </button>
             ))}
           </nav>
@@ -638,7 +1138,9 @@ export default function App() {
           </label>
           <button
             className="icon-btn account-shortcut"
-            aria-label={status?.session.authenticated ? T("account") : T("signIn")}
+            aria-label={
+              status?.session.authenticated ? T("account") : T("signIn")
+            }
             onClick={() => setSettings(true)}
             title={status?.session.authenticated ? T("account") : T("signIn")}
           >
@@ -678,9 +1180,7 @@ export default function App() {
                   : "Signed-in operator account. Business approval and listing publication are reviewed separately."
                 : T("operatorNote")}
             </p>
-            {role === "admin" && (
-              <AdminDashboard />
-            )}
+            {role === "admin" && <AdminDashboard />}
             {role === "admin" && (
               <AdminBusinesses lang={lang} areas={catalog.areas} />
             )}
@@ -999,16 +1499,27 @@ export default function App() {
           </section>
         ) : (
           <>
-            {tab === "NOW" && (
-              <div className="home-sections">
-<section className="hero hero-photo-intro">
+            {
+              <div
+                className="home-sections"
+                style={tab === "NOW" ? undefined : { display: "none" }}
+              >
+                <section className="hero hero-photo-intro">
                   <div className="hero-copy">
                     <span className="eyebrow">
                       <span className="status-dot" />
                       YOUR KOREA. RIGHT NOW.
                     </span>
-                    <h2>{siteContent?.[lang === "ko" ? "hero_title_ko" : "hero_title_en"] || T("hero")}</h2>
-                    <p>{siteContent?.[lang === "ko" ? "hero_intro_ko" : "hero_intro_en"] || T("intro")}</p>
+                    <h2>
+                      {siteContent?.[
+                        lang === "ko" ? "hero_title_ko" : "hero_title_en"
+                      ] || T("hero")}
+                    </h2>
+                    <p>
+                      {siteContent?.[
+                        lang === "ko" ? "hero_intro_ko" : "hero_intro_en"
+                      ] || T("intro")}
+                    </p>
                     <div className="hero-tags">
                       <span>
                         <Users size={15} />
@@ -1030,24 +1541,40 @@ export default function App() {
                   </div>
                   <div className="hero-image">
                     <img
-                      src={festivalCover?.image || '/brand/logo.webp'}
-                      alt={festivalCover?.title || 'NOWRO'}
-                      style={!festivalCover?.image ? {objectFit:'contain',padding:'20%',background:'#e5e7e9'} : undefined}
+                      src={festivalCover?.image || "/brand/logo.webp"}
+                      alt={festivalCover?.title || "NOWRO"}
+                      style={
+                        !festivalCover?.image
+                          ? {
+                              objectFit: "contain",
+                              padding: "20%",
+                              background: "#e5e7e9",
+                            }
+                          : undefined
+                      }
                       onError={() => setFestivalCover(null)}
                       fetchPriority="high"
                     />
                     <div className="image-label">
                       <span>
                         <MapPin size={14} />
-                        {festivalCover?.title || (lang === 'ko' ? '부산 축제 이미지 준비 중' : 'Busan festival cover')}
+                        {festivalCover?.title ||
+                          (lang === "ko"
+                            ? "부산 축제 이미지 준비 중"
+                            : "Busan festival cover")}
                       </span>
                       <small>
                         <a
-                          href={festivalCover?.source || 'https://www.visitbusan.net/'}
+                          href={
+                            festivalCover?.source ||
+                            "https://www.visitbusan.net/"
+                          }
                           target="_blank"
                           rel="noreferrer"
                         >
-                          {lang === 'ko' ? '사진: 부산광역시 축제 API · 자료 이미지' : 'Photo: Busan festival API · archive image'}
+                          {lang === "ko"
+                            ? "사진: 부산광역시 축제 API · 자료 이미지"
+                            : "Photo: Busan festival API · archive image"}
                         </a>{" "}
                         ·{" "}
                         <a
@@ -1055,7 +1582,7 @@ export default function App() {
                           target="_blank"
                           rel="noreferrer"
                         >
-                          {lang === 'ko' ? '공식 출처' : 'Official source'}
+                          {lang === "ko" ? "공식 출처" : "Official source"}
                         </a>
                       </small>
                     </div>
@@ -1066,427 +1593,68 @@ export default function App() {
                     </div>
                   </div>
                 </section>
-<OfficialPlaces lang={lang} onPlan={openPlanner} onPlanMany={planSaved} />
-<section
-                  id="planner"
-                  className="planner"
-                  aria-label={T("plan")}
-                >
-                  {c.requiredPlaceId && <p className="notice">{lang === 'ko' ? '포함할 장소: ' : 'Include: '}{catalog.places.find(p => p.id === c.requiredPlaceId)?.name[lang] || c.requiredPlaceId}<button className="text-btn" onClick={() => update('requiredPlaceId', undefined)}>{lang === 'ko' ? '선택 해제' : 'Clear'}</button></p>}
-                  {catalog.places.some(p=>p.planningEstimate) && <label className="notice"><input type="checkbox" checked={!!c.allowPlanningEstimates} onChange={e=>update('allowPlanningEstimates',e.target.checked)} />{lang === 'ko' ? '운영시간·요금·예약 여부 미확인 장소를 계획용 코스에 포함합니다. 방문 가능 여부와 실제 비용은 직접 확인해야 합니다.' : 'Include places with unverified hours, fees and reservations in a planning-only route. Confirm availability and actual costs before visiting.'}</label>}
-                  {!!c.requiredPlaceIds?.length && <p className="notice">{lang === 'ko' ? '선택한 장소: ' : 'Selected places: '}{c.requiredPlaceIds.map(id=>catalog.places.find(p=>p.id===id)?.name[lang] || id).join(' · ')}<button className="text-btn" onClick={()=>update('requiredPlaceIds',undefined)}>{lang === 'ko' ? '선택 해제' : 'Clear'}</button></p>}
-                  <div className="planner-heading">
-                    <div>
-                      <span className="eyebrow">YOUR NEXT MOVE</span>
-                      <h2>{T("plan")}</h2>
-                    </div>
-                    <span className="no-login">
-                      <ShieldCheck size={15} />
-                      {T("noSignup")}
-                    </span>
-                  </div>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      generate();
-                    }}
-                  >
-                    <div className="planner-grid">
-                      <div className="form-block">
-                        <label htmlFor="area">
-                          <MapPin size={17} />
-                          {T("where")}
-                        </label>
-                        <select
-                          id="area"
-                          value={c.areaId}
-                          onChange={(e) => areaChange(e.target.value)}
-                        >
-                          {catalog.areas.map((a) => (
-                            <option value={a.id} key={a.id}>
-                              {lang === "ko"
-                                ? a.name.ko
-                                : `${name(a)} / ${a.name.ko}`}
-                            </option>
-                          ))}
-                        </select>
-                        {area && (
-                          <small className="muted">{area.aliases[lang]}</small>
-                        )}
-                        {!catalog.places.some((p) => p.areaId === c.areaId) && (
-                          <p className="notice">{T("districtPreparing")}</p>
-                        )}
-                        <button
-                          type="button"
-                          className="text-btn"
-                          disabled={busy}
-                          onClick={gps}
-                        >
-                          <LocateFixed size={14} />
-                          {T("gps")}
-                        </button>
-                      </div>
-                      <div className="form-block time-block">
-                        <label>
-                          <Clock size={17} />
-                          {T("time")}
-                        </label>
-                        <div className="time-options">
-                          {[
-                            ["two", 120],
-                            ["four", 240],
-                            ["half", 360],
-                            ["day", 540],
-                          ].map(([key, n]) => (
-                            <button
-                              type="button"
-                              aria-pressed={c.minutes === n}
-                              className={c.minutes === n ? "chosen" : ""}
-                              key={key}
-                              onClick={() => update("minutes", n as number)}
-                            >
-                              {T(key as string)}
-                            </button>
-                          ))}
-                        </div>
-                        <label className="compact-label">
-                          {T("minutes")}
-                          <input
-                            aria-label={T("minutes")}
-                            type="number"
-                            min="30"
-                            max="720"
-                            value={c.minutes}
-                            onChange={(e) =>
-                              update("minutes", Number(e.target.value))
-                            }
-                          />
-                        </label>
-                      </div>
-                      <div className="form-block">
-                        <label htmlFor="budget">
-                          <Wallet size={17} />
-                          {T("budget")}
-                        </label>
-                        <div className="budget-input">
-                          <span>₩</span>
-                          <input
-                            id="budget"
-                            type="number"
-                            min="0"
-                            max="10000000"
-                            step="1000"
-                            value={c.budget}
-                            onChange={(e) =>
-                              update("budget", Number(e.target.value))
-                            }
-                          />
-                          <span>KRW</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="planner-bottom">
-                      <div>
-                        <label>{T("interests")}</label>
-                        <div className="interest-chips">
-                          {Object.entries(icons).map(([id, Icon]) => (
-                            <button
-                              key={id}
-                              type="button"
-                              aria-pressed={c.interests.includes(id)}
-                              className={
-                                c.interests.includes(id) ? "chosen" : ""
-                              }
-                              onClick={() => toggleInterest(id)}
-                            >
-                              <Icon size={15} />
-                              {T(id)}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <button className="primary main-cta" disabled={busy}>
-                        {busy ? T("loading") : T("go")}
-                        <ArrowUpRight size={21} />
-                      </button>
-                    </div>
-                    <p className="cost-note">{T("costNote")}</p>
-                    <details className="advanced">
-                      <summary>
-                        {T("advanced")}
-                        <ChevronDown size={15} />
-                      </summary>
-                      <div className="advanced-grid">
-                        <label>
-                          {T("companion")}
-                          <select
-                            value={c.companion}
-                            onChange={(e) =>
-                              update("companion", e.target.value)
-                            }
-                          >
-                            {["solo", "couple", "friends", "family"].map(
-                              (x) => (
-                                <option key={x} value={x}>
-                                  {T(x)}
-                                </option>
-                              ),
-                            )}
-                          </select>
-                        </label>
-                        <label>
-                          {T("transport")}
-                          <select
-                            value={c.transport}
-                            onChange={(e) =>
-                              update(
-                                "transport",
-                                e.target.value as Conditions["transport"],
-                              )
-                            }
-                          >
-                            {["walk", "transit", "car"].map((x) => (
-                              <option key={x} value={x}>
-                                {T(x)}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <label>
-                          {T("startAt")}
-                          <input
-                            type="datetime-local"
-                            required
-                            value={koreaInput(c.startAt)}
-                            onChange={(e) => {
-                              if (e.target.value)
-                                update("startAt", koreaISO(e.target.value));
-                            }}
-                          />
-                        </label>
-                        <label>
-                          {T("lat")}
-                          <input
-                            type="number"
-                            step="any"
-                            min="-90"
-                            max="90"
-                            value={c.origin.lat}
-                            onChange={(e) =>
-                              update("origin", {
-                                ...c.origin,
-                                lat: Number(e.target.value),
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          {T("lng")}
-                          <input
-                            type="number"
-                            step="any"
-                            min="-180"
-                            max="180"
-                            value={c.origin.lng}
-                            onChange={(e) =>
-                              update("origin", {
-                                ...c.origin,
-                                lng: Number(e.target.value),
-                              })
-                            }
-                          />
-                        </label>
-                        <label>
-                          {T("diet")}
-                          <select
-                            value={c.diet}
-                            onChange={(e) => update("diet", e.target.value)}
-                          >
-                            <option value="">{T("none")}</option>
-                            <option value="vegetarian">
-                              Vegetarian / 채식
-                            </option>
-                            <option value="halal">Halal / 할랄</option>
-                          </select>
-                        </label>
-                        <label className="checkbox">
-                          <input
-                            type="checkbox"
-                            checked={c.children}
-                            onChange={(e) =>
-                              update("children", e.target.checked)
-                            }
-                          />
-                          {T("children")}
-                        </label>
-                        <label className="checkbox">
-                          <input
-                            type="checkbox"
-                            checked={c.accessible}
-                            onChange={(e) =>
-                              update("accessible", e.target.checked)
-                            }
-                          />
-                          {T("accessible")}
-                        </label>
-                        <label className="checkbox">
-                          <input
-                            type="checkbox"
-                            checked={!!c.returnPoint}
-                            onChange={(e) => {
-                              const checked = e.target.checked;
-                              setC((old) => ({
-                                ...old,
-                                returnPoint: checked ? { ...old.origin } : null,
-                                deadline: checked ? old.deadline : null,
-                              }));
-                            }}
-                          />
-                          {T("returnTo")}
-                        </label>
-                        {c.returnPoint && (
-                          <>
-                            <label>
-                              {T("lat")}
-                              <input
-                                type="number"
-                                step="any"
-                                min="-90"
-                                max="90"
-                                value={c.returnPoint.lat}
-                                onChange={(e) =>
-                                  update("returnPoint", {
-                                    ...c.returnPoint!,
-                                    lat: Number(e.target.value),
-                                  })
-                                }
-                              />
-                            </label>
-                            <label>
-                              {T("lng")}
-                              <input
-                                type="number"
-                                step="any"
-                                min="-180"
-                                max="180"
-                                value={c.returnPoint.lng}
-                                onChange={(e) =>
-                                  update("returnPoint", {
-                                    ...c.returnPoint!,
-                                    lng: Number(e.target.value),
-                                  })
-                                }
-                              />
-                            </label>
-                            <label>
-                              {T("deadline")}
-                              <input
-                                type="datetime-local"
-                                value={c.deadline ? koreaInput(c.deadline) : ""}
-                                onChange={(e) =>
-                                  update(
-                                    "deadline",
-                                    e.target.value
-                                      ? koreaISO(e.target.value)
-                                      : null,
-                                  )
-                                }
-                              />
-                            </label>
-                          </>
-                        )}
-                        <label>
-                          {T("tripDates")}
-                          <div className="inline">
-                            <input
-                              aria-label="Trip start"
-                              type="date"
-                              value={c.tripStart}
-                              onChange={(e) =>
-                                update("tripStart", e.target.value)
-                              }
-                            />
-                            <input
-                              aria-label="Trip end"
-                              type="date"
-                              min={c.tripStart}
-                              value={c.tripEnd}
-                              onChange={(e) =>
-                                update("tripEnd", e.target.value)
-                              }
-                            />
-                          </div>
-                        </label>
-                      </div>
-                    </details>
-                  </form>
-                  <details className="natural">
-                    <summary>
-                      <Sparkles size={15} />
-                      {T("natural")}
-                    </summary>
-                    <p className="muted">{T("aiPrivacy")}</p>
-                    <textarea
-                      value={natural}
-                      maxLength={500}
-                      onChange={(e) => setNatural(e.target.value)}
-                      placeholder="Gwangalli, 4 hours, ocean and coffee, under KRW 60,000."
-                      aria-label={T("natural")}
-                    />
-                    <button
-                      className="secondary"
-                      disabled={busy || natural.length < 2}
-                      onClick={() =>
-                        action(async () => {
-                          const data = await api("ai/extract", {
-                            text: natural,
-                          });
-                          setExtracted(data.conditions);
-                          if (!data.conditions) setToast(T("aiOff"));
-                        })
-                      }
-                    >
-                      {T("extract")}
-                    </button>
-                    {extracted && (
-                      <div className="extracted">
-                        <p>
-                          {extracted.areaId || c.areaId} ·{" "}
-                          {extracted.minutes ?? c.minutes} min ·{" "}
-                          {krw(extracted.budget ?? c.budget)} ·{" "}
-                          {extracted.interests
-                            .map((x: string) => T(x))
-                            .join(", ")}
-                        </p>
-                        <button
-                          className="secondary"
-                          onClick={() => {
-                            setC((old) => ({
-                              ...old,
-                              areaId: extracted.areaId || old.areaId,
-                              origin:
-                                catalog.areas.find(
-                                  (a) => a.id === extracted.areaId,
-                                )?.point || old.origin,
-                              minutes: extracted.minutes ?? old.minutes,
-                              budget: extracted.budget ?? old.budget,
-                              interests: extracted.interests.length
-                                ? extracted.interests
-                                : old.interests,
-                            }));
-                            setExtracted(null);
-                          }}
-                        >
-                          {T("apply")}
-                          <Check size={15} />
-                        </button>
-                      </div>
-                    )}
-                  </details>
+                <OfficialPlaces
+                  lang={lang}
+                  onPlan={openPlanner}
+                  onPlanMany={planSaved}
+                />
+                <section className="panel planner-entry">
+                  <span className="eyebrow">YOUR NEXT MOVE</span>
+                  <h2>{T("plan")}</h2>
+                  <p>
+                    {lang === "ko"
+                      ? "지금 있는 곳과 남은 시간, 예산에 맞춰 여행코스를 만들어보세요."
+                      : "Plan a route around your location, available time and budget."}
+                  </p>
+                  <button className="primary" onClick={() => openPlanner()}>
+                    <RouteIcon size={17} />
+                    {lang === "ko" ? "바로 코스 만들기" : "Build my route"}
+                  </button>
                 </section>
-<section className="home-saved"><SavedPlaces lang={lang} onPlan={planSaved} /></section>
-                {siteContent?.news_title && <section className="section news-board"><h2>{lang === 'ko' ? '새로운 소식' : 'News'}</h2><article className="source-card">{siteContent.news_image?.startsWith('https://') && <img src={siteContent.news_image} alt="" style={{width:'100%',maxHeight:320,objectFit:'cover'}} />}<h3>{siteContent.news_title}</h3><p style={{whiteSpace:'pre-line'}}>{siteContent.news_body}</p></article></section>}
-<Boards lang={lang} />
+                <section className="home-saved">
+                  <div className="panel">
+                    <h2>
+                      {lang === "ko"
+                        ? "저장한 장소로 나만의 코스 만들기"
+                        : "Build a route from your saved places"}
+                    </h2>
+                    <p className="muted">
+                      {lang === "ko"
+                        ? "마음에 드는 장소를 모아두고, 저장 화면에서 함께 갈 장소를 골라보세요."
+                        : "Collect places you like, then choose your stops together in Saved."}
+                    </p>
+                    <button
+                      className="primary"
+                      onClick={() => navigate("TRIP")}
+                    >
+                      <Bookmark size={16} />
+                      {lang === "ko" ? "저장한 장소 보기" : "View saved places"}
+                    </button>
+                  </div>
+                </section>
+                {siteContent?.news_title && (
+                  <section className="section news-board">
+                    <h2>{lang === "ko" ? "새로운 소식" : "News"}</h2>
+                    <article className="source-card">
+                      {siteContent.news_image?.startsWith("https://") && (
+                        <img
+                          src={siteContent.news_image}
+                          alt=""
+                          style={{
+                            width: "100%",
+                            maxHeight: 320,
+                            objectFit: "cover",
+                          }}
+                        />
+                      )}
+                      <h3>{siteContent.news_title}</h3>
+                      <p style={{ whiteSpace: "pre-line" }}>
+                        {siteContent.news_body}
+                      </p>
+                    </article>
+                  </section>
+                )}
+                <Boards lang={lang} />
                 <section
                   className="quick-discovery"
                   aria-label={T("quickFind")}
@@ -1526,73 +1694,75 @@ export default function App() {
                     </button>
                   </form>
                   <div className="quick-categories">
-                    {["cafe", "food", "experience", "culture", "event"].map((category) => {
-                      const Icon = icons[category]!;
-                      return (
-                        <button
-                          key={category}
-                          onClick={() => {
-                            setQuery("");
-                            explore(category);
-                          }}
-                        >
-                          <Icon size={19} />
-                          {T(category)}
-                        </button>
-                      );
-                    })}
+                    {["cafe", "food", "experience", "culture", "event"].map(
+                      (category) => {
+                        const Icon = icons[category]!;
+                        return (
+                          <button
+                            key={category}
+                            onClick={() => {
+                              setQuery("");
+                              explore(category);
+                            }}
+                          >
+                            <Icon size={19} />
+                            {T(category)}
+                          </button>
+                        );
+                      },
+                    )}
                   </div>
                 </section>
-                
-                
 
-                <section hidden className="data-sources" aria-label={lang === "ko" ? "공식 데이터 출처" : "Official data sources"}>
+                <section
+                  hidden
+                  className="data-sources"
+                  aria-label={
+                    lang === "ko" ? "공식 데이터 출처" : "Official data sources"
+                  }
+                >
                   <div className="section-heading">
                     <div>
                       <span className="eyebrow">OFFICIAL DATA</span>
-                      <h2>{lang === "ko" ? "공식 관광 데이터" : "Official tourism data"}</h2>
+                      <h2>
+                        {lang === "ko"
+                          ? "공식 관광 데이터"
+                          : "Official tourism data"}
+                      </h2>
                     </div>
-                    <span className="muted">{lang === "ko" ? "부산에서 전국으로" : "Busan to all of Korea"}</span>
+                    <span className="muted">
+                      {lang === "ko"
+                        ? "부산에서 전국으로"
+                        : "Busan to all of Korea"}
+                    </span>
                   </div>
                   <div className="source-grid">
                     {openApiSources.slice(0, 6).map((source) => (
-                      <a className="source-card" key={source.id} href={source.endpoint} target="_blank" rel="noreferrer">
+                      <a
+                        className="source-card"
+                        key={source.id}
+                        href={source.endpoint}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
                         <strong>{source.name}</strong>
-                        <span>{lang === "ko" ? "공식 데이터 출처" : "Official data source"}</span>
+                        <span>
+                          {lang === "ko"
+                            ? "공식 데이터 출처"
+                            : "Official data source"}
+                        </span>
                       </a>
                     ))}
                   </div>
                 </section>
-                
+
                 <PublicListings
                   lang={lang}
                   home
                   onSelect={openListing}
                   regions={catalog.areas}
                 />
-                {routes !== null && (
-                  <section id="results" className="section">
-                    <div className="section-heading">
-                      <div>
-                        <span className="eyebrow">MADE FOR YOUR NOW</span>
-                        <h2>{T("routes")}</h2>
-                      </div>
-                      <span className="muted">{T("estimated")}</span>
-                    </div>
-                    {routes.length ? (
-                      <div className="route-grid">{routes.map(routeCard)}</div>
-                    ) : (
-                      <div className="empty">
-                        <Compass size={30} />
-                        <p>
-                          {!catalog.places.some((p) => p.areaId === c.areaId)
-                            ? T("districtPreparing")
-                            : T("empty")}
-                        </p>
-                      </div>
-                    )}
-                  </section>
-                )}
+
                 <section className="section">
                   <div className="section-heading">
                     <div>
@@ -1625,9 +1795,9 @@ export default function App() {
                       .slice(0, 4)
                       .map(placeCard)}
                   </div>
-                  {!catalog.places.some((p) => p.areaId === c.areaId && !p.sample) && (
-                    <p className="notice">{T("districtPreparing")}</p>
-                  )}
+                  {!catalog.places.some(
+                    (p) => p.areaId === c.areaId && !p.sample,
+                  ) && <p className="notice">{T("districtPreparing")}</p>}
                 </section>
                 <section className="passport-strip coming-soon-strip">
                   <div className="strip-icon">
@@ -1635,7 +1805,11 @@ export default function App() {
                   </div>
                   <div>
                     <span className="eyebrow">COMING SOON</span>
-                    <h2>{lang === "ko" ? "스탬프·굿즈는 준비 중이에요" : "Stamps & goods are coming soon"}</h2>
+                    <h2>
+                      {lang === "ko"
+                        ? "스탬프·굿즈는 준비 중이에요"
+                        : "Stamps & goods are coming soon"}
+                    </h2>
                     <p className="muted">
                       {lang === "ko"
                         ? "지금은 부산의 장소와 로컬 콘텐츠를 먼저 만나보세요."
@@ -1644,22 +1818,123 @@ export default function App() {
                   </div>
                 </section>
               </div>
+            }
+            {tab === "ROUTES" && (
+              <section className="section routes-page">
+                <div className="section-heading">
+                  <div>
+                    <span className="eyebrow">YOUR TRAVEL ROUTE</span>
+                    <h1>
+                      {lang === "ko" ? "나만의 여행코스" : "Your travel route"}
+                    </h1>
+                    <p className="muted">
+                      {lang === "ko"
+                        ? "장소를 선택하고 시간·예산을 맞춘 뒤 코스를 확인하세요."
+                        : "Choose your stops, set your time and budget, then review your route."}
+                    </p>
+                  </div>
+                  <button
+                    className="action-link"
+                    onClick={() => navigate("TRIP")}
+                  >
+                    <Bookmark size={16} />
+                    {lang === "ko"
+                      ? "저장한 장소에서 선택"
+                      : "Choose saved places"}
+                  </button>
+                </div>
+                <ol className="journey-steps">
+                  <li>{lang === "ko" ? "장소 선택" : "Choose places"}</li>
+                  <li>{lang === "ko" ? "조건 설정" : "Set preferences"}</li>
+                  <li>
+                    {lang === "ko" ? "코스 확인·저장" : "Review and save"}
+                  </li>
+                </ol>
+                {plannerView}
+                {routes !== null && (
+                  <section id="results" className="section">
+                    <div className="section-heading">
+                      <div>
+                        <span className="eyebrow">MADE FOR YOUR NOW</span>
+                        <h2>{T("routes")}</h2>
+                      </div>
+                      <span className="muted">{T("estimated")}</span>
+                    </div>
+                    {routes.length ? (
+                      <div className="route-grid">{routes.map(routeCard)}</div>
+                    ) : (
+                      <div className="empty">
+                        <Compass size={30} />
+                        <p>
+                          {!catalog.places.some((p) => p.areaId === c.areaId)
+                            ? T("districtPreparing")
+                            : T("empty")}
+                        </p>
+                      </div>
+                    )}
+                  </section>
+                )}
+                <RouteBenefits lang={lang} hasRoutes={!!routes?.length} />
+                <p className="muted">
+                  {lang === "ko"
+                    ? "코스는 이동과 방문을 위한 계획안입니다. 실제 운영시간·요금과 예약 필요 여부는 공식 안내에서 확인해주세요."
+                    : "Routes are travel plans. Confirm opening hours, prices and reservations with the official venue."}
+                </p>
+              </section>
             )}
             {tab === "ABOUT" && <Boards lang={lang} page />}
-            {tab === "MAP" && (
-              <section className="section official-explore"><h1>{lang === 'ko' ? '지역별 가이드' : 'Local guides'}</h1><DistrictDirectory areas={catalog.areas} lang={lang} selected={guideDistrict} onSelect={id=>setGuideDistrict(id===guideDistrict?'':id)} /><OfficialPlaces lang={lang} onPlan={openPlanner} onPlanMany={planSaved} districtNames={guideDistrict ? [catalog.areas.find(a=>a.id===guideDistrict)?.name.ko||"",catalog.areas.find(a=>a.id===guideDistrict)?.name.en||""] : []} onClearDistrict={()=>setGuideDistrict("")} regional /></section>
-            )}
+            {
+              <section
+                className="section official-explore"
+                style={tab === "MAP" ? undefined : { display: "none" }}
+              >
+                <h1>{lang === "ko" ? "지역별 가이드" : "Local guides"}</h1>
+                <DistrictDirectory
+                  areas={catalog.areas}
+                  lang={lang}
+                  selected={guideDistrict}
+                  onSelect={(id) =>
+                    setGuideDistrict(id === guideDistrict ? "" : id)
+                  }
+                />
+                <OfficialPlaces
+                  lang={lang}
+                  onPlan={openPlanner}
+                  onPlanMany={planSaved}
+                  districtNames={
+                    guideDistrict
+                      ? [
+                          catalog.areas.find((a) => a.id === guideDistrict)
+                            ?.name.ko || "",
+                          catalog.areas.find((a) => a.id === guideDistrict)
+                            ?.name.en || "",
+                        ]
+                      : []
+                  }
+                  onClearDistrict={() => setGuideDistrict("")}
+                  regional
+                />
+              </section>
+            }
             {tab === "TRIP" && (
               <section className="section">
+                <h1>{lang === "ko" ? "저장" : "Saved"}</h1>
+                <p className="muted">
+                  {lang === "ko"
+                    ? "장소를 모아 코스로 만들거나, 저장한 여행코스를 다시 확인하세요."
+                    : "Choose saved places for a new route, or reopen a route you have saved."}
+                </p>
                 <SavedPlaces lang={lang} onPlan={planSaved} />
                 <div className="section-heading">
                   <div>
                     <span className="eyebrow">YOUR PLANS, IN ONE PLACE</span>
-                    <h1>{lang === 'ko' ? '저장한 여행' : 'Saved trips'}</h1>
+                    <h2>{lang === "ko" ? "저장한 코스" : "Saved routes"}</h2>
                   </div>
                   <Bookmark size={30} />
                 </div>
-                <button className="primary" onClick={() => openPlanner()}>{lang === 'ko' ? '코스' : 'Routes'}</button>
+                <button className="primary" onClick={() => openPlanner()}>
+                  {lang === "ko" ? "코스" : "Routes"}
+                </button>
                 <p className="notice">
                   {T(
                     status?.session.authenticated
@@ -1692,7 +1967,7 @@ export default function App() {
                   <div className="empty">
                     <RouteIcon size={32} />
                     <p>{T("noSaved")}</p>
-                    <button className="primary" onClick={() => setTab("NOW")}>
+                    <button className="primary" onClick={() => openPlanner()}>
                       {T("go")}
                       <ArrowRight size={18} />
                     </button>
@@ -1706,76 +1981,86 @@ export default function App() {
                 <h1>{lang === "ko" ? "혜택·샵" : "Offers & shop"}</h1>
                 <div className="panel coming-soon-panel">
                   <span className="eyebrow">COMING SOON</span>
-                  <h2>{lang === "ko" ? "할인권과 굿즈 쇼핑몰을 준비하고 있어요" : "Discounts and NOWRO goods are coming soon"}</h2>
-                  <p>{lang === "ko" ? "초기에는 검증된 부산 여행 정보와 상점 콘텐츠를 무료로 제공합니다." : "We are starting with free, carefully checked Busan travel and local business information."}</p>
+                  <h2>
+                    {lang === "ko"
+                      ? "할인권과 굿즈 쇼핑몰을 준비하고 있어요"
+                      : "Discounts and NOWRO goods are coming soon"}
+                  </h2>
+                  <p>
+                    {lang === "ko"
+                      ? "초기에는 검증된 부산 여행 정보와 상점 콘텐츠를 무료로 제공합니다."
+                      : "We are starting with free, carefully checked Busan travel and local business information."}
+                  </p>
                 </div>
                 {/* Coupon and shop flows stay below in the source for the next release. */}
                 <div hidden>
                   <Shop lang={lang} />
                 </div>
                 <div hidden>
-                <Shop lang={lang} />
-                <div className="coupon-grid">
-                  {catalog.coupons.map((v) => {
-                    const held = wallet.vouchers.find(
-                      (x: any) => x.coupon_id === v.id,
-                    );
-                    const p = catalog.places.find((p) => p.id === v.placeId)!;
-                    return (
-                      <article className="coupon" key={v.id}>
-                        <div className="coupon-head">
-                          <Ticket size={29} />
-                          <span>
-                            NOWRO PASS <small>{T("sample")}</small>
-                          </span>
-                        </div>
-                        <h2>{v.benefit[lang]}</h2>
-                        <p>
-                          {name(p)} / {p.name.ko}
-                        </p>
-                        <div className="coupon-line" />
-                        <dl>
-                          <div>
-                            <dt>{T("minimum")}</dt>
-                            <dd>{krw(v.minimum)}</dd>
+                  <Shop lang={lang} />
+                  <div className="coupon-grid">
+                    {catalog.coupons.map((v) => {
+                      const held = wallet.vouchers.find(
+                        (x: any) => x.coupon_id === v.id,
+                      );
+                      const p = catalog.places.find((p) => p.id === v.placeId)!;
+                      return (
+                        <article className="coupon" key={v.id}>
+                          <div className="coupon-head">
+                            <Ticket size={29} />
+                            <span>
+                              NOWRO PASS <small>{T("sample")}</small>
+                            </span>
                           </div>
-                          <div>
-                            <dt>{T("valid")}</dt>
-                            <dd>
-                              {v.from} – {v.until}
-                            </dd>
-                          </div>
-                        </dl>
-                        <p className="muted">{v.excluded[lang]}</p>
-                        {held ? (
-                          <div className="voucher-code">
-                            <span className="pill">{T(held.status)}</span>
-                            {held.status === "held" && (
-                              <>
-                                <small>{T("show")}</small>
-                                <code>{held.id}</code>
-                              </>
-                            )}
-                          </div>
-                        ) : (
-                          <button
-                            className="primary full"
-                            disabled={busy || v.paused}
-                            onClick={() =>
-                              action(async () => {
-                                await api("coupons/issue", { couponId: v.id });
-                                await refresh();
-                              })
-                            }
-                          >
-                            {v.paused ? T("paused") : T("claim")}
-                            <Plus size={18} />
-                          </button>
-                        )}
-                      </article>
-                    );
-                  })}
-                </div>
+                          <h2>{v.benefit[lang]}</h2>
+                          <p>
+                            {name(p)} / {p.name.ko}
+                          </p>
+                          <div className="coupon-line" />
+                          <dl>
+                            <div>
+                              <dt>{T("minimum")}</dt>
+                              <dd>{krw(v.minimum)}</dd>
+                            </div>
+                            <div>
+                              <dt>{T("valid")}</dt>
+                              <dd>
+                                {v.from} – {v.until}
+                              </dd>
+                            </div>
+                          </dl>
+                          <p className="muted">{v.excluded[lang]}</p>
+                          {held ? (
+                            <div className="voucher-code">
+                              <span className="pill">{T(held.status)}</span>
+                              {held.status === "held" && (
+                                <>
+                                  <small>{T("show")}</small>
+                                  <code>{held.id}</code>
+                                </>
+                              )}
+                            </div>
+                          ) : (
+                            <button
+                              className="primary full"
+                              disabled={busy || v.paused}
+                              onClick={() =>
+                                action(async () => {
+                                  await api("coupons/issue", {
+                                    couponId: v.id,
+                                  });
+                                  await refresh();
+                                })
+                              }
+                            >
+                              {v.paused ? T("paused") : T("claim")}
+                              <Plus size={18} />
+                            </button>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
                 </div>
               </section>
             )}
@@ -1785,86 +2070,94 @@ export default function App() {
                 <h1>{lang === "ko" ? "스탬프·보상" : "Stamps & rewards"}</h1>
                 <div className="panel coming-soon-panel">
                   <span className="eyebrow">COMING SOON</span>
-                  <h2>{lang === "ko" ? "스탬프 투어와 완주 보상을 준비하고 있어요" : "Stamp tours and completion rewards are coming soon"}</h2>
-                  <p>{lang === "ko" ? "현재는 정보 제공과 장소 탐색에 집중하고 있습니다. 실제 운영이 시작되면 이곳에서 안내해드릴게요." : "We are focusing on discovery first. This page will be updated when the real program launches."}</p>
+                  <h2>
+                    {lang === "ko"
+                      ? "스탬프 투어와 완주 보상을 준비하고 있어요"
+                      : "Stamp tours and completion rewards are coming soon"}
+                  </h2>
+                  <p>
+                    {lang === "ko"
+                      ? "현재는 정보 제공과 장소 탐색에 집중하고 있습니다. 실제 운영이 시작되면 이곳에서 안내해드릴게요."
+                      : "We are focusing on discovery first. This page will be updated when the real program launches."}
+                  </p>
                 </div>
                 <div hidden>
-                <p className="section-intro">{T("stampIntro")}</p>
-                <div className="passport-layout">
-                  <div className="passport-book">
-                    <div className="book-title">
-                      NOWRO <BookOpen size={26} />
-                      <span>LOCAL PASSPORT</span>
-                    </div>
-                    <div className="stamp-grid">
-                      {catalog.areas
-                        .filter((a) => starterStampAreaIds.includes(a.id))
-                        .map((a) => {
-                          const count = wallet.stamps.filter(
-                            (s: any) =>
-                              catalog.places.find((p) => p.id === s.place_id)
-                                ?.areaId === a.id,
-                          ).length;
-                          return (
-                            <div
-                              key={a.id}
-                              className={`stamp ${count ? "collected" : ""}`}
-                            >
-                              <Waves size={27} />
-                              <strong>{name(a)}</strong>
-                              <span>{count ? `${count} ✓` : "○"}</span>
-                            </div>
-                          );
-                        })}
-                    </div>
-                    <p>YOUR KOREA. RIGHT NOW.</p>
-                  </div>
-                  <section className="panel">
-                    <h2>{T("verify")}</h2>
-                    <label>
-                      {T("code")}
-                      <textarea
-                        value={token}
-                        maxLength={2000}
-                        onChange={(e) => setToken(e.target.value.trim())}
-                      />
-                    </label>
-                    <button
-                      className="primary full"
-                      disabled={busy || !token}
-                      onClick={() =>
-                        action(async () => {
-                          await api("stamps/claim", { token });
-                          setToken("");
-                          history.replaceState({}, "", location.pathname);
-                          await refresh();
-                          setToast(T("success"));
-                        })
-                      }
-                    >
-                      {T("verify")}
-                      <ShieldCheck size={18} />
-                    </button>
-                    <p className="muted">{T("sample")}</p>
-                    {wallet.stamps.map((s: any) => (
-                      <div className="operator-row" key={s.id}>
-                        <span>
-                          {name(
-                            catalog.places.find((p) => p.id === s.place_id)!,
-                          )}
-                          <small>{s.created.slice(0, 10)}</small>
-                        </span>
-                        <Check size={18} />
+                  <p className="section-intro">{T("stampIntro")}</p>
+                  <div className="passport-layout">
+                    <div className="passport-book">
+                      <div className="book-title">
+                        NOWRO <BookOpen size={26} />
+                        <span>LOCAL PASSPORT</span>
                       </div>
-                    ))}
-                  </section>
-                </div>
-                <CompletionRewards
-                  key={status?.session.email || "guest"}
-                  lang={lang}
-                  authenticated={!!status?.session.authenticated}
-                  version={wallet.stamps.length}
-                />
+                      <div className="stamp-grid">
+                        {catalog.areas
+                          .filter((a) => starterStampAreaIds.includes(a.id))
+                          .map((a) => {
+                            const count = wallet.stamps.filter(
+                              (s: any) =>
+                                catalog.places.find((p) => p.id === s.place_id)
+                                  ?.areaId === a.id,
+                            ).length;
+                            return (
+                              <div
+                                key={a.id}
+                                className={`stamp ${count ? "collected" : ""}`}
+                              >
+                                <Waves size={27} />
+                                <strong>{name(a)}</strong>
+                                <span>{count ? `${count} ✓` : "○"}</span>
+                              </div>
+                            );
+                          })}
+                      </div>
+                      <p>YOUR KOREA. RIGHT NOW.</p>
+                    </div>
+                    <section className="panel">
+                      <h2>{T("verify")}</h2>
+                      <label>
+                        {T("code")}
+                        <textarea
+                          value={token}
+                          maxLength={2000}
+                          onChange={(e) => setToken(e.target.value.trim())}
+                        />
+                      </label>
+                      <button
+                        className="primary full"
+                        disabled={busy || !token}
+                        onClick={() =>
+                          action(async () => {
+                            await api("stamps/claim", { token });
+                            setToken("");
+                            history.replaceState({}, "", location.pathname);
+                            await refresh();
+                            setToast(T("success"));
+                          })
+                        }
+                      >
+                        {T("verify")}
+                        <ShieldCheck size={18} />
+                      </button>
+                      <p className="muted">{T("sample")}</p>
+                      {wallet.stamps.map((s: any) => (
+                        <div className="operator-row" key={s.id}>
+                          <span>
+                            {name(
+                              catalog.places.find((p) => p.id === s.place_id)!,
+                            )}
+                            <small>{s.created.slice(0, 10)}</small>
+                          </span>
+                          <Check size={18} />
+                        </div>
+                      ))}
+                    </section>
+                  </div>
+                  <CompletionRewards
+                    key={status?.session.email || "guest"}
+                    lang={lang}
+                    authenticated={!!status?.session.authenticated}
+                    version={wallet.stamps.length}
+                  />
                 </div>
               </section>
             )}
@@ -1910,7 +2203,6 @@ export default function App() {
       </main>
       {role === "traveler" && (
         <nav className="bottom-nav" aria-label="Main navigation">
-          <button onClick={() => openPlanner()} aria-label={lang === 'ko' ? '나우로 코스 만들기' : 'NOWRO route planner'}><RouteIcon size={21}/><span>{lang === 'ko' ? '코스' : 'Routes'}</span></button>
           {tabs.map(({ id, icon: Icon }) => (
             <button
               key={id}
@@ -1960,7 +2252,12 @@ export default function App() {
       {selected && (
         <Modal title={T("view")} close={() => setSelected(null)}>
           <p className="notice">
-            {selected.sample ? T("sample") : (lang === 'ko' ? '계획용 예상 코스 · 영업시간·요금·예약 여부 미확인' : 'Planning estimate · hours, fees and reservations are unverified')} · {T("estimated")}
+            {selected.sample
+              ? T("sample")
+              : lang === "ko"
+                ? "계획용 예상 코스 · 영업시간·요금·예약 여부 미확인"
+                : "Planning estimate · hours, fees and reservations are unverified"}{" "}
+            · {T("estimated")}
           </p>
           <div className="detail-metrics">
             <b>{selected.minutes} min</b>

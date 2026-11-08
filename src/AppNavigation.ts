@@ -1,19 +1,38 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { appTabUrl, readAppTab, type AppTab } from "../shared/app-navigation";
-import { syncPageMetadata } from '../shared/page-metadata';
+import { syncPageMetadata } from "../shared/page-metadata";
 
 export function useTabNavigation() {
   const [tab, update] = useState<AppTab>(() => readAppTab(location.search));
-  useEffect(()=>syncPageMetadata(),[tab]);
+  useEffect(() => syncPageMetadata(), [tab]);
   useEffect(() => {
-    const back = () => update(readAppTab(location.search));
+    const previous = history.scrollRestoration;
+    history.scrollRestoration = "manual";
+    const back = () => {
+      update(readAppTab(location.search));
+      const y = Number(history.state?.nowroScrollY) || 0;
+      requestAnimationFrame(() =>
+        window.scrollTo({ top: y, behavior: "instant" }),
+      );
+    };
     addEventListener("popstate", back);
-    return () => removeEventListener("popstate", back);
+    return () => {
+      removeEventListener("popstate", back);
+      history.scrollRestoration = previous;
+    };
   }, []);
   const navigate = useCallback((next: AppTab) => {
     const url = appTabUrl(location.href, next);
-    if (url.href !== location.href) history.pushState(null, "", url);
+    if (url.href !== location.href) {
+      history.replaceState(
+        { ...history.state, nowroScrollY: scrollY },
+        "",
+        location.href,
+      );
+      history.pushState({ nowroScrollY: 0 }, "", url);
+    }
     update(next);
+    requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'instant'}));
   }, []);
   return [tab, navigate] as const;
 }
@@ -27,6 +46,11 @@ export function useBackDismiss(
   current.current = close;
   useEffect(() => {
     const marker = crypto.randomUUID();
+    history.replaceState(
+      { ...history.state, nowroScrollY: scrollY },
+      "",
+      location.href,
+    );
     const dialogUrl = new URL(location.href);
     if (query) {
       const base = new URL(location.href);
