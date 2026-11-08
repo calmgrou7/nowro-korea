@@ -34,21 +34,20 @@ export function OfficialPlaces({ lang, onPlan }: { lang: string; onPlan?: (item?
     {failed && <div role="status"><p>{lang === 'ko' ? '정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' : 'Information is temporarily unavailable. Please try again shortly.'}</p><button onClick={() => setRetry(v => v + 1)}>{lang === 'ko' ? '다시 불러오기' : 'Try again'}</button></div>}
     {!loading && !failed && !items.length && <p>{lang === 'ko' ? '현재 제공된 정보가 없습니다.' : 'No information is currently available.'}</p>}
     {!loading && items.length > 0 && !matched.length && <p role="status">{lang === 'ko' ? '검색 결과가 없습니다.' : 'No matching places.'}</p>}
-    <div className="source-grid">{matched.slice(0, limit).map((original) => { const item = { ...original, UC_SEQ: category + '-' + (original.contentid || original.UC_SEQ), routePlaceId: category === 'places' ? 'kto-' + original.contentid : null, MAIN_TITLE: original.title || original.MAIN_TITLE, SUBTITLE: original.addr1 || original.ADDR1 || original.PLACE, MAIN_IMG_NORMAL: original.firstimage || original.MAIN_IMG_NORMAL, ITEMCNTNTS: original.ITEMCNTNTS || original.addr2 }; return <article className="source-card" key={item.UC_SEQ}>
+    <div className="source-grid">{matched.slice(0, limit).map((original) => { const item = { ...original, UC_SEQ: category + '-' + (original.contentid || original.UC_SEQ), routePlaceId: category === 'places' ? 'kto-' + original.contentid : null, MAIN_TITLE: original.title || original.MAIN_TITLE, SUBTITLE: original.addr1 || original.ADDR1 || original.PLACE, MAIN_IMG_NORMAL: original.firstimage || original.MAIN_IMG_NORMAL, ITEMCNTNTS: original.ITEMCNTNTS || original.addr2 }; return <article className="source-card tourism-card" key={item.UC_SEQ}>
       <TourismImage src={item.MAIN_IMG_NORMAL} title={item.MAIN_TITLE || item.TITLE} lang={lang} />
-      <h3>{item.MAIN_TITLE || item.TITLE}</h3><p>{item.SUBTITLE || item.PLACE}</p>
-      <button onClick={() => setSelected(item)}>{lang === 'ko' ? '상세 정보 보기' : 'View details'}</button>
-      <button aria-pressed={savedIds.includes(String(item.UC_SEQ))} onClick={() => savePlace(item)}>{savedIds.includes(String(item.UC_SEQ)) ? (lang === 'ko' ? '저장됨 ✓' : 'Saved ✓') : (lang === 'ko' ? '저장' : 'Save')}</button>
-      {onPlan && <button onClick={() => onPlan(item)}>{lang === 'ko' ? '이 장소 포함 코스' : 'Route with this place'}</button>}
-      {item.ITEMCNTNTS && <details><summary>{lang === 'ko' ? '소개 보기' : 'Read description'}</summary><p>{item.ITEMCNTNTS}</p></details>}
-      {original.USAGE_DAY_WEEK_AND_TIME && <details><summary>{lang === 'ko' ? '운영시간·일정' : 'Hours and dates'}</summary><p>{original.USAGE_DAY_WEEK_AND_TIME}</p></details>}
-      <a href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.SUBTITLE || item.MAIN_TITLE)} target="_blank" rel="noreferrer">{lang === 'ko' ? '지도에서 보기' : 'View on map'} ↗</a>
+      <button className="tourism-save" aria-label={lang === 'ko' ? '장소 저장' : 'Save place'} aria-pressed={savedIds.includes(String(item.UC_SEQ))} onClick={() => savePlace(item)}>{savedIds.includes(String(item.UC_SEQ)) ? '✓' : '♡'}</button>
+      <span className="tourism-district">{original.GUGUN_NM || String(item.SUBTITLE || '').match(/[가-힣]+[구군](?=\s|$)|[A-Za-z]+-(?:gu|gun)/)?.[0] || (lang === 'ko' ? '부산' : 'Busan')}</span>
+      <h3 title={item.MAIN_TITLE || item.TITLE}>{item.MAIN_TITLE || item.TITLE}</h3>
+      <p className="tourism-address" title={item.SUBTITLE || item.PLACE}>{item.SUBTITLE || item.PLACE || (lang === 'ko' ? '주소 확인 필요' : 'Address unverified')}</p>
+      <p className="tourism-schedule" title={original.USAGE_DAY_WEEK_AND_TIME}>{original.USAGE_DAY_WEEK_AND_TIME || (lang === 'ko' ? '일정·운영시간 확인 필요' : 'Check dates and opening hours')}</p>
+      <div className="tourism-actions"><button onClick={() => setSelected(item)}>{lang === 'ko' ? '상세보기' : 'Details'}</button>{onPlan && <button onClick={() => onPlan(item)}>{lang === 'ko' ? '이 장소 코스 포함' : 'Add to route'}</button>}</div>
     </article>; })}</div>{matched.length > limit && <button onClick={() => setLimit(v => v + 6)}>{lang === 'ko' ? '더 보기' : 'Show more'} ({Math.min(limit, matched.length)}/{matched.length})</button>}<p><small className="muted">{category === 'places' ? (lang === 'ko' ? '출처: 한국관광공사' : 'Source: Korea Tourism Organization') : (lang === 'ko' ? '출처: 부산광역시 · 공식 원문 / NOWRO 등록 콘텐츠' : 'Source: Busan Metropolitan City / NOWRO listings')}</small></p>
     {selected && <Modal title={selected.MAIN_TITLE} close={() => setSelected(null)}>
       <TourismImage src={selected.MAIN_IMG_NORMAL} title={selected.MAIN_TITLE} lang={lang} />
-      <p style={{whiteSpace:'pre-line'}}>{selected.ITEMCNTNTS || (lang === 'ko' ? '상세 소개가 제공되지 않았습니다.' : 'A detailed description is not available.')}</p>
       <h3>{lang === 'ko' ? '위치' : 'Location'}</h3><p>{selected.SUBTITLE || (lang === 'ko' ? '주소 확인 필요' : 'Address to be confirmed')}</p>
       <h3>{lang === 'ko' ? '운영시간·일정' : 'Hours and dates'}</h3><p>{selected.USAGE_DAY_WEEK_AND_TIME || (lang === 'ko' ? '방문 전 운영기관에 확인해주세요.' : 'Confirm with the venue before visiting.')}</p>
+      <h3>{lang === 'ko' ? '소개' : 'About'}</h3><p style={{whiteSpace:'pre-line'}}>{selected.ITEMCNTNTS || (lang === 'ko' ? '상세 소개가 제공되지 않았습니다.' : 'A detailed description is not available.')}</p>
       {selected.CNTCT_TEL && <p>{selected.CNTCT_TEL}</p>}
       <a href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(selected.SUBTITLE || selected.MAIN_TITLE)} target="_blank" rel="noreferrer">{lang === 'ko' ? '지도·길찾기' : 'Map and directions'} ↗</a>
       <p><small className="muted">{selected.sourceLabel || (category === 'places' ? 'Korea Tourism Organization' : 'Busan Metropolitan City')}</small></p>
