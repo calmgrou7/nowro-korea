@@ -6,7 +6,7 @@ import { Modal } from "./Modal";
 import { MapPin, Clock3, Bookmark, Check, Route } from "lucide-react";
 import { savePlace, readSavedPlaces, savedPlaceId } from "./SavedPlaces";
 import { NearbyShops } from "./NearbyShops";
-import { eventExpired } from "../shared/event-dates";
+import { eventExpired, eventEndDate } from "../shared/event-dates";
 function TourismImage({
   src,
   title,
@@ -524,6 +524,7 @@ export function OfficialPlaces({
               <h3 title={item.MAIN_TITLE || item.TITLE}>
                 {item.MAIN_TITLE || item.TITLE}
               </h3>
+              {category === 'festivals' && !eventEndDate(item) && <small className="muted">{visitorText(lang,'개최 일정 미확인 · 올해 행사로 확정된 정보가 아닙니다.','Dates unconfirmed · This listing does not confirm this year’s event.')}</small>}
               <p
                 className="tourism-address"
                 title={item.SUBTITLE || item.PLACE}

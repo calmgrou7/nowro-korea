@@ -34,6 +34,14 @@ export function eventEndDate(item: any): string | null {
   }
   const compact = text.match(/^\s*(20\d{2})(\d{2})(\d{2})\s*$/);
   if(compact)return validDate(compact[1],compact[2],compact[3]);
+  // A published month-only range still has a known latest possible end day.
+  const months=text.match(/^\s*(20\d{2})[.\-/년]\s*(\d{1,2})[.월]?\s*[~～–—]\s*(?:(20\d{2})[.\-/년]\s*)?(\d{1,2})[.월]?\s*$/);
+  if(months){
+    const month=Number(months[4]);
+    const year=Number(months[3]||months[1])+(months[3]?0:Number(months[4])<Number(months[2])?1:0);
+    if(month>=1&&month<=12&&Number(months[2])>=1&&Number(months[2])<=12)
+      return validDate(String(year),String(month),String(new Date(Date.UTC(year,month,0)).getUTCDate()));
+  }
   // Some festival feeds omit the schedule field but explicitly publish a date range in the description.
   const description=String(item.ITEMCNTNTS||'').replace(/<[^>]*>/g,' ');
   const range=description.match(/20\d{2}[.\-/년]\s*\d{1,2}[.\-/월]\s*\d{1,2}[.일\s]*(?:\([^)]*\))?\s*[~～–—]\s*(?:20\d{2}[.\-/년]\s*)?\d{1,2}[.\-/월]\s*\d{1,2}/);
