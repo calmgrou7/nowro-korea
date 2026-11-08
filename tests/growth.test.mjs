@@ -80,6 +80,8 @@ test("public search content escapes published posts, excludes drafts and emits p
   assert.ok(!searchSitemap(posts).includes("draft-1"));
   assert.match(searchRss(posts), /부산 여행 &amp; Busan travel/);
   assert.ok(!searchRss(posts).includes("Private"));
+  assert.match(publicSearchContent(new URL('https://nowrokorea.com/?tab=ABOUT&board=guide&lang=en')),/Build and save a route/);
+  assert.equal((searchRss().match(/<item>/g)||[]).length,3);
   assert.equal(
     publicSearchContent(new URL("https://nowrokorea.com/?tab=TRIP"), posts),
     "",

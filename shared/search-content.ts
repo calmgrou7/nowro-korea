@@ -1,3 +1,4 @@
+import {boards} from './board-guides.ts';
 export const publicTabs = ["NOW", "MAP", "ROUTES", "ABOUT"];
 const xml = (v: string) =>
   v
@@ -62,9 +63,10 @@ export function publicSearchContent(url: URL, posts: any[] = []) {
       p.board === url.searchParams.get("board") &&
       p.id === url.searchParams.get("post"),
   );
+  const guide=tab==='ABOUT'?boards.find(b=>b.id===url.searchParams.get('board')):undefined;
   const article = post
     ? `<article><h2>${xml(post.title)}</h2><p style="white-space:pre-line">${xml(post.body)}</p><p>${xml(post.updated?.slice(0, 10) || "")}</p></article>`
-    : "";
+    : guide?`<article><h2>${xml(en?guide.en:guide.title)}</h2><p style="white-space:pre-line">${xml(en?guide.enBody:guide.body)}</p></article>`:"";
   const summaries = en
     ? [
         [
@@ -140,5 +142,6 @@ export function searchRss(posts: any[] = []) {
       return `<item><title>${xml(p.title)}</title><link>${xml(link)}</link><guid isPermaLink="true">${xml(link)}</guid><description>${xml(p.body)}</description></item>`;
     })
     .join("");
-  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>NOWRO Korea 여행 소식</title><link>https://nowrokorea.com/</link><description>부산 여행 가이드와 나우로 소식</description>${items}</channel></rss>`;
+  const guides=boards.map(b=>{const link='https://nowrokorea.com/?tab=ABOUT&board='+b.id;return `<item><title>${xml(b.title)}</title><link>${xml(link)}</link><guid isPermaLink="true">${xml(link)}</guid><description>${xml(b.body)}</description></item>`;}).join('');
+  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>NOWRO Korea 여행 소식</title><link>https://nowrokorea.com/</link><description>부산 여행 가이드와 나우로 소식</description>${items}${guides}</channel></rss>`;
 }
