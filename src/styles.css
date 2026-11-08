@@ -114,7 +114,7 @@ html {
 .source-card > .tourism-image img { border-radius: 0; }
 .tourism-image figcaption { position: absolute; bottom: 10px; left: 10px; right: 10px; color: white; background: #172026cc; padding: 6px 9px; border-radius: 8px; font-size: 11px; line-height: 1.4; }
 .tourism-placeholder { width: 100%; aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; background: #e5e7e9; border-radius: 16px; }
-.tourism-placeholder img { width: 48%; max-width: 190px; height: auto; aspect-ratio: auto; object-fit: contain; border-radius: 0; }
+.tourism-placeholder img { width: 48%; max-width: 190px; height: auto; aspect-ratio: auto; object-fit: contain; border-radius: 0; mix-blend-mode: multiply; opacity: .25; filter: grayscale(1); }
 .saved-place-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 0; border-bottom:1px solid var(--border); }
 .saved-place-row label { display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
 .saved-place-row input { width:20px; height:20px; flex-shrink:0; }
