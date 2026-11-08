@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from './api';
 import { Modal } from './Modal';
+import { MapPin, Clock3, Bookmark, Check } from 'lucide-react';
 import { savePlace, readSavedPlaces } from './SavedPlaces';
 function TourismImage({ src, title, lang }: { src?: string; title: string; lang: string }) {
   const valid = /^https?:\/\//.test(src || '') || /^\/images\//.test(src || '');
@@ -49,11 +50,11 @@ export function OfficialPlaces({ lang, onPlan }: { lang: string; onPlan?: (item?
     {!loading && items.length > 0 && !matched.length && <p role="status">{lang === 'ko' ? '검색 결과가 없습니다.' : 'No matching places.'}</p>}
     <div className="source-grid">{matched.slice(0, limit).map((original) => { const item = { ...original, UC_SEQ: category + '-' + (original.contentid || original.UC_SEQ), routePlaceId: original.contentid ? 'kto-' + original.contentid : null, MAIN_TITLE: original.title || original.MAIN_TITLE, SUBTITLE: original.addr1 || original.ADDR1 || original.PLACE, MAIN_IMG_NORMAL: original.firstimage || original.MAIN_IMG_NORMAL, ITEMCNTNTS: original.ITEMCNTNTS || original.addr2 }; return <article className="source-card tourism-card" key={item.UC_SEQ}>
       <TourismImage src={item.MAIN_IMG_NORMAL} title={item.MAIN_TITLE || item.TITLE} lang={lang} />
-      <button className="tourism-save" aria-label={lang === 'ko' ? '장소 저장' : 'Save place'} aria-pressed={savedIds.includes(String(item.UC_SEQ))} onClick={() => savePlace(item)}>{savedIds.includes(String(item.UC_SEQ)) ? '✓' : '♡'}</button>
-      <span className="tourism-district">{original.GUGUN_NM || String(item.SUBTITLE || '').match(/[가-힣]+[구군](?=\s|$)|[A-Za-z]+-(?:gu|gun)/)?.[0] || (lang === 'ko' ? '부산' : 'Busan')}</span>
+      <button className="tourism-save" aria-label={lang === 'ko' ? '장소 저장' : 'Save place'} aria-pressed={savedIds.includes(String(item.UC_SEQ))} onClick={() => savePlace(item)}>{savedIds.includes(String(item.UC_SEQ)) ? <Check size={17} aria-hidden="true"/> : <Bookmark size={17} aria-hidden="true"/>}</button>
+      <span className="tourism-district"><MapPin size={12} aria-hidden="true"/>{original.GUGUN_NM || String(item.SUBTITLE || '').match(/[가-힣]+[구군](?=\s|$)|[A-Za-z]+-(?:gu|gun)/)?.[0] || (lang === 'ko' ? '부산' : 'Busan')}</span>
       <h3 title={item.MAIN_TITLE || item.TITLE}>{item.MAIN_TITLE || item.TITLE}</h3>
-      <p className="tourism-address" title={item.SUBTITLE || item.PLACE}>{item.SUBTITLE || item.PLACE || (lang === 'ko' ? '주소 확인 필요' : 'Address unverified')}</p>
-      <p className="tourism-schedule" title={original.USAGE_DAY_WEEK_AND_TIME}>{original.USAGE_DAY_WEEK_AND_TIME || (lang === 'ko' ? '일정·운영시간 확인 필요' : 'Check dates and opening hours')}</p>
+      <p className="tourism-address" title={item.SUBTITLE || item.PLACE}><MapPin size={14} aria-hidden="true"/><span>{item.SUBTITLE || item.PLACE || (lang === 'ko' ? '주소 확인 필요' : 'Address unverified')}</span></p>
+      <p className="tourism-schedule" title={original.USAGE_DAY_WEEK_AND_TIME}><Clock3 size={14} aria-hidden="true"/><span>{original.USAGE_DAY_WEEK_AND_TIME || (lang === 'ko' ? '일정·운영시간 확인 필요' : 'Check dates and opening hours')}</span></p>
       <div className="tourism-actions"><button onClick={() => setSelected(item)}>{lang === 'ko' ? '상세보기' : 'Details'}</button>{onPlan && <button onClick={() => onPlan(item)}>{lang === 'ko' ? '이 장소 코스 포함' : 'Add to route'}</button>}</div>
     </article>; })}</div>{matched.length > limit && <button onClick={() => setLimit(v => v + 6)}>{lang === 'ko' ? '더 보기' : 'Show more'} ({Math.min(limit, matched.length)}/{matched.length})</button>}<p><small className="muted">{category === 'places' ? (lang === 'ko' ? '출처: 한국관광공사' : 'Source: Korea Tourism Organization') : (lang === 'ko' ? '출처: 부산광역시 · 공식 원문 / NOWRO 등록 콘텐츠' : 'Source: Busan Metropolitan City / NOWRO listings')}</small></p>
     {selected && <Modal title={selected.MAIN_TITLE} close={() => setSelected(null)}>

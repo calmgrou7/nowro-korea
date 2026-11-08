@@ -62,7 +62,7 @@ type Tab = "NOW" | "MAP" | "TRIP" | "PASS" | "PASSPORT";
 const tabs = [
   { id: "NOW" as Tab, icon: Compass },
   { id: "MAP" as Tab, icon: Map },
-  { id: "TRIP" as Tab, icon: RouteIcon },
+  { id: "TRIP" as Tab, icon: Bookmark },
 ];
 const icons: Record<string, typeof Waves> = {
   sea: Waves,
@@ -1903,6 +1903,7 @@ export default function App() {
       </main>
       {role === "traveler" && (
         <nav className="bottom-nav" aria-label="Main navigation">
+          <button onClick={() => openPlanner()} aria-label={lang === 'ko' ? '나우로 코스 만들기' : 'NOWRO route planner'}><RouteIcon size={21}/><span>{lang === 'ko' ? '코스' : 'Routes'}</span></button>
           {tabs.map(({ id, icon: Icon }) => (
             <button
               key={id}
