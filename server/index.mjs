@@ -10,6 +10,7 @@ import { androidAssociation } from "../shared/android-app.mjs";
 import { fetchOpenApi, openApiSources, festivalHero } from "./busan-openapi.mjs";
 import { syncTourismCatalog } from './tourism-catalog.mjs';
 import { boardPosts, saveBoardPost } from './boards.mjs';
+import { nearbyShops } from './nearby.mjs';
 import {
   ownBusiness,
   submitBusiness,
@@ -288,6 +289,9 @@ export function createApp(store, options = {}) {
           break;
         case 'GET /api/boards':
           out = {posts:boardPosts(store)};
+          break;
+        case 'GET /api/nearby':
+          out = await nearbyShops(store,areas,Number(url.searchParams.get('lat')),Number(url.searchParams.get('lng')));
           break;
         case 'GET /api/performances': {
           const ids = JSON.parse(store.db.prepare("SELECT value FROM config WHERE key='performance_ids'").get()?.value || '[]');

@@ -3,6 +3,7 @@ import { api } from './api';
 import { Modal } from './Modal';
 import { MapPin, Clock3, Bookmark, Check } from 'lucide-react';
 import { savePlace, readSavedPlaces } from './SavedPlaces';
+import { NearbyShops } from './NearbyShops';
 function TourismImage({ src, title, lang }: { src?: string; title: string; lang: string }) {
   const valid = /^https?:\/\//.test(src || '') || /^\/images\//.test(src || '');
   const [failed, setFailed] = useState(false);
@@ -64,6 +65,7 @@ export function OfficialPlaces({ lang, onPlan, regional = false }: { lang: strin
       <h3>{lang === 'ko' ? '운영시간·일정' : 'Hours and dates'}</h3><p>{selected.USAGE_DAY_WEEK_AND_TIME || (lang === 'ko' ? '방문 전 운영기관에 확인해주세요.' : 'Confirm with the venue before visiting.')}</p>
       <h3>{lang === 'ko' ? '소개' : 'About'}</h3><p style={{whiteSpace:'pre-line'}}>{selected.ITEMCNTNTS || (lang === 'ko' ? '상세 소개가 제공되지 않았습니다.' : 'A detailed description is not available.')}</p>
       {selected.CNTCT_TEL && <p>{selected.CNTCT_TEL}</p>}
+      <NearbyShops item={selected} lang={lang} onPlan={item=>{setSelected(null);onPlan?.(item);}} />
       <a href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(selected.SUBTITLE || selected.MAIN_TITLE)} target="_blank" rel="noreferrer">{lang === 'ko' ? '지도·길찾기' : 'Map and directions'} ↗</a>
       <p><small className="muted">{selected.sourceLabel || (category === 'places' ? 'Korea Tourism Organization' : 'Busan Metropolitan City')}</small></p>
     </Modal>}

@@ -124,6 +124,11 @@ html {
 .tourism-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:auto; }
 .tourism-actions button { min-height:44px; border:0; border-radius:12px; padding:10px 6px; background:var(--lime-soft); font-size:12px; font-weight:600; }
 .tourism-actions button:last-child { background:var(--surface); }
+.nearby-shops { margin-top:24px; border-top:1px solid var(--border); padding-top:20px; }
+.nearby-shop-list { display:flex; overflow-x:auto; gap:12px; padding-bottom:14px; scroll-snap-type:x proximity; }
+.nearby-shop-list > article { flex:0 0 245px; border:1px solid var(--border); border-radius:16px; padding:14px; scroll-snap-align:start; }
+.nearby-shop-list h4 { margin:0 0 8px; }
+.nearby-shop-list p { font-size:13px; }
 .source-card.tourism-card { padding:12px; gap:5px; border-radius:16px; box-shadow:0 3px 12px #17202608; }
 .tourism-card-media { position:relative; margin:-12px -12px 4px; overflow:hidden; border-radius:15px 15px 0 0; }
 .tourism-card-media .tourism-image { margin:0; }

@@ -346,17 +346,21 @@ export default function App() {
       );
     });
   }
-  function openPlanner(item?: any) {
+  async function openPlanner(item?: any) {
     if (item?.UC_SEQ) {
-      const chosen = catalog?.places.find(p => p.id === item.routePlaceId);
+      const refreshed = await api('catalog').catch(()=>catalog);
+      if(refreshed)setCatalog(refreshed);
+      const chosen = refreshed?.places.find((p: Place) => p.id === item.routePlaceId);
       if (!chosen) { setToast(lang === 'ko' ? '이 장소는 위치 정보 확인 후 코스에 추가할 수 있습니다. 현재는 지도에서 위치를 확인해주세요.' : 'This place is not available for route planning yet. Please check its location on the map.'); return; }
       setC(old => ({ ...old, areaId: chosen.areaId, origin: chosen.point, requiredPlaceId: chosen.id, requiredPlaceIds: undefined }));
     }
     setTab('NOW');
     setTimeout(() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
   }
-  function planSaved(items: any[]) {
-    const chosen = items.map(item => catalog?.places.find(p => p.id === item.routePlaceId));
+  async function planSaved(items: any[]) {
+    const refreshed = await api('catalog').catch(()=>catalog);
+    if(refreshed)setCatalog(refreshed);
+    const chosen = items.map(item => refreshed?.places.find((p: Place) => p.id === item.routePlaceId));
     if (chosen.some(p => !p)) { setToast(lang === 'ko' ? '일부 항목은 위치·일정 확인이 필요해 아직 코스로 계산할 수 없습니다. 해당 항목을 해제해주세요.' : 'Some items are not route-ready. Deselect items whose location or schedule is unverified.'); return; }
     const points = chosen as Place[];
     if (new Set(points.map(p => p.areaId)).size !== 1) { setToast(lang === 'ko' ? '현재는 같은 구·군의 장소끼리 코스를 만들 수 있습니다.' : 'Select places in the same district.'); return; }
