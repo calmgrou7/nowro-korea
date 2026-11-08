@@ -3,6 +3,7 @@ import { api } from "./api";
 import { BoardAdmin } from './Boards';
 import {GrowthPanel} from './GrowthPanel';
 import {AffiliateAdmin} from './AffiliateAdmin';
+import {OperationsPanel} from './OperationsPanel';
 
 export function AdminDashboard() {
   const [form, setForm] = useState<any>({});
@@ -46,6 +47,7 @@ export function AdminDashboard() {
     <label>Hero image URL<input value={form.hero_image || ""} onChange={e => set("hero_image", e.target.value)} placeholder="https://..." /></label>
     <label>Or upload an image<input type="file" accept="image/*" onChange={e => uploadImage(e.target.files?.[0])} /></label>
     {form.hero_image && <img className="admin-image-preview" src={form.hero_image} alt="Homepage preview" />}
+    <OperationsPanel />
     <GrowthPanel />
     <AffiliateAdmin />
     <BoardAdmin />

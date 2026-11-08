@@ -19,6 +19,7 @@ import { renderPageMetadata, pageMetadata } from '../shared/page-metadata.ts';
 import {publicSearchContent,searchSitemap,searchRss} from '../shared/search-content.ts';
 import {growthConfig,saveGrowthConfig} from './growth.mjs';
 import {affiliateConfig,saveAffiliate,suggestAffiliateMatches,reviewAffiliate,publicAffiliateOffers} from './affiliates.mjs';
+import {operationsStatus,contentBackup} from './operations.mjs';
 import {
   ownBusiness,
   submitBusiness,
@@ -327,6 +328,10 @@ export function createApp(store, options = {}) {
         case 'GET /api/operator/growth':
           if(s.role!=='admin')throw new ServiceError('FORBIDDEN',403);
           out=growthConfig(store);break;
+        case 'GET /api/operator/operations':
+          out=operationsStatus(store,s,auth);break;
+        case 'GET /api/operator/content-backup':
+          out=contentBackup(store,s);break;
         case 'POST /api/operator/growth':
           out=saveGrowthConfig(store,s,body);break;
         case 'GET /api/boards':
