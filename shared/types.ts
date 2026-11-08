@@ -38,6 +38,7 @@ export type Place = {
   published: boolean;
 };
 export type Conditions = {
+  requiredPlaceId?: string;
   areaId: string;
   origin: Point;
   minutes: number;

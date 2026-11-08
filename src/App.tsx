@@ -321,7 +321,7 @@ export default function App() {
   }
   function areaChange(id: string) {
     const a = catalog?.areas.find((a) => a.id === id);
-    if (a) setC((old) => ({ ...old, areaId: id, origin: a.point }));
+    if (a) setC((old) => ({ ...old, areaId: id, origin: a.point, requiredPlaceId: undefined }));
   }
   async function generate(conditions = c) {
     await action(async () => {
@@ -341,7 +341,12 @@ export default function App() {
       );
     });
   }
-  function openPlanner() {
+  function openPlanner(item?: any) {
+    if (item?.UC_SEQ) {
+      const chosen = catalog?.places.find(p => p.id === 'kto-' + item.UC_SEQ);
+      if (!chosen) { setToast(lang === 'ko' ? '이 장소는 위치 정보 확인 후 코스에 추가할 수 있습니다. 현재는 지도에서 위치를 확인해주세요.' : 'This place is not available for route planning yet. Please check its location on the map.'); return; }
+      setC(old => ({ ...old, areaId: chosen.areaId, origin: chosen.point, requiredPlaceId: chosen.id }));
+    }
     setTab('NOW');
     setTimeout(() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
   }
@@ -499,7 +504,7 @@ export default function App() {
       </div>
       <small>
         {clock(r.startAt)}–{clock(r.endAt)} · {T(r.conditions.transport)} ·{" "}
-        {T("sample")}
+        {r.sample ? T("sample") : (lang === 'ko' ? '계획용 예상 · 영업·요금 미확인' : 'Planning estimate · hours and fees unverified')}
       </small>
       <button className="secondary full" onClick={() => setSelected(r)}>
         {T("view")}
@@ -1122,6 +1127,7 @@ export default function App() {
                   className="planner"
                   aria-label={T("plan")}
                 >
+                  {c.requiredPlaceId && <p className="notice">{lang === 'ko' ? '포함할 장소: ' : 'Include: '}{catalog.places.find(p => p.id === c.requiredPlaceId)?.name[lang] || c.requiredPlaceId}<button className="text-btn" onClick={() => update('requiredPlaceId', undefined)}>{lang === 'ko' ? '선택 해제' : 'Clear'}</button></p>}
                   <div className="planner-heading">
                     <div>
                       <span className="eyebrow">YOUR NEXT MOVE</span>
@@ -1624,7 +1630,7 @@ export default function App() {
                   </div>
                   <Bookmark size={30} />
                 </div>
-                <button className="primary" onClick={openPlanner}>{lang === 'ko' ? '코스' : 'Routes'}</button>
+                <button className="primary" onClick={() => openPlanner()}>{lang === 'ko' ? '코스' : 'Routes'}</button>
                 <p className="notice">
                   {T(
                     status?.session.authenticated
@@ -1924,7 +1930,7 @@ export default function App() {
       {selected && (
         <Modal title={T("view")} close={() => setSelected(null)}>
           <p className="notice">
-            {T("sample")} · {T("estimated")}
+            {selected.sample ? T("sample") : (lang === 'ko' ? '계획용 예상 코스 · 영업시간·요금·예약 여부 미확인' : 'Planning estimate · hours, fees and reservations are unverified')} · {T("estimated")}
           </p>
           <div className="detail-metrics">
             <b>{selected.minutes} min</b>

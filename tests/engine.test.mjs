@@ -23,6 +23,14 @@ test('all eight visible interests including events are valid route inputs', () =
   assert.doesNotThrow(() => recommend({ ...base, minutes: 360, budget: 160000, interests: ['sea','cafe','food','culture','shopping','experience','wellness','event'] }, places));
   assert.throws(() => recommend({ ...base, interests: ['unknown'] }, places), /INVALID_CONDITIONS/);
 });
+test('a requested place is included in every recommendation or produces no route', () => {
+  const initial = recommend(base, places);
+  const id = initial[0].stops[0].placeId;
+  const routes = recommend({ ...base, requiredPlaceId: id }, places);
+  assert.ok(routes.length > 0);
+  assert.ok(routes.every(route => route.stops.some(stop => stop.placeId === id)));
+  assert.deepEqual(recommend({ ...base, requiredPlaceId: 'missing' }, places), []);
+});
 test("all four time modes satisfy time, return, buffer, budget and registered IDs", () => {
   for (const minutes of [120, 240, 360, 540]) {
     const c = { ...base, minutes, returnPoint: base.origin };

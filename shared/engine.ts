@@ -38,6 +38,7 @@ export function validateConditions(c: Conditions) {
   if (
     !c ||
     typeof c.areaId !== "string" ||
+    (c.requiredPlaceId !== undefined && typeof c.requiredPlaceId !== 'string') ||
     typeof c.diet !== "string" ||
     typeof c.children !== "boolean" ||
     typeof c.accessible !== "boolean" ||
@@ -134,12 +135,12 @@ export function calculate(
     const arrival = now.toISOString();
     const lt = localTime(now),
       h = p.hours.find((h) => h.day === lt.day);
-    if (
+    if (!p.planningEstimate && (
       !h ||
       lt.minute < h.open ||
       lt.minute > h.lastEntry ||
       lt.minute + p.stay + p.wait > h.close
-    )
+    ))
       return null;
     now = new Date(now.getTime() + (p.stay + p.wait) * 60000);
     stops.push({
@@ -200,6 +201,7 @@ export function recommend(c: Conditions, catalog: Place[]): Route[] {
     )
     .sort(
       (a, b) =>
+        Number(b.id === c.requiredPlaceId) - Number(a.id === c.requiredPlaceId) ||
         Number(c.interests.includes(b.category)) -
           Number(c.interests.includes(a.category)) ||
         distance(c.origin, a.point) - distance(c.origin, b.point),
@@ -215,6 +217,7 @@ export function recommend(c: Conditions, catalog: Place[]): Route[] {
   }
   walk([]);
   return result
+    .filter(r => !c.requiredPlaceId || r.stops.some(s => s.placeId === c.requiredPlaceId))
     .sort((a, b) => score(b) - score(a))
     .filter(
       (r, i, all) =>
