@@ -10,6 +10,9 @@ test('nearby shops validate coordinates, constrain distance and persist route-re
   assert.equal((await nearbyShops(store,areas,0,0)).status,'location_unavailable');assert.equal(calls,0);
   const feed=await nearbyShops(store,areas,35.153,129.118);assert.equal(feed.status,'ok');assert.equal(feed.items.length,2);assert.ok(feed.items.every(p=>p.distanceKm<=2));
   assert.ok(store.catalog().some(p=>p.id==='kto-test-39'&&p.planningEstimate));
+  const { ingestTourismPlaces } = await import('../server/tourism-catalog.mjs');
+  ingestTourismPlaces(store,areas,[{contentid:'cafe-test',title:'카페',addr1:'부산광역시 수영구',mapy:'35.153',mapx:'129.118',contenttypeid:'39',cat3:'A05020900'}]);
+  assert.equal(store.catalog().find(p=>p.id==='kto-cafe-test')?.category,'cafe');
   await nearbyShops(store,areas,35.153,129.118);assert.equal(calls,2);
  } finally {globalThis.fetch=originalFetch;if(token===undefined)delete process.env.KTO_KOREAN_API_KEY;else process.env.KTO_KOREAN_API_KEY=token;store.close();}
 });
