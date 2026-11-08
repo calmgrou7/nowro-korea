@@ -596,15 +596,14 @@ export default function App() {
         </button>
         {role === "traveler" && (
           <nav className="desktop-nav" aria-label="Main navigation">
-            {tabs.map(({ id }) => (
+            {[{id:'NOW' as Tab, ko:'홈', en:'Home'}, {id:'NOW' as Tab, ko:'여행코스', en:'Routes'}, {id:'MAP' as Tab, ko:'지역별가이드', en:'Local guides'}, {id:'NOW' as Tab, ko:'나우로소개', en:'About NOWRO'}].map(({id,ko,en},index) => (
               <button
-                key={id}
-                className={tab === id ? "active" : ""}
-                onClick={() => navigate(id)}
+                key={ko}
+                className={index === 0 && tab === id ? "active" : ""}
+                onClick={() => { if(index === 1) openPlanner(); else if(index === 3) { setTab('NOW'); setTimeout(()=>document.getElementById('about-nowro')?.scrollIntoView({behavior:'smooth'}),100); } else navigate(id); }}
                 aria-current={tab === id ? "page" : undefined}
               >
-                {T(`nav${id}`)}
-                {tab === id && <span />}
+                {lang === 'ko' ? ko : en}
               </button>
             ))}
           </nav>
@@ -993,63 +992,7 @@ export default function App() {
           <>
             {tab === "NOW" && (
               <div className="home-sections">
-                <section
-                  className="quick-discovery"
-                  aria-label={T("quickFind")}
-                >
-                  <div className="quick-heading">
-                    <h1>{T("quickFind")}</h1>
-                    <button
-                      className="text-btn"
-                      onClick={() =>
-                        document.getElementById("planner")?.scrollIntoView({
-                          block: "start",
-                          behavior: "smooth",
-                        })
-                      }
-                    >
-                      {T("planTime")}
-                      <ArrowRight size={16} />
-                    </button>
-                  </div>
-                  <form
-                    className="quick-search"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      explore();
-                    }}
-                  >
-                    <Search size={20} aria-hidden="true" />
-                    <input
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder={T("search")}
-                      aria-label={T("search")}
-                      type="search"
-                    />
-                    <button className="primary" type="submit">
-                      {T("findPlaces")}
-                    </button>
-                  </form>
-                  <div className="quick-categories">
-                    {["cafe", "food", "experience", "culture", "event"].map((category) => {
-                      const Icon = icons[category]!;
-                      return (
-                        <button
-                          key={category}
-                          onClick={() => {
-                            setQuery("");
-                            explore(category);
-                          }}
-                        >
-                          <Icon size={19} />
-                          {T(category)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-                <section className="hero hero-photo-intro">
+<section className="hero hero-photo-intro">
                   <div className="hero-copy">
                     <span className="eyebrow">
                       <span className="status-dot" />
@@ -1116,26 +1059,8 @@ export default function App() {
                     </div>
                   </div>
                 </section>
-                <OfficialPlaces lang={lang} onPlan={openPlanner} />
-                {siteContent?.news_title && <section className="section news-board"><h2>{lang === 'ko' ? '새로운 소식' : 'News'}</h2><article className="source-card">{siteContent.news_image?.startsWith('https://') && <img src={siteContent.news_image} alt="" style={{width:'100%',maxHeight:320,objectFit:'cover'}} />}<h3>{siteContent.news_title}</h3><p style={{whiteSpace:'pre-line'}}>{siteContent.news_body}</p></article></section>}
-                <section hidden className="data-sources" aria-label={lang === "ko" ? "공식 데이터 출처" : "Official data sources"}>
-                  <div className="section-heading">
-                    <div>
-                      <span className="eyebrow">OFFICIAL DATA</span>
-                      <h2>{lang === "ko" ? "공식 관광 데이터" : "Official tourism data"}</h2>
-                    </div>
-                    <span className="muted">{lang === "ko" ? "부산에서 전국으로" : "Busan to all of Korea"}</span>
-                  </div>
-                  <div className="source-grid">
-                    {openApiSources.slice(0, 6).map((source) => (
-                      <a className="source-card" key={source.id} href={source.endpoint} target="_blank" rel="noreferrer">
-                        <strong>{source.name}</strong>
-                        <span>{lang === "ko" ? "공식 데이터 출처" : "Official data source"}</span>
-                      </a>
-                    ))}
-                  </div>
-                </section>
-                <section
+<OfficialPlaces lang={lang} onPlan={openPlanner} />
+<section
                   id="planner"
                   className="planner"
                   aria-label={T("plan")}
@@ -1552,6 +1477,86 @@ export default function App() {
                     )}
                   </details>
                 </section>
+<section className="home-saved"><SavedPlaces lang={lang} onPlan={planSaved} /></section>
+                {siteContent?.news_title && <section className="section news-board"><h2>{lang === 'ko' ? '새로운 소식' : 'News'}</h2><article className="source-card">{siteContent.news_image?.startsWith('https://') && <img src={siteContent.news_image} alt="" style={{width:'100%',maxHeight:320,objectFit:'cover'}} />}<h3>{siteContent.news_title}</h3><p style={{whiteSpace:'pre-line'}}>{siteContent.news_body}</p></article></section>}
+<section id="about-nowro" className="panel"><h2>{lang === "ko" ? "나우로 소개" : "About NOWRO"}</h2><p>{lang === "ko" ? "한국의 장소와 문화를 발견하고 저장한 장소로 여행을 계획하세요. 부산에서 시작합니다." : "Discover Korea and plan a trip with your saved places. Starting with Busan."}</p></section>
+                <section
+                  className="quick-discovery"
+                  aria-label={T("quickFind")}
+                >
+                  <div className="quick-heading">
+                    <h1>{T("quickFind")}</h1>
+                    <button
+                      className="text-btn"
+                      onClick={() =>
+                        document.getElementById("planner")?.scrollIntoView({
+                          block: "start",
+                          behavior: "smooth",
+                        })
+                      }
+                    >
+                      {T("planTime")}
+                      <ArrowRight size={16} />
+                    </button>
+                  </div>
+                  <form
+                    className="quick-search"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      explore();
+                    }}
+                  >
+                    <Search size={20} aria-hidden="true" />
+                    <input
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder={T("search")}
+                      aria-label={T("search")}
+                      type="search"
+                    />
+                    <button className="primary" type="submit">
+                      {T("findPlaces")}
+                    </button>
+                  </form>
+                  <div className="quick-categories">
+                    {["cafe", "food", "experience", "culture", "event"].map((category) => {
+                      const Icon = icons[category]!;
+                      return (
+                        <button
+                          key={category}
+                          onClick={() => {
+                            setQuery("");
+                            explore(category);
+                          }}
+                        >
+                          <Icon size={19} />
+                          {T(category)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+                
+                
+
+                <section hidden className="data-sources" aria-label={lang === "ko" ? "공식 데이터 출처" : "Official data sources"}>
+                  <div className="section-heading">
+                    <div>
+                      <span className="eyebrow">OFFICIAL DATA</span>
+                      <h2>{lang === "ko" ? "공식 관광 데이터" : "Official tourism data"}</h2>
+                    </div>
+                    <span className="muted">{lang === "ko" ? "부산에서 전국으로" : "Busan to all of Korea"}</span>
+                  </div>
+                  <div className="source-grid">
+                    {openApiSources.slice(0, 6).map((source) => (
+                      <a className="source-card" key={source.id} href={source.endpoint} target="_blank" rel="noreferrer">
+                        <strong>{source.name}</strong>
+                        <span>{lang === "ko" ? "공식 데이터 출처" : "Official data source"}</span>
+                      </a>
+                    ))}
+                  </div>
+                </section>
+                
                 <PublicListings
                   lang={lang}
                   home
@@ -1634,7 +1639,7 @@ export default function App() {
               </div>
             )}
             {tab === "MAP" && (
-              <section className="section official-explore"><OfficialPlaces lang={lang} onPlan={openPlanner} /></section>
+              <section className="section official-explore"><h1>{lang === 'ko' ? '지역별 가이드' : 'Local guides'}</h1><DistrictDirectory areas={catalog.areas} lang={lang} onSelect={id => { areaChange(id); setToast(lang === 'ko' ? '여행코스 지역이 선택되었습니다. 아래 목록 검색에 지역명을 입력해 장소를 찾아보세요.' : 'Route district selected. Search for the neighborhood in the list below.'); }} /><OfficialPlaces lang={lang} onPlan={openPlanner} /></section>
             )}
             {tab === "TRIP" && (
               <section className="section">
