@@ -55,6 +55,7 @@ import { starterStampAreaIds } from "../shared/catalog";
 import { AdminDashboard } from "./AdminDashboard";
 import { OfficialPlaces } from "./OfficialPlaces";
 import { SavedPlaces } from './SavedPlaces';
+import { Boards } from './Boards';
 import type { Listing } from "../shared/listings.ts";
 const LiveMap = lazy(() => import("./MapView"));
 type Tab = "NOW" | "MAP" | "TRIP" | "PASS" | "PASSPORT";
@@ -1479,7 +1480,7 @@ export default function App() {
                 </section>
 <section className="home-saved"><SavedPlaces lang={lang} onPlan={planSaved} /></section>
                 {siteContent?.news_title && <section className="section news-board"><h2>{lang === 'ko' ? '새로운 소식' : 'News'}</h2><article className="source-card">{siteContent.news_image?.startsWith('https://') && <img src={siteContent.news_image} alt="" style={{width:'100%',maxHeight:320,objectFit:'cover'}} />}<h3>{siteContent.news_title}</h3><p style={{whiteSpace:'pre-line'}}>{siteContent.news_body}</p></article></section>}
-<section id="about-nowro" className="panel"><h2>{lang === "ko" ? "나우로 소개" : "About NOWRO"}</h2><p>{lang === "ko" ? "한국의 장소와 문화를 발견하고 저장한 장소로 여행을 계획하세요. 부산에서 시작합니다." : "Discover Korea and plan a trip with your saved places. Starting with Busan."}</p></section>
+<Boards lang={lang} />
                 <section
                   className="quick-discovery"
                   aria-label={T("quickFind")}

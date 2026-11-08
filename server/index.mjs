@@ -9,6 +9,7 @@ import { AuthService } from "./auth.mjs";
 import { androidAssociation } from "../shared/android-app.mjs";
 import { fetchOpenApi, openApiSources, festivalHero } from "./busan-openapi.mjs";
 import { syncTourismCatalog } from './tourism-catalog.mjs';
+import { boardPosts, saveBoardPost } from './boards.mjs';
 import {
   ownBusiness,
   submitBusiness,
@@ -284,6 +285,16 @@ export function createApp(store, options = {}) {
           break;
         case "GET /api/site-content":
           out = { content: store.siteContent() };
+          break;
+        case 'GET /api/boards':
+          out = {posts:boardPosts(store)};
+          break;
+        case 'GET /api/operator/boards':
+          if(s.role!=='admin') throw new ServiceError('FORBIDDEN',403);
+          out = {posts:boardPosts(store,true)};
+          break;
+        case 'POST /api/operator/boards/save':
+          out = {post:saveBoardPost(store,s,body)};
           break;
         case "GET /api/openapi/sources":
           out = { sources: openApiSources() };
