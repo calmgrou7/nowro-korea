@@ -1624,7 +1624,7 @@ export default function App() {
                   </div>
                   <Bookmark size={30} />
                 </div>
-                <button className="primary" onClick={openPlanner}>{lang === 'ko' ? '새 코스 추천 받기' : 'Build a new route'}</button>
+                <button className="primary" onClick={openPlanner}>{lang === 'ko' ? '코스' : 'Routes'}</button>
                 <p className="notice">
                   {T(
                     status?.session.authenticated
