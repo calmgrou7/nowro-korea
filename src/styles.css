@@ -124,6 +124,19 @@ html {
 .tourism-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:auto; }
 .tourism-actions button { min-height:44px; border:0; border-radius:12px; padding:10px 6px; background:var(--lime-soft); font-size:12px; font-weight:600; }
 .tourism-actions button:last-child { background:var(--surface); }
+.source-card.tourism-card { padding:12px; gap:5px; border-radius:16px; box-shadow:0 3px 12px #17202608; }
+.tourism-card-media { position:relative; margin:-12px -12px 4px; overflow:hidden; border-radius:15px 15px 0 0; }
+.tourism-card-media .tourism-image { margin:0; }
+.tourism-card-media .tourism-image > img, .tourism-card-media .tourism-placeholder { aspect-ratio: 16/7; border-radius:0; }
+.tourism-card-media .tourism-district { top:auto; bottom:8px; left:10px; padding:3px 8px; font-size:11px; }
+.tourism-card-media .tourism-save { position:absolute; top:8px; right:8px; display:flex; align-items:center; justify-content:center; width:32px; height:32px; min-height:32px; border:0; border-radius:10px; background:#17202688; color:white; padding:0; }
+.source-card.tourism-card > h3 { min-height:0; font-size:17px; line-height:1.3; margin:0 0 1px; letter-spacing:-.5px; }
+.source-card.tourism-card > .tourism-address { min-height:0; font-size:12px; line-height:1.4; }
+.tourism-card .tourism-summary { display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; margin:1px 0 2px; font-size:13px; line-height:1.45; letter-spacing:-.3px; color:var(--ink); }
+.tourism-card .tourism-actions { gap:6px; padding-top:5px; }
+.tourism-card .tourism-actions button { border-radius:18px; min-height:36px; padding:7px 5px; line-height:1.25; font-size:12px; letter-spacing:-.3px; }
+.tourism-card .tourism-actions button:first-child { background:#e9fbb9; }
+.tourism-card .tourism-actions button:last-child { background:transparent; }
 .tourism-image { margin: 0; position: relative; }
 .tourism-image img { display: block; width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: 16px; }
 .source-card > .tourism-image { margin: -18px -18px 10px; }
