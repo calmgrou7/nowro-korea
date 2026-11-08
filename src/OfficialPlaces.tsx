@@ -10,11 +10,11 @@ function TourismImage({ src, title, lang }: { src?: string; title: string; lang:
   const fallback = !valid || failed;
   return <figure className={'tourism-image' + (fallback ? ' tourism-image-placeholder' : '')}>{fallback ? <div className="tourism-placeholder" role="img" aria-label={lang === 'ko' ? '장소 사진 준비 중' : 'Venue photo unavailable'}><img src="/brand/logo.webp" alt="NOWRO" /></div> : <img src={src!.replace(/^http:\/\/tong.visitkorea.or.kr\//, 'https://tong.visitkorea.or.kr/')} alt={title} loading="lazy" onError={() => setFailed(true)} />}</figure>;
 }
-export function OfficialPlaces({ lang, onPlan }: { lang: string; onPlan?: (item?: any) => void }) {
+export function OfficialPlaces({ lang, onPlan, regional = false }: { lang: string; onPlan?: (item?: any) => void; regional?: boolean }) {
   const [items, setItems] = useState<any[]>([]);
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState('places');
+  const [category, setCategory] = useState(regional ? 'places' : 'festivals');
   const [query, setQuery] = useState('');
   const [limit, setLimit] = useState(6);
   const [retry, setRetry] = useState(0);
@@ -30,18 +30,18 @@ export function OfficialPlaces({ lang, onPlan }: { lang: string; onPlan?: (item?
     let active = true; setItems([]); setLoading(true); setFailed(false);
     const tourism = lang === 'ko' ? 'kor' : 'eng';
     const food = (item: any) => ['39','82'].includes(String(item.contenttypeid));
-    const paths = category === 'foodie' ? ['foodie',tourism] : [category === 'places' ? tourism : category];
+    const paths = [category === 'places' || category === 'foodie' ? tourism : category === 'localguides' ? 'foodie' : category];
     Promise.allSettled(paths.map(path => api(path === 'performances' ? 'performances' : 'openapi/' + path))).then(results => {
       if (!active) return;
       const feeds = results.filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled').map(r=>r.value);
       const rows = feeds.flatMap(v => Array.isArray(v.items) ? v.items : []).map(item => item.res_no ? {...item, UC_SEQ:item.res_no, MAIN_TITLE:item.title, ADDR1:item.place_nm, USAGE_DAY_WEEK_AND_TIME:[item.op_st_dt,item.op_ed_dt].filter(Boolean).join(' – '), ITEMCNTNTS:[item.showtime,item.rating,item.price,item.casting].filter(Boolean).join('\n'), sourceLabel:'부산문화포털 다봄'} : item);
-      const filtered = category === 'places' ? rows.filter(item=>!food(item)) : category === 'foodie' ? rows.filter(item=>!item.contenttypeid || food(item)) : rows;
+      const filtered = category === 'places' ? rows.filter(item=>!food(item)) : category === 'foodie' ? rows.filter(food) : rows;
       setItems(filtered); setFailed(!feeds.some(v=>v.status === 'ok') && !filtered.length);
     }).finally(()=>{if(active)setLoading(false);});
     return ()=>{active=false;};
   }, [lang, category, retry]);
   return <section className="data-sources"><div className="section-heading"><h2>{lang === 'ko' ? '어디를 찾아볼까요?' : 'Find your next stop'}</h2>{onPlan && <button className="primary" onClick={() => onPlan()}>{lang === 'ko' ? '코스' : 'Routes'}</button>}</div>
-    <div className="quick-categories">{[['places','관광지','Places'],['foodie','푸디투어','Food tours'],['festivals','축제','Festivals'],['performances','공연','Performances'],['exhibitions','전시','Exhibitions'],['ocean','체험','Experiences']].map(([id,ko,en]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{lang === 'ko' ? ko : en}</button>)}</div>
+    <div className="quick-categories">{(regional ? [['places','관광지','Places'],['foodie','음식점','Restaurants'],['localguides','미식 여행 가이드','Food travel guides']] : [['festivals','축제','Festivals'],['performances','공연','Performances'],['exhibitions','전시','Exhibitions'],['ocean','체험','Experiences']]).map(([id,ko,en]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{lang === 'ko' ? ko : en}</button>)}</div>
     {category === 'festivals' && <p className="notice">{lang === 'ko' ? '축제 소개 자료입니다. 지난 연도 일정이 포함될 수 있으므로 올해 개최 일정은 주최기관에서 확인해주세요.' : 'Festival reference guide. Dates may refer to past editions; confirm current dates with the organizer.'}</p>}
     {loading && <p role="status">{lang === 'ko' ? '관광정보를 불러오는 중입니다.' : 'Loading places…'}</p>}
     <label>{lang === 'ko' ? '이 목록에서 장소·지역 찾기' : 'Find a place or neighborhood in this list'}<input type="search" value={query} onChange={e => { setQuery(e.target.value); setLimit(6); }} /></label>
@@ -57,7 +57,7 @@ export function OfficialPlaces({ lang, onPlan }: { lang: string; onPlan?: (item?
       {item.ITEMCNTNTS && <p className="tourism-summary">{String(item.ITEMCNTNTS).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim()}</p>}
       {original.USAGE_DAY_WEEK_AND_TIME && <p className="tourism-schedule" title={original.USAGE_DAY_WEEK_AND_TIME}><Clock3 size={14} aria-hidden="true"/><span>{original.USAGE_DAY_WEEK_AND_TIME}</span></p>}
       <div className="tourism-actions"><button onClick={() => setSelected(item)}>{lang === 'ko' ? '상세보기 ›' : 'Details ›'}</button>{onPlan && <button onClick={() => onPlan(item)}>{lang === 'ko' ? '이 장소 포함 코스 ＋' : 'Add to route ＋'}</button>}</div>
-    </article>; })}</div>{matched.length > limit && <button onClick={() => setLimit(v => v + 6)}>{lang === 'ko' ? '더 보기' : 'Show more'} ({Math.min(limit, matched.length)}/{matched.length})</button>}<p><small className="muted">{category === 'places' ? (lang === 'ko' ? '출처: 한국관광공사' : 'Source: Korea Tourism Organization') : (lang === 'ko' ? '출처: 부산광역시 · 공식 원문 / NOWRO 등록 콘텐츠' : 'Source: Busan Metropolitan City / NOWRO listings')}</small></p>
+    </article>; })}</div>{matched.length > limit && <button onClick={() => setLimit(v => v + 6)}>{lang === 'ko' ? '더 보기' : 'Show more'} ({Math.min(limit, matched.length)}/{matched.length})</button>}<p><small className="muted">{(category === 'places' || category === 'foodie') ? (lang === 'ko' ? '출처: 한국관광공사' : 'Source: Korea Tourism Organization') : (lang === 'ko' ? '출처: 부산광역시 · 공식 원문 / NOWRO 등록 콘텐츠' : 'Source: Busan Metropolitan City / NOWRO listings')}</small></p>
     {selected && <Modal title={selected.MAIN_TITLE} close={() => setSelected(null)}>
       <TourismImage src={selected.MAIN_IMG_NORMAL} title={selected.MAIN_TITLE} lang={lang} />
       <h3>{lang === 'ko' ? '위치' : 'Location'}</h3><p>{selected.SUBTITLE || (lang === 'ko' ? '주소 확인 필요' : 'Address to be confirmed')}</p>

@@ -1640,7 +1640,7 @@ export default function App() {
               </div>
             )}
             {tab === "MAP" && (
-              <section className="section official-explore"><h1>{lang === 'ko' ? '지역별 가이드' : 'Local guides'}</h1><DistrictDirectory areas={catalog.areas} lang={lang} onSelect={id => { areaChange(id); setToast(lang === 'ko' ? '여행코스 지역이 선택되었습니다. 아래 목록 검색에 지역명을 입력해 장소를 찾아보세요.' : 'Route district selected. Search for the neighborhood in the list below.'); }} /><OfficialPlaces lang={lang} onPlan={openPlanner} /></section>
+              <section className="section official-explore"><h1>{lang === 'ko' ? '지역별 가이드' : 'Local guides'}</h1><DistrictDirectory areas={catalog.areas} lang={lang} onSelect={id => { areaChange(id); setToast(lang === 'ko' ? '여행코스 지역이 선택되었습니다. 아래 목록 검색에 지역명을 입력해 장소를 찾아보세요.' : 'Route district selected. Search for the neighborhood in the list below.'); }} /><OfficialPlaces lang={lang} onPlan={openPlanner} regional /></section>
             )}
             {tab === "TRIP" && (
               <section className="section">
