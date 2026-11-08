@@ -1049,7 +1049,7 @@ export default function App() {
                     })}
                   </div>
                 </section>
-                <section className="hero">
+                <section className="hero hero-photo-intro">
                   <div className="hero-copy">
                     <span className="eyebrow">
                       <span className="status-dot" />
