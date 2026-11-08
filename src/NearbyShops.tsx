@@ -9,6 +9,7 @@ import {
   Utensils,
   Coffee,
   ShoppingBag,
+  Sparkles,
 } from "lucide-react";
 export function NearbyShops({
   item,
@@ -21,16 +22,57 @@ export function NearbyShops({
   onPlan?: (item: any) => void;
   onPlanMany?: (items: any[]) => void;
 }) {
-  const lat = Number(item.mapy || item.LAT),
-    lng = Number(item.mapx || item.LNG);
+  const originalLat = Number(item.mapy || item.LAT),
+    originalLng = Number(item.mapx || item.LNG);
+  const hasOriginalPoint =
+    Number.isFinite(originalLat) &&
+    Number.isFinite(originalLng) &&
+    originalLat >= 34 &&
+    originalLat <= 36 &&
+    originalLng >= 128 &&
+    originalLng <= 130;
+  const [reference, setReference] = useState<any>(null),
+    [candidates, setCandidates] = useState<any[]>([]),
+    [locating, setLocating] = useState(false),
+    [partial, setPartial] = useState(false);
+  const lat = hasOriginalPoint ? originalLat : Number(reference?.lat || 0),
+    lng = hasOriginalPoint ? originalLng : Number(reference?.lng || 0);
+  useEffect(() => {
+    let active = true;
+    setReference(null);
+    setCandidates([]);
+    if (hasOriginalPoint) {
+      setLocating(false);
+      return;
+    }
+    setLocating(true);
+    api(
+      "location-candidates?title=" +
+        encodeURIComponent(
+          item.lookupTitle || item.MAIN_TITLE || item.title || "",
+        ),
+    )
+      .then((v) => {
+        if (active) {
+          setCandidates(v.items || []);
+          if (v.items?.length === 1) setReference(v.items[0]);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLocating(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [hasOriginalPoint, item.UC_SEQ, item.lookupTitle, item.MAIN_TITLE]);
   const [items, setItems] = useState<any[]>([]),
     [status, setStatus] = useState("loading"),
     [saved, setSaved] = useState<string[]>(() =>
       readSavedPlaces().map(savedPlaceId),
     );
   useEffect(() => {
-    const update = () =>
-      setSaved(readSavedPlaces().map(savedPlaceId));
+    const update = () => setSaved(readSavedPlaces().map(savedPlaceId));
     window.addEventListener("nowro-saved", update);
     return () => window.removeEventListener("nowro-saved", update);
   }, []);
@@ -40,7 +82,7 @@ export function NearbyShops({
   useEffect(() => {
     setSelected([]);
     setIncludeCurrent(!!item.routePlaceId);
-  }, [item.UC_SEQ, item.routePlaceId]);
+  }, [item.UC_SEQ, item.routePlaceId, lat, lng]);
   const entry = (p: any) => ({
     ...p,
     UC_SEQ: "nearby-" + p.contentid,
@@ -51,17 +93,20 @@ export function NearbyShops({
   });
   const count = selected.length + (includeCurrent ? 1 : 0);
   const group = (p: any) =>
-    String(p.contenttypeid) === "38"
-      ? "shopping"
-      : p.cat3 === "A05020900"
-        ? "cafe"
-        : "food";
+    String(p.contenttypeid) === "28"
+      ? "experience"
+      : String(p.contenttypeid) === "38"
+        ? "shopping"
+        : p.cat3 === "A05020900"
+          ? "cafe"
+          : "food";
   const visible = items.filter((p) => filter === "all" || group(p) === filter);
   const L = (ko: string, en: string) => (lang === "ko" ? ko : en);
   useEffect(() => {
     let active = true;
     setItems([]);
     setStatus("loading");
+    setPartial(false);
     if (!lat || !lng) {
       setStatus("location_unavailable");
       return;
@@ -75,6 +120,7 @@ export function NearbyShops({
             ),
           );
           setStatus(v.status);
+          setPartial(!!v.partial);
         }
       })
       .catch(() => {
@@ -86,7 +132,57 @@ export function NearbyShops({
   }, [lat, lng, item.routePlaceId]);
   return (
     <section className="nearby-shops">
-      <h3>{L("근처 맛집·카페·쇼핑", "Nearby food, cafés and shopping")}</h3>
+      <h3>
+        {L(
+          "근처 맛집·카페·체험·쇼핑",
+          "Nearby food, cafés, experiences and shopping",
+        )}
+      </h3>
+      {locating && (
+        <p role="status">
+          {L(
+            "공식 관광자료에서 기준 위치를 확인하고 있습니다.",
+            "Checking the reference location in official tourism data…",
+          )}
+        </p>
+      )}
+      {!hasOriginalPoint && reference && (
+        <p className="notice">
+          <MapPin size={15} />
+          {L(
+            "공식 관광정보의 대표 지점 기준: ",
+            "Official tourism reference point: ",
+          )}
+          {reference.title} · {reference.address}
+          <br />
+          {L(
+            "현재 콘텐츠의 확정 좌표가 아닙니다. 실제 방문할 행사장 위치를 지도에서 확인해주세요.",
+            "This is a reference point, not a confirmed location for this listing. Check the venue you will visit on the map.",
+          )}
+        </p>
+      )}
+      {!hasOriginalPoint && candidates.length > 1 && (
+        <label>
+          {L("주변 검색 기준 장소", "Choose the location for nearby search")}
+          <select
+            value={reference?.id || ""}
+            onChange={(e) =>
+              setReference(
+                candidates.find((p) => p.id === e.target.value) || null,
+              )
+            }
+          >
+            <option value="">
+              {L("기준 장소 선택", "Choose a reference location")}
+            </option>
+            {candidates.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title} · {p.address}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <p className="muted">
         {L(
           "반경 2km · 직선거리 기준 · 영업상태 및 판매 상품은 미확인입니다.",
@@ -98,6 +194,7 @@ export function NearbyShops({
           ["all", "전체", "All"],
           ["food", "음식점", "Dining"],
           ["cafe", "카페·찻집", "Cafés"],
+          ["experience", "체험·레저", "Experiences"],
           ["shopping", "쇼핑", "Shopping"],
         ].map(([id, ko, en]) => (
           <button
@@ -109,22 +206,26 @@ export function NearbyShops({
           </button>
         ))}
       </div>
-      {status === "loading" ? (
+      {locating ? null : status === "loading" ? (
         <p role="status">
           {L("주변 장소를 찾고 있습니다.", "Finding nearby places…")}
         </p>
       ) : status !== "ok" ? (
         <p>
           {L(
-            "주변 정보를 확인할 수 없습니다. 지도에서 확인해주세요.",
-            "Nearby information is unavailable. Please check the map.",
+            status === "location_unavailable"
+              ? "확인된 좌표가 없어 주변 장소를 조회할 수 없습니다. 공식 원문에서 행사장 위치를 확인해주세요."
+              : "주변 정보를 확인할 수 없습니다. 잠시 후 다시 확인해주세요.",
+            status === "location_unavailable"
+              ? "Nearby search needs a confirmed location or reference point. Check the official venue listing."
+              : "Nearby information is temporarily unavailable. Please try again.",
           )}
         </p>
       ) : !visible.length ? (
         <p>
           {L(
-            "현재 제공된 주변 상점 정보가 없습니다.",
-            "No nearby shop information available.",
+            "현재 제공된 이 분류의 주변 장소 정보가 없습니다.",
+            "No nearby places are available in this category.",
           )}
         </p>
       ) : (
@@ -136,9 +237,11 @@ export function NearbyShops({
             const Icon =
               group(p) === "shopping"
                 ? ShoppingBag
-                : group(p) === "cafe"
-                  ? Coffee
-                  : Utensils;
+                : group(p) === "experience"
+                  ? Sparkles
+                  : group(p) === "cafe"
+                    ? Coffee
+                    : Utensils;
             return (
               <article
                 key={p.contentid}
@@ -156,9 +259,11 @@ export function NearbyShops({
                   {Math.round(p.distanceKm * 1000)}m ·{" "}
                   {group(p) === "shopping"
                     ? L("쇼핑 장소", "Shopping")
-                    : group(p) === "cafe"
-                      ? L("카페·전통찻집", "Café / tea house")
-                      : L("음식점", "Dining")}
+                    : group(p) === "experience"
+                      ? L("체험·레저", "Experience / leisure")
+                      : group(p) === "cafe"
+                        ? L("카페·전통찻집", "Café / tea house")
+                        : L("음식점", "Dining")}
                 </small>
                 <div className="tourism-actions">
                   <button
@@ -211,6 +316,14 @@ export function NearbyShops({
             );
           })}
         </div>
+      )}
+      {partial && (
+        <p className="muted">
+          {L(
+            "일부 주변 자료의 응답이 지연돼 조회된 장소만 표시합니다.",
+            "Some providers are delayed; only successfully loaded places are shown.",
+          )}
+        </p>
       )}
       {onPlanMany && items.length > 0 && (
         <div className="nearby-route-builder">

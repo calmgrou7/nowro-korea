@@ -11,6 +11,8 @@ import { fetchOpenApi, openApiSources, festivalHero } from "./busan-openapi.mjs"
 import { syncTourismCatalog, ingestPublicContent } from './tourism-catalog.mjs';
 import { boardPosts, saveBoardPost } from './boards.mjs';
 import { nearbyShops } from './nearby.mjs';
+import { exhibitionLocation } from './exhibition-location.mjs';
+import { locationCandidates } from './location-candidates.mjs';
 import { kopisPerformances, kopisDetail } from './kopis.mjs';
 import { renderPageMetadata } from '../shared/page-metadata.ts';
 import {
@@ -295,6 +297,14 @@ export function createApp(store, options = {}) {
         case 'GET /api/nearby':
           out = await nearbyShops(store,areas,Number(url.searchParams.get('lat')),Number(url.searchParams.get('lng')));
           break;
+        case 'GET /api/location-candidates':
+          out=await locationCandidates(url.searchParams.get('title'));
+          break;
+        case 'GET /api/exhibition-location': {
+          const id=url.searchParams.get('id');out=await exhibitionLocation(id);
+          if(out.location){const base=(await fetchOpenApi('exhibitions')).items?.find(p=>String(p.res_no)===id);if(base){const [item]=ingestPublicContent(store,areas,'exhibitions',[{...base,...out.location,UC_SEQ:id,MAIN_TITLE:base.title,USAGE_DAY_WEEK_AND_TIME:[base.op_st_dt,base.op_ed_dt].filter(Boolean).join(' – ')}]);out.location={...out.location,routePlaceId:item.routePlaceId};}}
+          break;
+        }
         case 'GET /api/performances': {
           if(process.env.KOPIS_API_KEY) { out=await kopisPerformances(); break; }
           const ids = JSON.parse(store.db.prepare("SELECT value FROM config WHERE key='performance_ids'").get()?.value || '[]');

@@ -121,6 +121,93 @@ export function OfficialPlaces({
       active = false;
     };
   }, [selected?.kopisId]);
+  useEffect(() => {
+    if (
+      category !== "exhibitions" ||
+      !selected?.res_no ||
+      (selected.LAT && selected.LNG)
+    )
+      return;
+    let active = true;
+    const id = selected.res_no;
+    api("exhibition-location?id=" + encodeURIComponent(id))
+      .then((value) => {
+        if (!active) return;
+        setSelected((previous: any) =>
+          previous?.res_no === id
+            ? {
+                ...previous,
+                ...value.location,
+                SUBTITLE: value.location?.ADDR1 || previous.SUBTITLE,
+                locationRequested: true,
+              }
+            : previous,
+        );
+        setItems((previous) =>
+          previous.map((p) =>
+            p.res_no === id
+              ? { ...p, ...value.location, locationRequested: true }
+              : p,
+          ),
+        );
+      })
+      .catch(() => {
+        if (active)
+          setSelected((previous: any) =>
+            previous?.res_no === id
+              ? { ...previous, locationRequested: true }
+              : previous,
+          );
+      });
+    return () => {
+      active = false;
+    };
+  }, [category, selected?.res_no]);
+  useEffect(() => {
+    if (category !== "exhibitions") return;
+    let active = true;
+    // Fill the public venue metadata in small cached batches without blocking the list or search.
+    const pending = items
+      .filter((p) => p.res_no && !p.locationRequested)
+      .slice(0, 3);
+    if (!pending.length) return;
+    Promise.all(
+      pending.map(async (p) => {
+        try {
+          const value = await api(
+            "exhibition-location?id=" + encodeURIComponent(p.res_no),
+          );
+          return { id: p.res_no, location: value.location || {} };
+        } catch {
+          return { id: p.res_no, location: {} };
+        }
+      }),
+    ).then((results) => {
+      if (!active) return;
+      setItems((previous) =>
+        previous.map((p) => {
+          const found = results.find((r) => r.id === p.res_no);
+          return found
+            ? { ...p, ...found.location, locationRequested: true }
+            : p;
+        }),
+      );
+      setSelected((previous: any) => {
+        const found = results.find((r) => r.id === previous?.res_no);
+        return found
+          ? {
+              ...previous,
+              ...found.location,
+              SUBTITLE: found.location.ADDR1 || previous.SUBTITLE,
+              locationRequested: true,
+            }
+          : previous;
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, [category, items]);
   const [listings, setListings] = useState<any[]>([]);
   useEffect(() => {
     api("listings")
@@ -141,6 +228,7 @@ export function OfficialPlaces({
     )
     .map((v) => ({
       UC_SEQ: v.id,
+      lookupTitle: v.data.titleKo,
       MAIN_TITLE: lang === "ko" ? v.data.titleKo : v.data.titleEn,
       ADDR1: v.data.address,
       ITEMCNTNTS: lang === "ko" ? v.data.descriptionKo : v.data.descriptionEn,
@@ -215,7 +303,7 @@ export function OfficialPlaces({
                   ...item,
                   UC_SEQ: item.res_no,
                   MAIN_TITLE: item.title,
-                  ADDR1: item.place_nm,
+                  ADDR1: item.ADDR1 || item.place_nm,
                   USAGE_DAY_WEEK_AND_TIME: [item.op_st_dt, item.op_ed_dt]
                     .filter(Boolean)
                     .join(" – "),
@@ -441,7 +529,17 @@ export function OfficialPlaces({
                     String(item.SUBTITLE || "").match(
                       /[가-힣]+[구군](?=\s|$)|[A-Za-z]+-(?:gu|gun)/,
                     )?.[0] ||
-                    (lang === "ko" ? "부산" : "Busan")}
+                    (category === "exhibitions"
+                      ? original.locationRequested
+                        ? lang === "ko"
+                          ? "지역 미확인"
+                          : "Area unverified"
+                        : lang === "ko"
+                          ? "위치 확인 중"
+                          : "Locating venue"
+                      : lang === "ko"
+                        ? "부산"
+                        : "Busan")}
                 </span>
               </div>
               {eventCategory && eventExpired(item, today) && (
@@ -486,7 +584,12 @@ export function OfficialPlaces({
                 </button>
                 {onPlan && (
                   <button
-                    disabled={eventCategory && eventExpired(item, today)}
+                    disabled={
+                      (eventCategory && eventExpired(item, today)) ||
+                      (category === "exhibitions" &&
+                        original.res_no &&
+                        !original.locationRequested)
+                    }
                     onClick={() => onPlan(item)}
                   >
                     {lang === "ko" ? "이 장소 포함 코스 ＋" : "Add to route ＋"}
@@ -535,6 +638,15 @@ export function OfficialPlaces({
             lang={lang}
           />
           <h3>{lang === "ko" ? "위치" : "Location"}</h3>
+          {category === "exhibitions" &&
+            selected.res_no &&
+            !selected.locationRequested && (
+              <p role="status">
+                {lang === "ko"
+                  ? "공식 시설의 주소와 지도 위치를 확인하고 있습니다."
+                  : "Checking the address and map location of the official venue…"}
+              </p>
+            )}
           <p>
             {selected.SUBTITLE ||
               (lang === "ko" ? "주소 확인 필요" : "Address to be confirmed")}
@@ -554,6 +666,17 @@ export function OfficialPlaces({
                 : "A detailed description is not available.")}
           </p>
           {selected.CNTCT_TEL && <p>{selected.CNTCT_TEL}</p>}
+          {selected.locationBasis === "official_linked_venue" && (
+            <p className="muted">
+              {lang === "ko"
+                ? "공식 전시 안내에 연결된 시설 기준: "
+                : "Officially linked venue: "}
+              {selected.venueName}
+              {lang === "ko"
+                ? " · 다른 지점에서 관람한다면 공식 원문의 장소를 확인해주세요."
+                : " · Check the official listing if you plan to visit another branch."}
+            </p>
+          )}
           <div
             className="detail-primary-actions"
             aria-label={
@@ -584,7 +707,11 @@ export function OfficialPlaces({
               <button
                 className="detail-plan"
                 disabled={
-                  routeBusy || (eventCategory && eventExpired(selected, today))
+                  routeBusy ||
+                  (eventCategory && eventExpired(selected, today)) ||
+                  (category === "exhibitions" &&
+                    selected.res_no &&
+                    !selected.locationRequested)
                 }
                 aria-busy={routeBusy}
                 onClick={async () => {

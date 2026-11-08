@@ -28,13 +28,14 @@ function verifiedAgent() {
     ca: [...rootCertificates, pem],
     rejectUnauthorized: true,
     keepAlive: true,
+    maxSockets:4,
   }));
 }
 export function readExhibitionOrigin(url) {
   if (
     url.protocol !== "https:" ||
     url.hostname !== "busandabom.net" ||
-    url.pathname !== "/play/list.nm" ||
+    !['/play/list.nm','/play/view.nm'].includes(url.pathname) ||
     url.username ||
     url.password
   )
