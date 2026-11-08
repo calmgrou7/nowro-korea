@@ -1,4 +1,4 @@
-import { loadExhibitions } from './exhibitions.mjs';
+import { loadExhibitionsWithFallback } from './exhibition-origin.mjs';
 const SOURCES = {
   foodie: { name: "Busan Foodie Tour", endpoint: "https://apis.data.go.kr/6260000/FoodieService", key: "BUSAN_FOODIE_API_KEY" },
   exhibitions: { name: "Busan Culture Exhibitions", endpoint: "https://apis.data.go.kr/6260000/BusanCultureExhibitService", key: "BUSAN_EXHIBIT_API_KEY" },
@@ -62,7 +62,7 @@ async function loadOpenApi(type, params = {}) {
   if (!source) throw new Error("UNKNOWN_OPEN_API");
   const serviceKey = process.env[source.key];
   if (!serviceKey) return { source: { id: type, name: source.name, endpoint: source.endpoint, configured: false }, items: [], configured: false };
-  if(type==='exhibitions')return loadExhibitions(serviceKey);
+  if(type==='exhibitions')return loadExhibitionsWithFallback(serviceKey);
   const operations = { theatre: 'getBusanCulturePlayDetail', foodie: 'getFoodieKr', ocean: 'getMaritimeKr', festivals: 'getFestivalKr', exhibitions: 'getBusanCultureExhibit', kor: 'areaBasedList2', eng: 'areaBasedList2' };
   if (!operations[type]) return { source: { id: type, name: source.name }, items: [], configured: true, status: 'verification_pending' };
   const tourism = type === 'kor' || type === 'eng';

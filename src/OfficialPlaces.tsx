@@ -67,6 +67,8 @@ export function OfficialPlaces({
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [feedReason, setFeedReason] = useState("");
+  const [originFallback, setOriginFallback] = useState(false);
+  const [originPartial, setOriginPartial] = useState(false);
   const [category, setCategory] = useState(regional ? "places" : "festivals");
   const [query, setQuery] = useState("");
   const [limit, setLimit] = useState(6);
@@ -93,9 +95,9 @@ export function OfficialPlaces({
     return () => window.removeEventListener("nowro-saved", update);
   }, []);
   const [selected, setSelected] = useState<any>(null);
-  const [routeBusy,setRouteBusy]=useState(false);
-  const [detailMessage,setDetailMessage]=useState('');
-  useEffect(()=>setDetailMessage(''),[selected?.UC_SEQ]);
+  const [routeBusy, setRouteBusy] = useState(false);
+  const [detailMessage, setDetailMessage] = useState("");
+  useEffect(() => setDetailMessage(""), [selected?.UC_SEQ]);
   useEffect(() => {
     if (!selected?.kopisId) return;
     let active = true;
@@ -178,6 +180,8 @@ export function OfficialPlaces({
     setLoading(true);
     setFailed(false);
     setFeedReason("");
+    setOriginFallback(false);
+    setOriginPartial(false);
     const tourism = lang === "ko" ? "kor" : "eng";
     const food = (item: any) =>
       ["39", "82"].includes(String(item.contenttypeid));
@@ -201,6 +205,8 @@ export function OfficialPlaces({
           )
           .map((r) => r.value);
         setFeedReason(feeds.find((v) => v.reason)?.reason || "");
+        setOriginFallback(feeds.some((v) => v.transport === "official_portal"));
+        setOriginPartial(feeds.some((v) => v.partial));
         const rows = feeds
           .flatMap((v) => (Array.isArray(v.items) ? v.items : []))
           .map((item) =>
@@ -213,15 +219,12 @@ export function OfficialPlaces({
                   USAGE_DAY_WEEK_AND_TIME: [item.op_st_dt, item.op_ed_dt]
                     .filter(Boolean)
                     .join(" – "),
-                  ITEMCNTNTS: [
-                    item.showtime,
-                    item.rating,
-                    item.price,
-                    item.casting,
-                  ]
-                    .filter(Boolean)
-                    .join("\n"),
-                  sourceLabel: "부산문화포털 다봄",
+                  ITEMCNTNTS:
+                    item.ITEMCNTNTS ||
+                    [item.showtime, item.rating, item.price, item.casting]
+                      .filter(Boolean)
+                      .join("\n"),
+                  sourceLabel: item.sourceLabel || "부산문화포털 다봄",
                 }
               : item,
           );
@@ -301,6 +304,17 @@ export function OfficialPlaces({
             : "Festival reference guide. Dates may refer to past editions; confirm current dates with the organizer."}
         </p>
       )}
+      {category === "exhibitions" && originFallback && (
+        <p className="notice">
+          {lang === "ko"
+            ? "전시 API 응답 지연으로 부산문화포털의 공식 공개 일정을 자동으로 보완해 보여드립니다."
+            : "The exhibition API is delayed. Listings are supplemented automatically from the official Busan Culture Portal."}
+          {originPartial &&
+            (lang === "ko"
+              ? " 일부 일정만 불러왔습니다. 전체 일정은 공식 원문에서 확인해주세요."
+              : " Some listings could not be loaded. Check the official portal for the full schedule.")}
+        </p>
+      )}
       {loading && (
         <p role="status">
           {lang === "ko" ? "관광정보를 불러오는 중입니다." : "Loading places…"}
@@ -356,7 +370,7 @@ export function OfficialPlaces({
           {category === "exhibitions" && (
             <a
               className="action-link"
-              href="https://www.busandabom.net/"
+              href="https://busandabom.net/play/list.nm?menuCd=8&lang=ko&url=play&prg_cd=140"
               target="_blank"
               rel="noreferrer"
             >
@@ -491,15 +505,19 @@ export function OfficialPlaces({
       )}
       <p>
         <small className="muted">
-          {category === "performances"
-            ? "출처: KOPIS · 공연예술통합전산망 / 부산문화포털"
-            : category === "places" || category === "foodie"
-              ? lang === "ko"
-                ? "출처: 한국관광공사"
-                : "Source: Korea Tourism Organization"
-              : lang === "ko"
-                ? "출처: 부산광역시 · 공식 원문 / NOWRO 등록 콘텐츠"
-                : "Source: Busan Metropolitan City / NOWRO listings"}
+          {category === "exhibitions" && originFallback
+            ? lang === "ko"
+              ? "출처: 부산문화포털 다봄 · 공식 전시 일정"
+              : "Source: Busan Culture Portal · official exhibition listings"
+            : category === "performances"
+              ? "출처: KOPIS · 공연예술통합전산망 / 부산문화포털"
+              : category === "places" || category === "foodie"
+                ? lang === "ko"
+                  ? "출처: 한국관광공사"
+                  : "Source: Korea Tourism Organization"
+                : lang === "ko"
+                  ? "출처: 부산광역시 · 공식 원문 / NOWRO 등록 콘텐츠"
+                  : "Source: Busan Metropolitan City / NOWRO listings"}
         </small>
       </p>
       {selected && (
@@ -536,23 +554,90 @@ export function OfficialPlaces({
                 : "A detailed description is not available.")}
           </p>
           {selected.CNTCT_TEL && <p>{selected.CNTCT_TEL}</p>}
-          <div className="detail-primary-actions" aria-label={lang==='ko'?'현재 장소 저장 및 코스 선택':'Save this place or select it for a route'}>
-            <button className="detail-save" aria-pressed={savedIds.includes(savedPlaceId(selected))} onClick={()=>savePlace(selected)}>{savedIds.includes(savedPlaceId(selected))?<Check size={18} aria-hidden="true"/>:<Bookmark size={18} aria-hidden="true"/>}{savedIds.includes(savedPlaceId(selected))?(lang==='ko'?'저장됨 · 취소':'Saved · remove'):(lang==='ko'?'저장':'Save')}</button>
-            {onPlan&&<button className="detail-plan" disabled={routeBusy||(eventCategory&&eventExpired(selected,today))} aria-busy={routeBusy} onClick={async()=>{setRouteBusy(true);setDetailMessage('');try{const ok=await onPlan(selected);if(ok!==false)setSelected(null);else setDetailMessage(lang==='ko'?'현재 장소의 위치·일정 확인이 필요해 코스에 연결하지 못했습니다.':'This place needs verified location or schedule information before it can be added.');}catch{setDetailMessage(lang==='ko'?'코스 연결에 실패했습니다. 잠시 후 다시 시도해주세요.':'Unable to connect this place to a route. Please try again.');}finally{setRouteBusy(false);}}}><Route size={18} aria-hidden="true"/>{routeBusy?(lang==='ko'?'연결 중…':'Connecting…'):(lang==='ko'?'코스 선택':'Select for route')}</button>}
+          <div
+            className="detail-primary-actions"
+            aria-label={
+              lang === "ko"
+                ? "현재 장소 저장 및 코스 선택"
+                : "Save this place or select it for a route"
+            }
+          >
+            <button
+              className="detail-save"
+              aria-pressed={savedIds.includes(savedPlaceId(selected))}
+              onClick={() => savePlace(selected)}
+            >
+              {savedIds.includes(savedPlaceId(selected)) ? (
+                <Check size={18} aria-hidden="true" />
+              ) : (
+                <Bookmark size={18} aria-hidden="true" />
+              )}
+              {savedIds.includes(savedPlaceId(selected))
+                ? lang === "ko"
+                  ? "저장됨 · 취소"
+                  : "Saved · remove"
+                : lang === "ko"
+                  ? "저장"
+                  : "Save"}
+            </button>
+            {onPlan && (
+              <button
+                className="detail-plan"
+                disabled={
+                  routeBusy || (eventCategory && eventExpired(selected, today))
+                }
+                aria-busy={routeBusy}
+                onClick={async () => {
+                  setRouteBusy(true);
+                  setDetailMessage("");
+                  try {
+                    const ok = await onPlan(selected);
+                    if (ok !== false) setSelected(null);
+                    else
+                      setDetailMessage(
+                        lang === "ko"
+                          ? "현재 장소의 위치·일정 확인이 필요해 코스에 연결하지 못했습니다."
+                          : "This place needs verified location or schedule information before it can be added.",
+                      );
+                  } catch {
+                    setDetailMessage(
+                      lang === "ko"
+                        ? "코스 연결에 실패했습니다. 잠시 후 다시 시도해주세요."
+                        : "Unable to connect this place to a route. Please try again.",
+                    );
+                  } finally {
+                    setRouteBusy(false);
+                  }
+                }}
+              >
+                <Route size={18} aria-hidden="true" />
+                {routeBusy
+                  ? lang === "ko"
+                    ? "연결 중…"
+                    : "Connecting…"
+                  : lang === "ko"
+                    ? "코스 선택"
+                    : "Select for route"}
+              </button>
+            )}
           </div>
-          {detailMessage&&<p className="notice" role="status">{detailMessage}</p>}
+          {detailMessage && (
+            <p className="notice" role="status">
+              {detailMessage}
+            </p>
+          )}
           <NearbyShops
             item={selected}
             lang={lang}
             onPlan={async (item) => {
-              const ok=await onPlan?.(item);
-              if(ok!==false)setSelected(null);
+              const ok = await onPlan?.(item);
+              if (ok !== false) setSelected(null);
             }}
             onPlanMany={
               onPlanMany
                 ? async (items) => {
-                    const ok=await onPlanMany(items);
-                    if(ok!==false)setSelected(null);
+                    const ok = await onPlanMany(items);
+                    if (ok !== false) setSelected(null);
                   }
                 : undefined
             }
@@ -571,7 +656,9 @@ export function OfficialPlaces({
           </a>
           <p>
             <small className="muted">
-              {selected.sourceUrl?.startsWith("https://www.kopis.or.kr/") ? (
+              {["https://www.kopis.or.kr/", "https://busandabom.net/"].some(
+                (prefix) => selected.sourceUrl?.startsWith(prefix),
+              ) ? (
                 <a href={selected.sourceUrl} target="_blank" rel="noreferrer">
                   {selected.sourceLabel} ↗
                 </a>

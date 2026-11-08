@@ -129,14 +129,14 @@ export function parseExhibitionResponse(raw, httpStatus = 200) {
     throw failure("upstream_invalid_response", undefined, httpStatus);
   return { items, totalCount, format: "xml" };
 }
-export async function loadExhibitions(serviceKey) {
+export async function loadExhibitions(serviceKey,{timeoutMs=15000}={}) {
   const url = new URL(endpoint);
   url.search = new URLSearchParams({
     ServiceKey: serviceKey,
     pageNo: "1",
     numOfRows: "30",
   });
-  const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+  const response = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
   const data = parseExhibitionResponse(await response.text(), response.status);
   return {
     ...data,
