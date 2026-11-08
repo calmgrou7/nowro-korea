@@ -28,6 +28,7 @@ export function OfficialPlaces({ lang, onPlan }: { lang: string; onPlan?: (item?
   const matched = [...items, ...extra].filter(item => [item.title, item.MAIN_TITLE, item.addr1, item.ADDR1, item.GUGUN_NM, item.PLACE].join(' ').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   useEffect(() => {
     let active = true; setItems([]); setLoading(true); setFailed(false);
+    if (category === 'performances') { setItems([]); setLoading(false); setFailed(false); return; }
     const tourism = lang === 'ko' ? 'kor' : 'eng';
     const food = (item: any) => ['39','82'].includes(String(item.contenttypeid));
     const paths = category === 'foodie' ? ['foodie',tourism] : [category === 'places' ? tourism : category];
@@ -41,7 +42,8 @@ export function OfficialPlaces({ lang, onPlan }: { lang: string; onPlan?: (item?
     return ()=>{active=false;};
   }, [lang, category, retry]);
   return <section className="data-sources"><div className="section-heading"><h2>{lang === 'ko' ? '어디를 찾아볼까요?' : 'Find your next stop'}</h2>{onPlan && <button className="primary" onClick={() => onPlan()}>{lang === 'ko' ? '코스' : 'Routes'}</button>}</div>
-    <div className="quick-categories">{[['places','관광지','Places'],['foodie','푸디투어','Food tours'],['ocean','체험','Experiences'],['festivals','축제 안내','Festival guide']].map(([id,ko,en]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{lang === 'ko' ? ko : en}</button>)}</div>
+    <div className="quick-categories">{[['places','관광지','Places'],['foodie','푸디투어','Food tours'],['festivals','축제','Festivals'],['performances','공연','Performances'],['exhibitions','전시','Exhibitions'],['ocean','체험','Experiences']].map(([id,ko,en]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{lang === 'ko' ? ko : en}</button>)}</div>
+    {category === 'performances' && <p className="notice">{lang === 'ko' ? '공연 목록 API 연동을 준비하고 있습니다.' : 'Performance listings are being connected.'}</p>}
     {category === 'festivals' && <p className="notice">{lang === 'ko' ? '축제 소개 자료입니다. 지난 연도 일정이 포함될 수 있으므로 올해 개최 일정은 주최기관에서 확인해주세요.' : 'Festival reference guide. Dates may refer to past editions; confirm current dates with the organizer.'}</p>}
     {loading && <p role="status">{lang === 'ko' ? '관광정보를 불러오는 중입니다.' : 'Loading places…'}</p>}
     <label>{lang === 'ko' ? '이 목록에서 장소·지역 찾기' : 'Find a place or neighborhood in this list'}<input type="search" value={query} onChange={e => { setQuery(e.target.value); setLimit(6); }} /></label>
