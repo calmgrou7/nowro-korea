@@ -25,7 +25,20 @@ export function OfficialPlaces({ lang, onPlan }: { lang: string; onPlan?: (item?
   useEffect(() => { setQuery(''); setLimit(6); }, [category, lang]);
   const extra = listings.filter(v => category === 'festivals' ? v.data.kind === 'event' : category === 'ocean' ? v.data.kind === 'experience' || v.data.kind === 'service' : false).map(v => ({ UC_SEQ: v.id, MAIN_TITLE: lang === 'ko' ? v.data.titleKo : v.data.titleEn, ADDR1: v.data.address, ITEMCNTNTS: lang === 'ko' ? v.data.descriptionKo : v.data.descriptionEn, MAIN_IMG_NORMAL: v.data.images[0], USAGE_DAY_WEEK_AND_TIME: v.data.eventStart ? v.data.eventStart + ' – ' + v.data.eventEnd : v.data.hours, sourceLabel: 'NOWRO · ' + v.data.businessName }));
   const matched = [...items, ...extra].filter(item => [item.title, item.MAIN_TITLE, item.addr1, item.ADDR1, item.GUGUN_NM, item.PLACE].join(' ').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
-  useEffect(() => { let active = true; setItems([]); setLoading(true); setFailed(false); api('openapi/' + (category === 'places' ? (lang === 'ko' ? 'kor' : 'eng') : category)).then(v => { if(active) { setItems(Array.isArray(v.items) ? v.items : []); setFailed(v.status === 'temporarily_unavailable'); } }).catch(() => { if(active) setFailed(true); }).finally(() => { if(active) setLoading(false); }); return () => { active = false; }; }, [lang, category, retry]);
+  useEffect(() => {
+    let active = true; setItems([]); setLoading(true); setFailed(false);
+    const tourism = lang === 'ko' ? 'kor' : 'eng';
+    const food = (item: any) => ['39','82'].includes(String(item.contenttypeid));
+    const paths = category === 'foodie' ? ['foodie',tourism] : [category === 'places' ? tourism : category];
+    Promise.allSettled(paths.map(path => api('openapi/' + path))).then(results => {
+      if (!active) return;
+      const feeds = results.filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled').map(r=>r.value);
+      const rows = feeds.flatMap(v => Array.isArray(v.items) ? v.items : []);
+      const filtered = category === 'places' ? rows.filter(item=>!food(item)) : category === 'foodie' ? rows.filter(item=>!item.contenttypeid || food(item)) : rows;
+      setItems(filtered); setFailed(!feeds.some(v=>v.status === 'ok') && !filtered.length);
+    }).finally(()=>{if(active)setLoading(false);});
+    return ()=>{active=false;};
+  }, [lang, category, retry]);
   return <section className="data-sources"><div className="section-heading"><h2>{lang === 'ko' ? '어디를 찾아볼까요?' : 'Find your next stop'}</h2>{onPlan && <button className="primary" onClick={() => onPlan()}>{lang === 'ko' ? '코스' : 'Routes'}</button>}</div>
     <div className="quick-categories">{[['places','관광지','Places'],['foodie','푸디투어','Food tours'],['ocean','체험','Experiences'],['festivals','축제 안내','Festival guide']].map(([id,ko,en]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{lang === 'ko' ? ko : en}</button>)}</div>
     {category === 'festivals' && <p className="notice">{lang === 'ko' ? '축제 소개 자료입니다. 지난 연도 일정이 포함될 수 있으므로 올해 개최 일정은 주최기관에서 확인해주세요.' : 'Festival reference guide. Dates may refer to past editions; confirm current dates with the organizer.'}</p>}
@@ -34,7 +47,7 @@ export function OfficialPlaces({ lang, onPlan }: { lang: string; onPlan?: (item?
     {failed && <div role="status"><p>{lang === 'ko' ? '정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' : 'Information is temporarily unavailable. Please try again shortly.'}</p><button onClick={() => setRetry(v => v + 1)}>{lang === 'ko' ? '다시 불러오기' : 'Try again'}</button></div>}
     {!loading && !failed && !items.length && <p>{lang === 'ko' ? '현재 제공된 정보가 없습니다.' : 'No information is currently available.'}</p>}
     {!loading && items.length > 0 && !matched.length && <p role="status">{lang === 'ko' ? '검색 결과가 없습니다.' : 'No matching places.'}</p>}
-    <div className="source-grid">{matched.slice(0, limit).map((original) => { const item = { ...original, UC_SEQ: category + '-' + (original.contentid || original.UC_SEQ), routePlaceId: category === 'places' ? 'kto-' + original.contentid : null, MAIN_TITLE: original.title || original.MAIN_TITLE, SUBTITLE: original.addr1 || original.ADDR1 || original.PLACE, MAIN_IMG_NORMAL: original.firstimage || original.MAIN_IMG_NORMAL, ITEMCNTNTS: original.ITEMCNTNTS || original.addr2 }; return <article className="source-card tourism-card" key={item.UC_SEQ}>
+    <div className="source-grid">{matched.slice(0, limit).map((original) => { const item = { ...original, UC_SEQ: category + '-' + (original.contentid || original.UC_SEQ), routePlaceId: original.contentid ? 'kto-' + original.contentid : null, MAIN_TITLE: original.title || original.MAIN_TITLE, SUBTITLE: original.addr1 || original.ADDR1 || original.PLACE, MAIN_IMG_NORMAL: original.firstimage || original.MAIN_IMG_NORMAL, ITEMCNTNTS: original.ITEMCNTNTS || original.addr2 }; return <article className="source-card tourism-card" key={item.UC_SEQ}>
       <TourismImage src={item.MAIN_IMG_NORMAL} title={item.MAIN_TITLE || item.TITLE} lang={lang} />
       <button className="tourism-save" aria-label={lang === 'ko' ? '장소 저장' : 'Save place'} aria-pressed={savedIds.includes(String(item.UC_SEQ))} onClick={() => savePlace(item)}>{savedIds.includes(String(item.UC_SEQ)) ? '✓' : '♡'}</button>
       <span className="tourism-district">{original.GUGUN_NM || String(item.SUBTITLE || '').match(/[가-힣]+[구군](?=\s|$)|[A-Za-z]+-(?:gu|gun)/)?.[0] || (lang === 'ko' ? '부산' : 'Busan')}</span>
