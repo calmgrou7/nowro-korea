@@ -38,6 +38,7 @@ export type Place = {
   published: boolean;
 };
 export type Conditions = {
+  allowPlanningEstimates?: boolean;
   requiredPlaceId?: string;
   requiredPlaceIds?: string[];
   areaId: string;

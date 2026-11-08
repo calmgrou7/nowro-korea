@@ -23,6 +23,12 @@ test('all eight visible interests including events are valid route inputs', () =
   assert.doesNotThrow(() => recommend({ ...base, minutes: 360, budget: 160000, interests: ['sea','cafe','food','culture','shopping','experience','wellness','event'] }, places));
   assert.throws(() => recommend({ ...base, interests: ['unknown'] }, places), /INVALID_CONDITIONS/);
 });
+test('unverified API places require explicit planning-only opt in', () => {
+  const original = recommend(base, places)[0].stops[0].placeId;
+  const provisional = places.map(p => p.id === original ? {...p, planningEstimate:true, hours:[]} : p);
+  assert.equal(calculate([original], base, provisional), null);
+  assert.ok(calculate([original], {...base, allowPlanningEstimates:true}, provisional));
+});
 test('a requested place is included in every recommendation or produces no route', () => {
   const initial = recommend(base, places);
   const id = initial[0].stops[0].placeId;

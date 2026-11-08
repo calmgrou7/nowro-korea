@@ -327,6 +327,7 @@ export default function App() {
     if (a) setC((old) => ({ ...old, areaId: id, origin: a.point, requiredPlaceId: undefined, requiredPlaceIds: undefined }));
   }
   async function generate(conditions = c) {
+    if (catalog?.places.some(p => p.planningEstimate) && !conditions.allowPlanningEstimates) { setToast(lang === 'ko' ? '운영정보 미확인 장소를 포함한 계획용 코스에 동의해주세요.' : 'Please allow planning estimates for places with unverified hours and fees.'); return; }
     await action(async () => {
       const data = await api("recommend", { conditions });
       const updatedCatalog = await api('catalog');
@@ -1140,6 +1141,7 @@ export default function App() {
                   aria-label={T("plan")}
                 >
                   {c.requiredPlaceId && <p className="notice">{lang === 'ko' ? '포함할 장소: ' : 'Include: '}{catalog.places.find(p => p.id === c.requiredPlaceId)?.name[lang] || c.requiredPlaceId}<button className="text-btn" onClick={() => update('requiredPlaceId', undefined)}>{lang === 'ko' ? '선택 해제' : 'Clear'}</button></p>}
+                  {catalog.places.some(p=>p.planningEstimate) && <label className="notice"><input type="checkbox" checked={!!c.allowPlanningEstimates} onChange={e=>update('allowPlanningEstimates',e.target.checked)} />{lang === 'ko' ? '운영시간·요금·예약 여부 미확인 장소를 계획용 코스에 포함합니다. 방문 가능 여부와 실제 비용은 직접 확인해야 합니다.' : 'Include places with unverified hours, fees and reservations in a planning-only route. Confirm availability and actual costs before visiting.'}</label>}
                   {!!c.requiredPlaceIds?.length && <p className="notice">{lang === 'ko' ? '선택한 장소: ' : 'Selected places: '}{c.requiredPlaceIds.map(id=>catalog.places.find(p=>p.id===id)?.name[lang] || id).join(' · ')}<button className="text-btn" onClick={()=>update('requiredPlaceIds',undefined)}>{lang === 'ko' ? '선택 해제' : 'Clear'}</button></p>}
                   <div className="planner-heading">
                     <div>

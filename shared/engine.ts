@@ -122,6 +122,7 @@ export function calculate(
     const p = catalog.find((p) => p.id === id && p.published);
     if (
       !p ||
+      (p.planningEstimate && c.allowPlanningEstimates !== true) ||
       p.areaId !== c.areaId ||
       p.reservation ||
       (c.children && p.children !== true) ||

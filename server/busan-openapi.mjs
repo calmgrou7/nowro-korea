@@ -18,13 +18,16 @@ let heroCache;
 export async function festivalHero() {
   if (heroCache && Date.now() - heroCache.at < 3600000) return heroCache.value;
   const feed = await fetchOpenApi('festivals');
-  for (const item of (feed.items || []).slice(0, 5)) {
+  for (const item of (feed.items || []).filter(item => /부산불꽃축제/.test(item.MAIN_TITLE || ''))) {
     try {
       const url = new URL(item.MAIN_IMG_NORMAL, 'https://www.visitbusan.net');
       if (url.protocol !== 'https:' || url.hostname !== 'www.visitbusan.net') continue;
       const response = await fetch(url, { redirect:'error', signal:AbortSignal.timeout(4000) });
-      const valid = response.ok && response.headers.get('content-type')?.startsWith('image/');
-      await response.body?.cancel();
+      const reader = response.body?.getReader();
+      const first = await reader?.read();
+      const bytes = first?.value;
+      const valid = response.ok && bytes && ((bytes[0] === 255 && bytes[1] === 216) || (bytes[0] === 137 && bytes[1] === 80) || (bytes[0] === 82 && bytes[1] === 73));
+      await reader?.cancel();
       if (!valid) continue;
       const value = { image: url.href, title: item.MAIN_TITLE, source:'https://www.visitbusan.net/', checkedAt:new Date().toISOString(), archival:true };
       heroCache = {at:Date.now(),value}; return value;
