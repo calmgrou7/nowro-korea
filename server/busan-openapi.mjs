@@ -22,8 +22,10 @@ export async function festivalHero() {
     try {
       const url = new URL(item.MAIN_IMG_NORMAL, 'https://www.visitbusan.net');
       if (url.protocol !== 'https:' || url.hostname !== 'www.visitbusan.net') continue;
-      const response = await fetch(url, { method:'HEAD', redirect:'error', signal:AbortSignal.timeout(4000) });
-      if (!response.ok || !response.headers.get('content-type')?.startsWith('image/')) continue;
+      const response = await fetch(url, { redirect:'error', signal:AbortSignal.timeout(4000) });
+      const valid = response.ok && response.headers.get('content-type')?.startsWith('image/');
+      await response.body?.cancel();
+      if (!valid) continue;
       const value = { image: url.href, title: item.MAIN_TITLE, source:'https://www.visitbusan.net/', checkedAt:new Date().toISOString(), archival:true };
       heroCache = {at:Date.now(),value}; return value;
     } catch {}
