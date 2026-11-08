@@ -14,7 +14,7 @@ const decode = (value) =>
     .replace(/&apos;/g, "'")
     .replace(/&amp;/g, "&");
 export function parseKopis(xml) {
-  if (/<!DOCTYPE|<!ENTITY/i.test(xml) || !/<dbs(?:\s|>)/.test(xml))
+  if (/<!DOCTYPE|<!ENTITY/i.test(xml) || !/<dbs(?:\s|\/?>)/.test(xml))
     throw new Error("INVALID_XML");
   return [...xml.matchAll(/<db>([\s\S]*?)<\/db>/g)].map(([, row]) =>
     Object.fromEntries(
@@ -69,25 +69,26 @@ async function request(path, params = {}) {
   const task = (async () => {
     try {
       const url = new URL("https://kopis.or.kr/openApi/restful/" + path);
-      url.searchParams.set("service", process.env.KOPIS_API_KEY);
+      url.searchParams.set("service", process.env.KOPIS_API_KEY.trim());
       for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
       const response = await fetch(url, {
         signal: AbortSignal.timeout(15000),
         redirect: "error",
       });
-      if (!response.ok) throw new Error("UPSTREAM");
+      if (!response.ok) throw Object.assign(new Error("UPSTREAM"), {httpStatus:response.status});
       const xml = await response.text();
       if (xml.length > 3000000) throw new Error("SIZE");
       const rows = parseKopis(xml);
-      const value = { status: "ok", items: rows.map(normalize) };
+      const value = { status: "ok", items: rows.map(normalize), updatedAt:new Date().toISOString() };
       cache.set(key, { at: Date.now(), ttl: 3600000, value });
       while (cache.size > 150) cache.delete(cache.keys().next().value);
       return value;
-    } catch {
+    } catch (error) {
+      const diagnostic = {reason:error.name==='TimeoutError'?'upstream_timeout':error.httpStatus?'upstream_http_error':error.message==='INVALID_XML'?'upstream_invalid_response':'upstream_connection_error',...(error.httpStatus?{upstreamHttpStatus:error.httpStatus}:{}),...(error.cause?.code?{connectionCode:error.cause.code}:{})};
       const value =
         cached?.value?.status === "ok"
-          ? { ...cached.value, stale: true }
-          : { status: "temporarily_unavailable", items: [] };
+          ? { ...cached.value, stale: true, ...diagnostic }
+          : { status: "temporarily_unavailable", items: [], ...diagnostic };
       cache.set(key, { at: Date.now(), ttl: 60000, value });
       return value;
     } finally {
@@ -100,7 +101,8 @@ async function request(path, params = {}) {
 export async function kopisPerformances() {
   const now = new Date(Date.now() + 9 * 3600000),
     start = now.toISOString().slice(0, 10);
-  now.setUTCDate(now.getUTCDate() + 90);
+  // KOPIS documents a maximum inclusive 31-day query window.
+  now.setUTCDate(now.getUTCDate() + 30);
   const end = now.toISOString().slice(0, 10);
   const feed = await request("pblprfr", {
     stdate: start.replaceAll("-", ""),
@@ -115,6 +117,7 @@ export async function kopisPerformances() {
       (p) => p.USAGE_DAY_WEEK_AND_TIME.slice(-10) >= start,
     ),
     limit: 100,
+    period: {start,end},
   };
 }
 export async function kopisDetail(id) {

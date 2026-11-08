@@ -416,9 +416,10 @@ export function OfficialPlaces({
           </label>
           <small className="muted">
             {lang === "ko"
-              ? `부산 시간 기준 · 종료 일정 ${expiredCount}건 · 종료일 미확인 정보는 포함됩니다.`
-              : `Busan time · ${expiredCount} ended · Listings without a confirmed end date remain visible.`}
+              ? `검색 결과 ${matched.length}건 · 전체 자료 중 지난 일정 ${expiredCount}건${includePast ? " 포함" : " 숨김"} · 종료일 미확인 자료 포함`
+              : `${matched.length} results · ${expiredCount} past listings ${includePast ? "included" : "hidden"} · Undated listings included`}
           </small>
+          {category === "festivals" && !includePast && expiredCount > 0 && <small className="muted">{visitorText(lang,"이 숫자는 부산 전체 축제 수가 아닙니다. 지난 회차 자료는 ‘지난 행사 포함’에서 볼 수 있습니다.","This is not a count of all Busan festivals. Turn on Include past events to browse past editions.")}</small>}
         </div>
       )}
       <label>
