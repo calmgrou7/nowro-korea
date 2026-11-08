@@ -6,6 +6,7 @@ import {AffiliateOffers} from './AffiliateOffers';
 import {LocalizedDescription} from './LocalizedDescription';
 import {RouteShare} from './RouteShare';
 import {languagePath,urlLanguage} from '../shared/site-language';
+import {koreaInput,koreaISO} from '../shared/korea-time';
 import { visitorText } from "./visitor-copy";
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { recommendationMessage } from "./recommendation-copy";
@@ -100,9 +101,6 @@ const clock = (iso: string) =>
     minute: "2-digit",
     hourCycle: "h23",
   }).format(new Date(iso));
-const koreaInput = (iso: string) =>
-  new Date(Date.parse(iso) + 9 * 3600000).toISOString().slice(0, 16);
-const koreaISO = (value: string) => new Date(value + ":00+09:00").toISOString();
 const defaults: Conditions = {
   areaId: "",
   origin: { lat: 0, lng: 0 },
@@ -719,7 +717,7 @@ export default function App() {
           generate();
         }}
       >
-        <div className="route-date-row"><label>{T('startAt')}<input type="datetime-local" required value={koreaInput(c.startAt)} onChange={e=>{if(e.target.value)update('startAt',koreaISO(e.target.value));}}/></label><p className="muted">{lang==='ko'?'부산 현지 시간(UTC+9)입니다. 행사를 포함했다면 해당 행사 기간에 맞는 날짜를 선택하세요.':'Busan local time (UTC+9). If your route includes an event, choose a date within its scheduled period.'}</p></div>
+        <div className="route-date-row"><label>{T('startAt')}<input type="datetime-local" required value={koreaInput(c.startAt)} onInput={e=>{const value=koreaISO(e.currentTarget.value);if(value)update('startAt',value);}} onChange={e=>{const value=koreaISO(e.target.value);if(value)update('startAt',value);}}/></label><p className="muted">{lang==='ko'?'부산 현지 시간(UTC+9)입니다. 행사를 포함했다면 해당 행사 기간에 맞는 날짜를 선택하세요.':'Busan local time (UTC+9). If your route includes an event, choose a date within its scheduled period.'}</p></div>
         <div className="planner-grid">
           <div className="form-block">
             <label htmlFor="area">

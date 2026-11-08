@@ -4,6 +4,13 @@ import {Store,areas} from '../server/store.mjs';
 import {syncTourismCatalog} from '../server/tourism-catalog.mjs';
 import {calculate} from '../shared/engine.ts';
 import {recommendationResponse} from '../server/recommendation.mjs';
+import {koreaInput,koreaISO} from '../shared/korea-time.ts';
+test('a stalled provider does not delay a second official provider with located places',{timeout:1000},async()=>{
+ const store=new Store(),area=areas[1];try{await syncTourismCatalog(store,areas,async type=>type==='kor'?new Promise(()=>{}):{status:'ok',items:[{UC_SEQ:22,MAIN_TITLE:'공식 해양체험',GUGUN_NM:area.name.ko,LAT:area.point.lat,LNG:area.point.lng}]});assert.ok(store.catalog().some(p=>p.id==='busan-ocean-22'));}finally{store.close();}
+});
+test('Korea time inputs accept minute and second formats and reject invalid dates without crashing',()=>{
+ assert.equal(koreaISO('2026-11-09T10:00'),'2026-11-09T01:00:00.000Z');assert.equal(koreaISO('2026-11-09T10:00:00'),'2026-11-09T01:00:00.000Z');assert.equal(koreaInput('2026-11-09T01:00:00.000Z'),'2026-11-09T10:00');assert.equal(koreaISO('2026-02-30T10:00'),'');assert.equal(koreaInput('invalid'),'');
+});
 test('a tourism-provider timeout keeps officially located marine places available without demo data',async()=>{
  const store=new Store(),area=areas[1],requested=[];
  try{await syncTourismCatalog(store,areas,async type=>{requested.push(type);return type==='kor'?{status:'temporarily_unavailable',items:[]}:{status:'ok',items:[{UC_SEQ:10,MAIN_TITLE:'공식 해양체험',ADDR1:area.name.ko+' 해변',GUGUN_NM:area.name.ko,LAT:area.point.lat,LNG:area.point.lng}]};});
