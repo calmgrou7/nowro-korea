@@ -2816,3 +2816,8 @@ input, select, textarea { font-size: 16px; border-radius: var(--radius-control);
  .event-filter input[type=checkbox] { flex:0 0 18px; width:18px; height:18px; margin:0; }
  .event-filter small { flex-basis:100%; }
 }
+.planner-submit { width: min(100%, 340px); min-width: 0; }
+.planner-submit .main-cta { width: 100%; }
+.planner-submit .estimate-consent { display:flex; align-items:flex-start; gap:8px; font-size:12px; line-height:1.5; margin-bottom:10px; font-weight:400; }
+.estimate-consent input { flex:0 0 auto; width:18px; height:18px; margin:2px 0; }
+.route-feedback { color:#9b321f; font-size:13px; line-height:1.5; margin:10px 0 0; }

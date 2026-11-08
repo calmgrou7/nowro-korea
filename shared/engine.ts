@@ -196,10 +196,18 @@ export function calculate(
 }
 export function recommend(c: Conditions, catalog: Place[]): Route[] {
   validateConditions(c);
+  const firstDate=new Date(Date.parse(c.startAt)+9*3600000).toISOString().slice(0,10);
+  const lastDate=new Date(Date.parse(c.startAt)+(c.minutes+9*60)*60000).toISOString().slice(0,10);
   const candidates = catalog
     .filter(
       (p) =>
         p.published &&
+        (!p.planningEstimate||c.allowPlanningEstimates===true) &&
+        (!p.availableUntil||p.availableUntil>=firstDate) &&
+        (!p.availableFrom||p.availableFrom<=lastDate) &&
+        (!c.children||p.children===true) &&
+        (!c.accessible||p.accessible===true) &&
+        (!c.diet||p.diet.includes(c.diet)) &&
         p.areaId === c.areaId &&
         !p.reservation &&
         distance(c.origin, p.point) < (c.transport === "walk" ? 3 : 8),

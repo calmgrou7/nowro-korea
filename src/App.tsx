@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { recommendationMessage } from "./recommendation-copy";
 import {
   ArrowUpRight,
   ArrowRight,
@@ -181,6 +182,8 @@ export default function App() {
       }
     }),
     [routes, setRoutes] = useState<Route[] | null>(null),
+    [routeFeedback, setRouteFeedback] = useState(""),
+    [emptyReason, setEmptyReason] = useState(""),
     [selected, setSelected] = useState<Route | null>(null),
     [place, setPlace] = useState<Place | null>(null),
     [settings, setSettings] = useState(false),
@@ -298,11 +301,13 @@ export default function App() {
       localStorage.setItem("nowro-language", lang);
     } catch {}
   }, [lang]);
+  const recommendationSeq = useRef(0);
   useEffect(() => {
-    try {
-      sessionStorage.setItem("nowro-conditions", JSON.stringify(c));
-      setRoutes(null);
-    } catch {}
+    recommendationSeq.current++;
+    setRoutes(null);
+    setEmptyReason("");
+    setRouteFeedback("");
+    try { sessionStorage.setItem("nowro-conditions", JSON.stringify(c)); } catch {}
   }, [c]);
   useEffect(() => {
     if (!toast) return;
@@ -349,28 +354,34 @@ export default function App() {
       }));
   }
   async function generate(conditions = c) {
+    if (busy) return;
     if (
       catalog?.places.some((p) => p.planningEstimate) &&
       !conditions.allowPlanningEstimates
     ) {
-      setToast(
-        lang === "ko"
-          ? "운영정보 미확인 장소를 포함한 계획용 코스에 동의해주세요."
-          : "Please allow planning estimates for places with unverified hours and fees.",
-      );
+      setRouteFeedback(recommendationMessage("planning_confirmation_required", lang));
+      document.getElementById("planning-estimates")?.focus();
       return;
     }
-    await action(async () => {
+    const attempt = ++recommendationSeq.current;
+    setBusy(true);
+    setRouteFeedback("");
+    setRoutes(null);
+    try {
       const data = await api("recommend", { conditions });
-      const updatedCatalog = await api("catalog");
-      setCatalog(updatedCatalog);
-      if (updatedCatalog.places.some((p: Place) => p.planningEstimate))
+      if (attempt !== recommendationSeq.current) return;
+      if (!Array.isArray(data.routes)) throw new Error("INVALID_RESPONSE");
+      if (Array.isArray(data.places)) {
+        setCatalog(previous => previous ? {...previous, places: [...previous.places.filter(p => !data.places.some((next:Place) => next.id === p.id)), ...data.places]} : previous);
+      }
+      if (data.routes.length)
         setToast(
           lang === "ko"
             ? "공식 API 장소 기반 예상 코스입니다. 운영시간·요금·예약 여부는 방문 전 확인해주세요."
             : "Route uses official API places. Hours, fees and reservations require venue confirmation.",
         );
       setRoutes(data.routes);
+      setEmptyReason(data.diagnostic || "conditions_too_restrictive");
       setTab("ROUTES");
       api("events", { name: "recommend" }).catch(() => {});
       setTimeout(
@@ -380,7 +391,10 @@ export default function App() {
             ?.scrollIntoView({ behavior: "smooth", block: "start" }),
         100,
       );
-    });
+    } catch (error) {
+      if (attempt === recommendationSeq.current)
+        setRouteFeedback(recommendationMessage(error instanceof Error && error.message === "INVALID_CONDITIONS" ? "invalid_conditions" : "connection_error", lang));
+    } finally { setBusy(false); }
   }
   async function openPlanner(item?: any) {
     if (item?.UC_SEQ) {
@@ -587,7 +601,7 @@ export default function App() {
       </div>
       <h3>
         {r.stops
-          .map((s) => name(catalog!.places.find((p) => p.id === s.placeId)!))
+          .map((s) => { const place = catalog!.places.find((p) => p.id === s.placeId); return place ? name(place) : (lang === "ko" ? "장소 정보 확인 필요" : "Place details unavailable"); })
           .join(" → ")}
       </h3>
       <p>{T("reason")}</p>
@@ -677,18 +691,6 @@ export default function App() {
             {lang === "ko" ? "선택 해제" : "Clear"}
           </button>
         </p>
-      )}
-      {catalog.places.some((p) => p.planningEstimate) && (
-        <label className="notice">
-          <input
-            type="checkbox"
-            checked={!!c.allowPlanningEstimates}
-            onChange={(e) => update("allowPlanningEstimates", e.target.checked)}
-          />
-          {lang === "ko"
-            ? "운영시간·요금·예약 여부 미확인 장소를 계획용 코스에 포함합니다. 방문 가능 여부와 실제 비용은 직접 확인해야 합니다."
-            : "Include places with unverified hours, fees and reservations in a planning-only route. Confirm availability and actual costs before visiting."}
-        </label>
       )}
       {!!c.requiredPlaceIds?.length && (
         <p className="notice">
@@ -827,10 +829,25 @@ export default function App() {
               ))}
             </div>
           </div>
+          <div className="planner-submit">
+      {catalog.places.some((p) => p.planningEstimate) && (
+        <label className="estimate-consent">
+          <input
+            id="planning-estimates" type="checkbox"
+            checked={!!c.allowPlanningEstimates}
+            onChange={(e) => update("allowPlanningEstimates", e.target.checked)}
+          />
+          {lang === "ko"
+            ? "운영시간·요금·예약 여부 미확인 장소를 계획용 코스에 포함합니다. 방문 가능 여부와 실제 비용은 직접 확인해야 합니다."
+            : "Include places with unverified hours, fees and reservations in a planning-only route. Confirm availability and actual costs before visiting."}
+        </label>
+      )}
           <button className="primary main-cta" disabled={busy}>
             {busy ? T("loading") : T("go")}
             <ArrowUpRight size={21} />
           </button>
+{routeFeedback && <p className="route-feedback" role="alert">{routeFeedback}</p>}
+          </div>
         </div>
         <p className="cost-note">{T("costNote")}</p>
         <details className="advanced">
@@ -1866,9 +1883,7 @@ export default function App() {
                       <div className="empty">
                         <Compass size={30} />
                         <p>
-                          {!catalog.places.some((p) => p.areaId === c.areaId)
-                            ? T("districtPreparing")
-                            : T("empty")}
+                          {recommendationMessage(emptyReason, lang)}
                         </p>
                       </div>
                     )}
