@@ -7,6 +7,7 @@ export function recommendationResponse(conditions,catalog) {
 function explain(c,catalog) {
  const ids=[c.requiredPlaceId,...(c.requiredPlaceIds||[])].filter(Boolean),chosen=ids.map(id=>catalog.find(p=>p.id===id&&p.published));
  if(chosen.some(p=>!p))return 'selected_place_unavailable';
+ if(chosen.some(p=>!p.sample&&p.category==='event'&&!p.availableUntil))return 'selected_event_unconfirmed';
  if(chosen.some(p=>distance(c.origin,p.point)>=(c.transport==='walk'?3:8)))return 'selected_place_too_far';
  const first=new Date(Date.parse(c.startAt)+9*3600000).toISOString().slice(0,10),last=new Date(Date.parse(c.startAt)+(c.minutes+9*60)*60000).toISOString().slice(0,10);
  if(chosen.some(p=>p.availableUntil&&p.availableUntil<first||p.availableFrom&&p.availableFrom>last))return 'selected_event_outside_period';

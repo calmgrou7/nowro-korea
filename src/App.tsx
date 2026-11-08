@@ -823,7 +823,7 @@ export default function App() {
             </div>
           </div>
           <div className="planner-submit">
-      {catalog.places.some((p) => p.planningEstimate) && (
+      {(
         <label className="estimate-consent">
           <input
             id="planning-estimates" type="checkbox"

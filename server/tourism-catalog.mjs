@@ -1,9 +1,10 @@
 import { fetchOpenApi } from "./busan-openapi.mjs";
 import { eventEndDate } from "../shared/event-dates.ts";
-export async function syncTourismCatalog(store, areas) {
-  const feed = await fetchOpenApi("kor");
-  if (feed.status !== "ok" || !feed.items.length) return;
-  ingestTourismPlaces(store, areas, feed.items);
+export async function syncTourismCatalog(store, areas, load=fetchOpenApi) {
+  const marine=load('ocean').then(feed=>{if(feed.status==='ok')ingestPublicContent(store,areas,'ocean',feed.items||[]);}).catch(()=>{});
+  const feed = await load("kor").catch(()=>({status:'temporarily_unavailable',items:[]}));
+  if (feed.status === "ok" && feed.items.length) {ingestTourismPlaces(store, areas, feed.items);return;}
+  await marine;
 }
 export function ingestTourismPlaces(store, areas, items) {
   const places = items.flatMap((item) => {

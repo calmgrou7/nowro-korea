@@ -123,6 +123,7 @@ export function calculate(
     if (
       !p ||
       (p.planningEstimate && c.allowPlanningEstimates !== true) ||
+      (!p.sample && p.category === 'event' && !p.availableUntil) ||
       p.reservation ||
       (c.children && p.children !== true) ||
       (c.accessible && p.accessible !== true) ||
@@ -202,6 +203,7 @@ export function recommend(c: Conditions, catalog: Place[]): Route[] {
       (p) =>
         p.published &&
         (!p.planningEstimate||c.allowPlanningEstimates===true) &&
+        (p.sample || p.category !== 'event' || !!p.availableUntil) &&
         (!p.availableUntil||p.availableUntil>=firstDate) &&
         (!p.availableFrom||p.availableFrom<=lastDate) &&
         (!c.children||p.children===true) &&

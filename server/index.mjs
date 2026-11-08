@@ -385,7 +385,7 @@ export function createApp(store, options = {}) {
           out = {
             cities,
             areas,
-            places: store.catalog().filter((p) => p.published),
+            places: store.catalog().filter((p) => p.published && (preview || !p.sample)),
             coupons: coupons.map((c) => ({
               ...c,
               paused:
