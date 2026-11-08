@@ -210,6 +210,11 @@ html {
 .route-date-row { display:grid; grid-template-columns:minmax(220px,300px) 1fr; align-items:end; gap:16px; margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid var(--border); }
 .route-date-row label { display:grid; gap:7px; }
 .route-date-row p { margin:0; font-size:13px; }
+.detail-primary-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:20px 0 4px; }
+.detail-primary-actions > button { display:flex; align-items:center; justify-content:center; gap:8px; min-width:0; min-height:46px; padding:12px; border:1px solid var(--border); border-radius:12px; font-size:14px; font-weight:600; color:var(--ink); }
+.detail-primary-actions .detail-save { background:var(--lime-soft); }
+.detail-primary-actions .detail-save[aria-pressed=true] { border-color:var(--lime-border); }
+.detail-primary-actions .detail-plan { background:var(--ink); color:var(--white); border-color:var(--ink); }
 @media(max-width:720px) { .route-date-row { grid-template-columns:1fr; gap:8px; } }
 @media(max-width:720px) { .planner-entry { padding:20px; } .routes-page > .planner { padding:18px; } .journey-steps { gap:8px 14px; } .journey-steps li { font-size:12px; } }
 .about-page .board-post-row { color:var(--ink); text-decoration:none; }

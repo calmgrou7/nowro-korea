@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import { Modal } from "./Modal";
-import { MapPin, Clock3, Bookmark, Check } from "lucide-react";
+import { MapPin, Clock3, Bookmark, Check, Route } from "lucide-react";
 import { savePlace, readSavedPlaces, savedPlaceId } from "./SavedPlaces";
 import { NearbyShops } from "./NearbyShops";
 import { eventExpired } from "../shared/event-dates";
@@ -93,6 +93,9 @@ export function OfficialPlaces({
     return () => window.removeEventListener("nowro-saved", update);
   }, []);
   const [selected, setSelected] = useState<any>(null);
+  const [routeBusy,setRouteBusy]=useState(false);
+  const [detailMessage,setDetailMessage]=useState('');
+  useEffect(()=>setDetailMessage(''),[selected?.UC_SEQ]);
   useEffect(() => {
     if (!selected?.kopisId) return;
     let active = true;
@@ -533,6 +536,11 @@ export function OfficialPlaces({
                 : "A detailed description is not available.")}
           </p>
           {selected.CNTCT_TEL && <p>{selected.CNTCT_TEL}</p>}
+          <div className="detail-primary-actions" aria-label={lang==='ko'?'현재 장소 저장 및 코스 선택':'Save this place or select it for a route'}>
+            <button className="detail-save" aria-pressed={savedIds.includes(savedPlaceId(selected))} onClick={()=>savePlace(selected)}>{savedIds.includes(savedPlaceId(selected))?<Check size={18} aria-hidden="true"/>:<Bookmark size={18} aria-hidden="true"/>}{savedIds.includes(savedPlaceId(selected))?(lang==='ko'?'저장됨 · 취소':'Saved · remove'):(lang==='ko'?'저장':'Save')}</button>
+            {onPlan&&<button className="detail-plan" disabled={routeBusy||(eventCategory&&eventExpired(selected,today))} aria-busy={routeBusy} onClick={async()=>{setRouteBusy(true);setDetailMessage('');try{const ok=await onPlan(selected);if(ok!==false)setSelected(null);else setDetailMessage(lang==='ko'?'현재 장소의 위치·일정 확인이 필요해 코스에 연결하지 못했습니다.':'This place needs verified location or schedule information before it can be added.');}catch{setDetailMessage(lang==='ko'?'코스 연결에 실패했습니다. 잠시 후 다시 시도해주세요.':'Unable to connect this place to a route. Please try again.');}finally{setRouteBusy(false);}}}><Route size={18} aria-hidden="true"/>{routeBusy?(lang==='ko'?'연결 중…':'Connecting…'):(lang==='ko'?'코스 선택':'Select for route')}</button>}
+          </div>
+          {detailMessage&&<p className="notice" role="status">{detailMessage}</p>}
           <NearbyShops
             item={selected}
             lang={lang}
