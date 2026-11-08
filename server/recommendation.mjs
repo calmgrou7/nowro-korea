@@ -7,10 +7,10 @@ export function recommendationResponse(conditions,catalog) {
 function explain(c,catalog) {
  const ids=[c.requiredPlaceId,...(c.requiredPlaceIds||[])].filter(Boolean),chosen=ids.map(id=>catalog.find(p=>p.id===id&&p.published));
  if(chosen.some(p=>!p))return 'selected_place_unavailable';
- if(chosen.some(p=>p.areaId!==c.areaId))return 'selected_area_mismatch';
+ if(chosen.some(p=>distance(c.origin,p.point)>=(c.transport==='walk'?3:8)))return 'selected_place_too_far';
  const first=new Date(Date.parse(c.startAt)+9*3600000).toISOString().slice(0,10),last=new Date(Date.parse(c.startAt)+(c.minutes+9*60)*60000).toISOString().slice(0,10);
  if(chosen.some(p=>p.availableUntil&&p.availableUntil<first||p.availableFrom&&p.availableFrom>last))return 'selected_event_outside_period';
- const area=catalog.filter(p=>p.published&&p.areaId===c.areaId);
+ const area=catalog.filter(p=>p.published&&distance(c.origin,p.point)<(c.transport==='walk'?3:8));
  if(!area.length)return 'no_area_data';
  if(!c.allowPlanningEstimates&&(chosen.some(p=>p.planningEstimate)||area.every(p=>p.planningEstimate)))return 'planning_confirmation_required';
  const nearby=area.filter(p=>distance(c.origin,p.point)<(c.transport==='walk'?3:8));

@@ -72,8 +72,8 @@ export function SavedPlaces({
       </h2>
       <p className="muted">
         {L(
-          "이 기기에 저장됩니다. 같은 지역의 장소를 최대 4개 선택해 코스를 만드세요.",
-          "Saved on this device. Select up to four places in the same district for a route.",
+          "이 기기에 저장됩니다. 가까운 장소를 최대 4개 선택하세요. 인접 구·군도 함께 코스로 만들 수 있습니다.",
+          "Saved on this device. Select up to four nearby places, including stops across district boundaries.",
         )}
       </p>
       {!items.length && (

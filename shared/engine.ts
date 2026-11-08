@@ -123,7 +123,6 @@ export function calculate(
     if (
       !p ||
       (p.planningEstimate && c.allowPlanningEstimates !== true) ||
-      p.areaId !== c.areaId ||
       p.reservation ||
       (c.children && p.children !== true) ||
       (c.accessible && p.accessible !== true) ||
@@ -208,7 +207,6 @@ export function recommend(c: Conditions, catalog: Place[]): Route[] {
         (!c.children||p.children===true) &&
         (!c.accessible||p.accessible===true) &&
         (!c.diet||p.diet.includes(c.diet)) &&
-        p.areaId === c.areaId &&
         !p.reservation &&
         distance(c.origin, p.point) < (c.transport === "walk" ? 3 : 8),
     )

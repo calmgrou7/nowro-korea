@@ -448,14 +448,6 @@ export default function App() {
       return false;
     }
     const points = chosen as Place[];
-    if (new Set(points.map((p) => p.areaId)).size !== 1) {
-      setToast(
-        lang === "ko"
-          ? "현재는 같은 구·군의 장소끼리 코스를 만들 수 있습니다."
-          : "Select places in the same district.",
-      );
-      return false;
-    }
     setC((old) => ({
       ...old,
       areaId: points[0].areaId,
@@ -743,9 +735,7 @@ export default function App() {
               ))}
             </select>
             {area && <small className="muted">{area.aliases[lang]}</small>}
-            {!catalog.places.some((p) => p.areaId === c.areaId) && (
-              <p className="notice">{T("districtPreparing")}</p>
-            )}
+            <small className="muted">{lang === "ko" ? "출발점 기준 도보 3km · 대중교통/차량 8km 내 인접 구·군도 함께 추천합니다. 실제 이동시간은 예상치입니다." : "Includes nearby districts within 3 km on foot or 8 km by transit/car from your start. Travel times are estimates."}</small>
             <button
               type="button"
               className="text-btn"
@@ -2317,7 +2307,7 @@ export default function App() {
                         {catalog.places
                           .filter(
                             (x) =>
-                              x.areaId === selected.conditions.areaId &&
+                              x.published && distance(selected.conditions.origin, x.point) < (selected.conditions.transport === "walk" ? 3 : 8) &&
                               (!selected.stops.some(
                                 (s) => s.placeId === x.id,
                               ) ||

@@ -353,8 +353,8 @@ export function NearbyShops({
           )}
           <p className="muted">
             {L(
-              "같은 구·군의 장소를 최대 4개까지 선택하세요.",
-              "Choose up to four stops in the same district.",
+              "가까운 장소를 최대 4개까지 선택하세요. 인접 구·군도 함께 선택할 수 있습니다.",
+              "Choose up to four nearby stops, including neighboring districts.",
             )}{" "}
             ({count}/4)
           </p>
