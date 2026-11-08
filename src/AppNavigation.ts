@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { appTabUrl, readAppTab, type AppTab } from "../shared/app-navigation";
+import { syncPageMetadata } from '../shared/page-metadata';
 
 export function useTabNavigation() {
   const [tab, update] = useState<AppTab>(() => readAppTab(location.search));
+  useEffect(()=>syncPageMetadata(),[tab]);
   useEffect(() => {
     const back = () => update(readAppTab(location.search));
     addEventListener("popstate", back);

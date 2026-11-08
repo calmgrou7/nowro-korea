@@ -12,6 +12,8 @@ export type Area = {
 export type Place = {
   image?: string;
   planningEstimate?: boolean;
+  availableFrom?: string;
+  availableUntil?: string;
   id: string;
   areaId: string;
   name: Localized;

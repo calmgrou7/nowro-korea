@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import { savePlace, readSavedPlaces } from "./SavedPlaces";
+import { savePlace, readSavedPlaces, savedPlaceId } from "./SavedPlaces";
 import {
   MapPin,
   Route,
@@ -26,11 +26,11 @@ export function NearbyShops({
   const [items, setItems] = useState<any[]>([]),
     [status, setStatus] = useState("loading"),
     [saved, setSaved] = useState<string[]>(() =>
-      readSavedPlaces().map((p) => String(p.UC_SEQ || p.contentid)),
+      readSavedPlaces().map(savedPlaceId),
     );
   useEffect(() => {
     const update = () =>
-      setSaved(readSavedPlaces().map((p) => String(p.UC_SEQ || p.contentid)));
+      setSaved(readSavedPlaces().map(savedPlaceId));
     window.addEventListener("nowro-saved", update);
     return () => window.removeEventListener("nowro-saved", update);
   }, []);
@@ -132,7 +132,7 @@ export function NearbyShops({
           {visible.map((p) => {
             const place = entry(p),
               chosen = selected.includes(String(p.contentid)),
-              isSaved = saved.includes(String(place.UC_SEQ));
+              isSaved = saved.includes(savedPlaceId(place));
             const Icon =
               group(p) === "shopping"
                 ? ShoppingBag

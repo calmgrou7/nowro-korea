@@ -135,6 +135,8 @@ export function calculate(
       transportCost += c.transport === "transit" ? 3000 : 6000;
     now = new Date(now.getTime() + travel * 60000);
     const arrival = now.toISOString();
+    const visitDate=new Date(now.getTime()+9*3600000).toISOString().slice(0,10);
+    if((p.availableFrom&&visitDate<p.availableFrom)||(p.availableUntil&&visitDate>p.availableUntil))return null;
     const lt = localTime(now),
       h = p.hours.find((h) => h.day === lt.day);
     if (!p.planningEstimate && (
@@ -145,6 +147,7 @@ export function calculate(
     ))
       return null;
     now = new Date(now.getTime() + (p.stay + p.wait) * 60000);
+    if(p.availableUntil&&new Date(now.getTime()+9*3600000).toISOString().slice(0,10)>p.availableUntil)return null;
     stops.push({
       placeId: id,
       travel,

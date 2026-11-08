@@ -8,6 +8,7 @@ test('event end dates handle provider formats and shortened ranges without treat
  assert.equal(eventEndDate({USAGE_DAY_WEEK_AND_TIME:'2026.12.30 ~ 1.2'}),'2027-01-02');
  assert.equal(eventEndDate({USAGE_DAY_WEEK_AND_TIME:'10:00 ~ 18:00, 매년 7월'}),null);
  assert.equal(eventEndDate({eventenddate:'20260230'}),null);
+ assert.equal(eventEndDate({op_at:'Y',op_ed_dt:'2020-01-01'}),null);
 });
 test('events remain active through the end date in Korea and undated listings are retained',()=>{
  const item={eventenddate:'20261108'};

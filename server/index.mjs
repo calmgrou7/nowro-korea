@@ -8,10 +8,11 @@ import { extract } from "./ai.mjs";
 import { AuthService } from "./auth.mjs";
 import { androidAssociation } from "../shared/android-app.mjs";
 import { fetchOpenApi, openApiSources, festivalHero } from "./busan-openapi.mjs";
-import { syncTourismCatalog } from './tourism-catalog.mjs';
+import { syncTourismCatalog, ingestPublicContent } from './tourism-catalog.mjs';
 import { boardPosts, saveBoardPost } from './boards.mjs';
 import { nearbyShops } from './nearby.mjs';
 import { kopisPerformances, kopisDetail } from './kopis.mjs';
+import { renderPageMetadata } from '../shared/page-metadata.ts';
 import {
   ownBusiness,
   submitBusiness,
@@ -95,7 +96,7 @@ export function createApp(store, options = {}) {
             ? "no-cache"
             : "public,max-age=3600",
         });
-        return res.end(readFileSync(file));
+        return res.end(file.endsWith('index.html')?renderPageMetadata(readFileSync(file,'utf8'),url):readFileSync(file));
       }
       const cookie = req.headers.cookie
         ?.split(";")
@@ -170,7 +171,7 @@ export function createApp(store, options = {}) {
       let out;
       if (req.method === "GET" && url.pathname.startsWith("/api/openapi/")) {
         const type = url.pathname.slice("/api/openapi/".length);
-        if (type !== "sources") return send(200, await fetchOpenApi(type, { res_no: url.searchParams.get('res_no') }));
+        if (type !== "sources") {const feed=await fetchOpenApi(type,{res_no:url.searchParams.get('res_no')});return send(200,{...feed,items:ingestPublicContent(store,areas,type,feed.items||[])});}
       }
       switch (route) {
         case "GET /api/business/application":
@@ -305,6 +306,7 @@ export function createApp(store, options = {}) {
         }
         case 'GET /api/performance-detail':
           out=await kopisDetail(url.searchParams.get('id'));
+          out={...out,items:ingestPublicContent(store,areas,'kopis',out.items||[])};
           break;
         case 'GET /api/operator/performance-ids':
           if(s.role!=='admin') throw new ServiceError('FORBIDDEN',403);

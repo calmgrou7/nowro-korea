@@ -7,6 +7,7 @@ function validDate(year: string, month: string, day: string) {
     : null;
 }
 export function eventEndDate(item: any): string | null {
+  if (item.op_at === "Y" || item.openrun === "Y") return null;
   const explicit =
     item.eventenddate || item.eventEnd || item.op_ed_dt || item.endDate;
   const text = String(explicit || item.USAGE_DAY_WEEK_AND_TIME || "");

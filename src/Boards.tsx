@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
+import { syncPageMetadata } from '../shared/page-metadata';
 import { ArrowRight, Compass } from 'lucide-react';
 const boards = [
   {
@@ -50,6 +51,7 @@ export function Boards({
     () => new URLSearchParams(location.search),
   );
   const L = (ko: string, en: string) => (lang === "ko" ? ko : en);
+  useEffect(()=>{if(page)syncPageMetadata();},[query,page]);
   useEffect(() => {
     const back = () => setQuery(new URLSearchParams(location.search));
     addEventListener("popstate", back);
