@@ -11,6 +11,7 @@ import { fetchOpenApi, openApiSources, festivalHero } from "./busan-openapi.mjs"
 import { syncTourismCatalog } from './tourism-catalog.mjs';
 import { boardPosts, saveBoardPost } from './boards.mjs';
 import { nearbyShops } from './nearby.mjs';
+import { kopisPerformances, kopisDetail } from './kopis.mjs';
 import {
   ownBusiness,
   submitBusiness,
@@ -294,6 +295,7 @@ export function createApp(store, options = {}) {
           out = await nearbyShops(store,areas,Number(url.searchParams.get('lat')),Number(url.searchParams.get('lng')));
           break;
         case 'GET /api/performances': {
+          if(process.env.KOPIS_API_KEY) { out=await kopisPerformances(); break; }
           const ids = JSON.parse(store.db.prepare("SELECT value FROM config WHERE key='performance_ids'").get()?.value || '[]');
           const feeds = await Promise.all(ids.map(res_no => fetchOpenApi('theatre', {res_no})));
           const today = new Date(Date.now()+9*3600000).toISOString().slice(0,10);
@@ -301,6 +303,9 @@ export function createApp(store, options = {}) {
           out = {items,status:!ids.length?'setup_required':feeds.some(feed=>feed.status === 'ok')?'ok':'temporarily_unavailable'};
           break;
         }
+        case 'GET /api/performance-detail':
+          out=await kopisDetail(url.searchParams.get('id'));
+          break;
         case 'GET /api/operator/performance-ids':
           if(s.role!=='admin') throw new ServiceError('FORBIDDEN',403);
           out = {ids:JSON.parse(store.db.prepare("SELECT value FROM config WHERE key='performance_ids'").get()?.value || '[]')};

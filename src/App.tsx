@@ -56,6 +56,7 @@ import { AdminDashboard } from "./AdminDashboard";
 import { OfficialPlaces } from "./OfficialPlaces";
 import { SavedPlaces } from './SavedPlaces';
 import { Boards } from './Boards';
+import { eventExpired } from '../shared/event-dates';
 import type { Listing } from "../shared/listings.ts";
 const LiveMap = lazy(() => import("./MapView"));
 type Tab = "NOW" | "MAP" | "TRIP" | "PASS" | "PASSPORT" | "ABOUT";
@@ -358,6 +359,8 @@ export default function App() {
     setTimeout(() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
   }
   async function planSaved(items: any[]) {
+    if(!items.length||items.length>4)return;
+    if(items.some(item=>eventExpired(item))) {setToast(lang==='ko'?'종료된 일정은 코스에 포함할 수 없습니다. 해당 항목을 해제해주세요.':'Ended events cannot be included in a route. Please deselect them.');return;}
     const refreshed = await api('catalog').catch(()=>catalog);
     if(refreshed)setCatalog(refreshed);
     const chosen = items.map(item => refreshed?.places.find((p: Place) => p.id === item.routePlaceId));
@@ -1064,7 +1067,7 @@ export default function App() {
                     </div>
                   </div>
                 </section>
-<OfficialPlaces lang={lang} onPlan={openPlanner} />
+<OfficialPlaces lang={lang} onPlan={openPlanner} onPlanMany={planSaved} />
 <section
                   id="planner"
                   className="planner"
@@ -1645,7 +1648,7 @@ export default function App() {
             )}
             {tab === "ABOUT" && <Boards lang={lang} page />}
             {tab === "MAP" && (
-              <section className="section official-explore"><h1>{lang === 'ko' ? '지역별 가이드' : 'Local guides'}</h1><DistrictDirectory areas={catalog.areas} lang={lang} onSelect={id => { areaChange(id); setToast(lang === 'ko' ? '여행코스 지역이 선택되었습니다. 아래 목록 검색에 지역명을 입력해 장소를 찾아보세요.' : 'Route district selected. Search for the neighborhood in the list below.'); }} /><OfficialPlaces lang={lang} onPlan={openPlanner} regional /></section>
+              <section className="section official-explore"><h1>{lang === 'ko' ? '지역별 가이드' : 'Local guides'}</h1><DistrictDirectory areas={catalog.areas} lang={lang} onSelect={id => { areaChange(id); setToast(lang === 'ko' ? '여행코스 지역이 선택되었습니다. 아래 목록 검색에 지역명을 입력해 장소를 찾아보세요.' : 'Route district selected. Search for the neighborhood in the list below.'); }} /><OfficialPlaces lang={lang} onPlan={openPlanner} onPlanMany={planSaved} regional /></section>
             )}
             {tab === "TRIP" && (
               <section className="section">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
+import { ArrowRight, Compass } from 'lucide-react';
 const boards = [
   {
     id: "guide",
@@ -111,7 +112,7 @@ export function Boards({
           <div>
             <h3>{L(b.title, b.en)}</h3>
             <p>{L(b.description, b.enDescription)}</p>
-            <span>{L("게시판 보기 →", "Open board →")}</span>
+            <span className="board-card-action">{L("게시판 보기", "Open board")}<ArrowRight size={15} aria-hidden="true"/></span>
           </div>
         </a>
       ))}
@@ -122,7 +123,7 @@ export function Boards({
       <section id="about-nowro" className="section boards-section">
         <div className="section-heading">
           <h2>{L("나우로 소개", "About NOWRO")}</h2>
-          <a href="?tab=ABOUT">{L("나우로 알아보기 →", "Meet NOWRO →")}</a>
+          <a className="action-link" href="?tab=ABOUT"><Compass size={16} aria-hidden="true"/>{L("나우로 알아보기", "Meet NOWRO")}<ArrowRight size={15} aria-hidden="true"/></a>
         </div>
         {cards}
       </section>
