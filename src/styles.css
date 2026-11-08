@@ -108,6 +108,11 @@ html {
 .data-sources > label input { display: block; width: 100%; margin-top: 8px; background: white; border-radius: 14px; min-height: 50px; }
 .official-explore .data-sources { border: 0; margin-top: 0; }
 .source-grid { gap: 20px; }
+.tourism-image { margin: 0; position: relative; }
+.tourism-image img { display: block; width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: 16px; }
+.source-card > .tourism-image { margin: -18px -18px 10px; }
+.source-card > .tourism-image img { border-radius: 0; }
+.tourism-image figcaption { position: absolute; bottom: 10px; left: 10px; right: 10px; color: white; background: #172026cc; padding: 6px 9px; border-radius: 8px; font-size: 11px; line-height: 1.4; }
 .data-sources .quick-categories button[aria-pressed="true"] { background: var(--ink); color: var(--white); }
 .source-card span { color: var(--muted); font-size: .85rem; }
 @media (max-width: 720px) { .source-grid { grid-template-columns: 1fr 1fr; } }

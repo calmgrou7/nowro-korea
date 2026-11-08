@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { api } from './api';
 import { Modal } from './Modal';
+function TourismImage({ src, title, lang }: { src?: string; title: string; lang: string }) {
+  const valid = /^https?:\/\//.test(src || '') || /^\/images\//.test(src || '');
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+  const fallback = !valid || failed;
+  return <figure className="tourism-image"><img src={fallback ? '/images/gwangalli.webp' : src!.replace(/^http:\/\/tong.visitkorea.or.kr\//, 'https://tong.visitkorea.or.kr/')} alt={fallback ? (lang === 'ko' ? '부산 광안리 대표 풍경' : 'Reference scenery of Gwangalli, Busan') : title} loading="lazy" onError={() => { if (!fallback) setFailed(true); }} />{fallback && <figcaption>{lang === 'ko' ? '부산 대표 이미지 · 해당 장소 사진 아님' : 'Busan reference image · not a venue photo'}</figcaption>}</figure>;
+}
 export function OfficialPlaces({ lang }: { lang: string }) {
   const [items, setItems] = useState<any[]>([]);
   const [failed, setFailed] = useState(false);
@@ -25,8 +32,7 @@ export function OfficialPlaces({ lang }: { lang: string }) {
     {!loading && !failed && !items.length && <p>{lang === 'ko' ? '현재 제공된 정보가 없습니다.' : 'No information is currently available.'}</p>}
     {!loading && items.length > 0 && !matched.length && <p role="status">{lang === 'ko' ? '검색 결과가 없습니다.' : 'No matching places.'}</p>}
     <div className="source-grid">{matched.slice(0, limit).map((original) => { const item = { ...original, UC_SEQ: original.contentid || original.UC_SEQ, MAIN_TITLE: original.title || original.MAIN_TITLE, SUBTITLE: original.addr1 || original.ADDR1 || original.PLACE, MAIN_IMG_NORMAL: original.firstimage || original.MAIN_IMG_NORMAL, ITEMCNTNTS: original.ITEMCNTNTS || original.addr2 }; return <article className="source-card" key={item.UC_SEQ}>
-      <img src={/^https?:\/\//.test(item.MAIN_IMG_NORMAL || '') ? item.MAIN_IMG_NORMAL.replace(/^http:\/\/tong.visitkorea.or.kr\//, 'https://tong.visitkorea.or.kr/') : '/images/gwangalli.webp'} alt={item.MAIN_TITLE || item.TITLE} loading="lazy" onError={e => { if(!e.currentTarget.src.endsWith('/images/gwangalli.webp')) e.currentTarget.src = '/images/gwangalli.webp'; }} style={{ width: '100%', aspectRatio: '16/10', objectFit: 'cover', borderRadius: 10 }} />
-      {!item.MAIN_IMG_NORMAL && <small>{lang === 'ko' ? '부산 대표 이미지 · 해당 장소 사진 아님' : 'Busan reference image · not a venue photo'}</small>}
+      <TourismImage src={item.MAIN_IMG_NORMAL} title={item.MAIN_TITLE || item.TITLE} lang={lang} />
       <h3>{item.MAIN_TITLE || item.TITLE}</h3><p>{item.SUBTITLE || item.PLACE}</p>
       <button onClick={() => setSelected(item)}>{lang === 'ko' ? '상세 정보 보기' : 'View details'}</button>
       {item.ITEMCNTNTS && <details><summary>{lang === 'ko' ? '소개 보기' : 'Read description'}</summary><p>{item.ITEMCNTNTS}</p></details>}
@@ -34,6 +40,7 @@ export function OfficialPlaces({ lang }: { lang: string }) {
       <a href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.SUBTITLE || item.MAIN_TITLE)} target="_blank" rel="noreferrer">{lang === 'ko' ? '지도에서 보기' : 'View on map'} ↗</a>
     </article>; })}</div>{matched.length > limit && <button onClick={() => setLimit(v => v + 6)}>{lang === 'ko' ? '더 보기' : 'Show more'} ({Math.min(limit, matched.length)}/{matched.length})</button>}<p><small className="muted">{category === 'places' ? (lang === 'ko' ? '출처: 한국관광공사' : 'Source: Korea Tourism Organization') : (lang === 'ko' ? '출처: 부산광역시 · 공식 원문 / NOWRO 등록 콘텐츠' : 'Source: Busan Metropolitan City / NOWRO listings')}</small></p>
     {selected && <Modal title={selected.MAIN_TITLE} close={() => setSelected(null)}>
+      <TourismImage src={selected.MAIN_IMG_NORMAL} title={selected.MAIN_TITLE} lang={lang} />
       <p style={{whiteSpace:'pre-line'}}>{selected.ITEMCNTNTS || (lang === 'ko' ? '상세 소개가 제공되지 않았습니다.' : 'A detailed description is not available.')}</p>
       <h3>{lang === 'ko' ? '위치' : 'Location'}</h3><p>{selected.SUBTITLE || (lang === 'ko' ? '주소 확인 필요' : 'Address to be confirmed')}</p>
       <h3>{lang === 'ko' ? '운영시간·일정' : 'Hours and dates'}</h3><p>{selected.USAGE_DAY_WEEK_AND_TIME || (lang === 'ko' ? '방문 전 운영기관에 확인해주세요.' : 'Confirm with the venue before visiting.')}</p>
