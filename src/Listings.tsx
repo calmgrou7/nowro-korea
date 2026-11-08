@@ -3,6 +3,7 @@ import type { Area, Lang } from "../shared/types.ts";
 import type { Listing, ListingData } from "../shared/listings.ts";
 import { api } from "./api";
 import { curatedEvents } from "../shared/curated-events";
+import {LocalizedDescription} from './LocalizedDescription';
 const money = (v: number) =>
   new Intl.NumberFormat("ko-KR", {
     style: "currency",
@@ -91,7 +92,7 @@ export function ListingDetail({
           {L("Event dates", "행사 기간")}: {d.eventStart} – {d.eventEnd}
         </p>
       )}
-      <div className="listing-description">{text(d, lang, "description")}</div>
+      <LocalizedDescription text={text(d,lang,'description')} lang={lang}/>
       <dl className="place-details">
         {[
           [L("Address", "주소"), d.address],

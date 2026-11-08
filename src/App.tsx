@@ -2,6 +2,10 @@ import { PlaceMaps } from "./PlaceMaps";
 import {Analytics} from './AnalyticsLoader';
 import {track} from './analytics';
 import {syncPageMetadata} from '../shared/page-metadata';
+import {AffiliateOffers} from './AffiliateOffers';
+import {LocalizedDescription} from './LocalizedDescription';
+import {RouteShare} from './RouteShare';
+import {languagePath,urlLanguage} from '../shared/site-language';
 import { visitorText } from "./visitor-copy";
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { recommendationMessage } from "./recommendation-copy";
@@ -301,11 +305,12 @@ export default function App() {
   }, []);
   useEffect(() => {
     document.documentElement.lang = lang;
-    const current=new URL(location.href);current.searchParams.set('lang',lang);history.replaceState(history.state,'',current);syncPageMetadata();
+    const current=new URL(location.href);current.pathname=languagePath(lang);current.searchParams.delete('lang');history.replaceState(history.state,'',current);syncPageMetadata();
     try {
       localStorage.setItem("nowro-language", lang);
     } catch {}
   }, [lang]);
+  useEffect(()=>{const restore=()=>{const next=urlLanguage(new URL(location.href));if(next)setLang(next);};addEventListener('popstate',restore);return()=>removeEventListener('popstate',restore);},[]);
   const recommendationSeq = useRef(0);
   useEffect(() => {
     recommendationSeq.current++;
@@ -420,6 +425,7 @@ export default function App() {
         requiredPlaceId: chosen.id,
         requiredPlaceIds: undefined,
       }));
+      track('add_to_route',chosen.id);
       setRoutes(null);
     }
     setTab("ROUTES");
@@ -1517,10 +1523,6 @@ export default function App() {
                         <Footprints size={15} />
                         {T("walk")}
                       </span>
-                      <span>
-                        <Ticket size={15} />
-                        NOWRO Pass
-                      </span>
                     </div>
                     <div className="hero-foot">
                       <span>01 — BUSAN, KOREA</span>
@@ -1623,6 +1625,7 @@ export default function App() {
                     </article>
                   </section>
                 )}
+                <AffiliateOffers lang={lang} placement="preparation" page="home"/>
                 <Boards lang={lang} />
                 <section
                   className="quick-discovery"
@@ -2226,6 +2229,7 @@ export default function App() {
                       {p.name.ko} · {T("stay")} {s.stay} min + {s.wait} min ·{" "}
                       {krw(s.costMax)}
                     </p>
+                    <AffiliateOffers lang={lang} placeIds={[p.id]} page="route"/>
                     <div className="stop-actions">
                       <select
                         aria-label={T("replace")}
@@ -2297,6 +2301,8 @@ export default function App() {
             {T("back")} {selected.returnMinutes} min · {T("buffer")}{" "}
             {selected.buffer} min
           </p>
+          <AffiliateOffers lang={lang} placeIds={selected.stops.map(stop=>stop.placeId)} placement="stay" page="route"/>
+          <RouteShare route={selected} places={catalog.places} lang={lang}/>
           <div className="modal-actions">
             <button
               className="secondary"
@@ -2368,7 +2374,8 @@ export default function App() {
           </p>
           {place.sample && <span className="sample-label">{T("sample")}</span>}
           <p>{place.name.ko}</p><PlaceMaps item={place} lang={lang} />
-          <p>{place.description[lang]}</p>
+          <LocalizedDescription text={place.description[lang]} lang={lang}/>
+          <AffiliateOffers lang={lang} placeIds={[place.id]}/>
           <dl className="place-details">
             <div>
               <dt>{T("address")}</dt>

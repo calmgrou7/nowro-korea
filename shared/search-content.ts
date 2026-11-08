@@ -1,4 +1,5 @@
 import {boards} from './board-guides.ts';
+import {urlLanguage,languagePath} from './site-language.ts';
 export const publicTabs = ["NOW", "MAP", "ROUTES", "ABOUT"];
 const xml = (v: string) =>
   v
@@ -9,7 +10,7 @@ const xml = (v: string) =>
 export function publicSearchContent(url: URL, posts: any[] = []) {
   const tab = url.searchParams.get("tab") || "NOW";
   if (!publicTabs.includes(tab)) return "";
-  const en = url.searchParams.get("lang") !== "ko";
+  const en = urlLanguage(url) !== "ko";
   const headings: Record<string, [string, string]> = {
     NOW: [
       "나우로 코리아와 부산 여행을 시작하세요",
@@ -54,7 +55,7 @@ export function publicSearchContent(url: URL, posts: any[] = []) {
   const links = publicTabs
     .map(
       (v, i) =>
-        `<a href="/?lang=${en ? "en" : "ko"}${v === "NOW" ? "" : "&amp;tab=" + v}">${labels[i]}</a>`,
+        `<a href="${languagePath(en?'en':'ko')}${v === "NOW" ? "" : "?tab=" + v}">${labels[i]}</a>`,
     )
     .join(" · ");
   const post = posts.find(
@@ -117,15 +118,15 @@ export function searchSitemap(posts: any[] = []) {
     "/?tab=ABOUT&board=partners",
   ];
   const rows = pages.flatMap((path) =>
-    ["", "ko", "en"].map((lang) => {
+    (["ko", "en"] as const).map((lang) => {
       const u = new URL(path, "https://nowrokorea.com");
-      if (lang) u.searchParams.set("lang", lang);
+      u.pathname=languagePath(lang);
       return `<url><loc>${xml(u.href)}</loc></url>`;
     }),
   );
   for (const p of posts.filter((p) => p.published))
     rows.push(
-      `<url><loc>${xml("https://nowrokorea.com/?tab=ABOUT&board=" + encodeURIComponent(p.board) + "&post=" + encodeURIComponent(p.id))}</loc>${/^\d{4}-\d{2}-\d{2}T/.test(p.updated || "") ? "<lastmod>" + xml(p.updated) + "</lastmod>" : ""}</url>`,
+      `<url><loc>${xml("https://nowrokorea.com/ko/?tab=ABOUT&board=" + encodeURIComponent(p.board) + "&post=" + encodeURIComponent(p.id))}</loc>${/^\d{4}-\d{2}-\d{2}T/.test(p.updated || "") ? "<lastmod>" + xml(p.updated) + "</lastmod>" : ""}</url>`,
     );
   return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${rows.join("")}</urlset>`;
 }

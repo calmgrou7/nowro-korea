@@ -2,7 +2,7 @@ const tabs = ["NOW", "MAP", "ROUTES", "ABOUT"];
 export function safePageUrl(href: string) {
   const input = new URL(href),
     out = new URL(input.pathname, "https://nowrokorea.com");
-  if (!/^\/(?:en|ko)?\/?$/.test(out.pathname)) out.pathname = "/";
+  if (!/^\/(?:en|ko|ja|zh-cn|zh-tw)?\/?$/.test(out.pathname)) out.pathname = "/";
   const tab = input.searchParams.get("tab");
   if (tab && tabs.includes(tab)) out.searchParams.set("tab", tab);
   const lang = input.searchParams.get("lang");

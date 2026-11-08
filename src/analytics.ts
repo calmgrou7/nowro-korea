@@ -13,6 +13,9 @@ const allowedEvents = new Set([
   "generate_route",
   "save_route",
   "map_click",
+  "add_to_route",
+  "click_affiliate",
+  "share_route",
 ]);
 export function disableAnalytics() {
   if (!activeId) return;
@@ -72,7 +75,7 @@ export function analyticsPage() {
     send_to: activeId,
   });
 }
-export function track(name: string, id?: string) {
+export function track(name: string, id?: string,attributes:Record<string,string>={}) {
   if (!activeId || privatePage(location.href) || !allowedEvents.has(name))
     return;
   const params: Record<string, string> = {
@@ -81,5 +84,6 @@ export function track(name: string, id?: string) {
     page_referrer: "",
   };
   if (id && /^[a-zA-Z0-9_-]{1,100}$/.test(id)) params.item_id = id;
+  for(const key of ['provider','place_id','lang','page','content_type'])if(attributes[key]&&/^[a-zA-Z0-9_-]{1,100}$/.test(attributes[key]))params[key]=attributes[key];
   (window as GAWindow).gtag?.("event", name, params);
 }

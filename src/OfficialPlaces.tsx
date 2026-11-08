@@ -1,5 +1,8 @@
 import { PlaceMaps } from "./PlaceMaps";
 import {track} from './analytics';
+import {showEvent} from '../shared/visitor-content';
+import {LocalizedDescription} from './LocalizedDescription';
+import {AffiliateOffers} from './AffiliateOffers';
 import { visitorText } from "./visitor-copy";
 import { useEffect, useState } from "react";
 import { api } from "./api";
@@ -102,7 +105,7 @@ export function OfficialPlaces({
   const [routeBusy, setRouteBusy] = useState(false);
   const [detailMessage, setDetailMessage] = useState("");
   useEffect(() => setDetailMessage(""), [selected?.UC_SEQ]);
-  useEffect(()=>{if(selected?.UC_SEQ)track('view_item',String(selected.UC_SEQ));},[selected?.UC_SEQ]);
+  useEffect(()=>{if(selected?.UC_SEQ)track('view_item',String(selected.UC_SEQ),{content_type:eventCategory?'event':'place'});},[selected?.UC_SEQ]);
   useEffect(() => {
     if (!selected?.kopisId) return;
     let active = true;
@@ -246,6 +249,7 @@ export function OfficialPlaces({
   const expiredCount = [...items, ...extra].filter(
     (item) => eventCategory && eventExpired(item, today),
   ).length;
+  const undatedCount=category==='festivals'?[...items,...extra].filter(item=>!eventEndDate(item)).length:0;
   const matched = [...items, ...extra].filter((item) => {
     const text = [
       item.title,
@@ -259,7 +263,7 @@ export function OfficialPlaces({
       .toLocaleLowerCase();
     const compact = (v: string) => v.toLocaleLowerCase().replace(/[\s-]/g, "");
     return (
-      (!eventCategory || includePast || !eventExpired(item, today)) &&
+      showEvent(item,category,includePast,today) &&
       text.includes(query.trim().toLocaleLowerCase()) &&
       (!districtNames.length ||
         districtNames
@@ -414,12 +418,12 @@ export function OfficialPlaces({
                 setLimit(6);
               }}
             />
-            {visitorText(lang, "지난 행사 포함", "Include past events")}
+            {category==='festivals'?({ko:'지난·일정 미확인 자료 포함',en:'Include past or undated listings',ja:'終了・日程未確認の資料も表示','zh-CN':'显示往届及日期未确认资料','zh-TW':'顯示往屆及日期未確認資料'} as Record<string,string>)[lang]||'Include past or undated listings':visitorText(lang, "지난 행사 포함", "Include past events")}
           </label>
           <small className="muted">
             {lang === "ko"
-              ? `검색 결과 ${matched.length}건 · 전체 자료 중 지난 일정 ${expiredCount}건${includePast ? " 포함" : " 숨김"} · 종료일 미확인 자료 포함`
-              : `${matched.length} results · ${expiredCount} past listings ${includePast ? "included" : "hidden"} · Undated listings included`}
+              ? `검색 결과 ${matched.length}건 · 지난 일정 ${expiredCount}건${category==='festivals'?` / 일정 미확인 ${undatedCount}건`:''}${includePast ? " 포함" : " 숨김"}${category==='festivals'?'':' · 종료일 미확인 자료 포함'}`
+              : `${matched.length} results · ${expiredCount} past listings${category==='festivals'?` / ${undatedCount} undated`:''} ${includePast ? "included" : "hidden"}`}
           </small>
           {category === "festivals" && !includePast && expiredCount > 0 && <small className="muted">{visitorText(lang,"이 숫자는 부산 전체 축제 수가 아닙니다. 지난 회차 자료는 ‘지난 행사 포함’에서 볼 수 있습니다.","This is not a count of all Busan festivals. Turn on Include past events to browse past editions.")}</small>}
         </div>
@@ -473,7 +477,7 @@ export function OfficialPlaces({
           const item = {
             ...original,
             UC_SEQ: category + "-" + (original.contentid || original.UC_SEQ),
-            routePlaceId: original.contentid
+                    routePlaceId: original.contentid
               ? "kto-" + original.contentid
               : original.routePlaceId || null,
             MAIN_TITLE: original.title || original.MAIN_TITLE,
@@ -538,14 +542,7 @@ export function OfficialPlaces({
                     (visitorText(lang, "주소 확인 필요", "Address unverified"))}
                 </span>
               </p>
-              {item.ITEMCNTNTS && (
-                <p className="tourism-summary">
-                  {String(item.ITEMCNTNTS)
-                    .replace(/<[^>]*>/g, " ")
-                    .replace(/\s+/g, " ")
-                    .trim()}
-                </p>
-              )}
+              <LocalizedDescription text={item.ITEMCNTNTS} lang={lang} compact/>
               {original.USAGE_DAY_WEEK_AND_TIME && (
                 <p
                   className="tourism-schedule"
@@ -563,6 +560,7 @@ export function OfficialPlaces({
                   <button
                     disabled={
                       (eventCategory && eventExpired(item, today)) ||
+                      (category === 'festivals' && !eventEndDate(item)) ||
                       (category === "exhibitions" &&
                         original.res_no &&
                         !original.locationRequested)
@@ -624,10 +622,8 @@ export function OfficialPlaces({
               (visitorText(lang, "방문 전 운영기관에 확인해주세요.", "Confirm with the venue before visiting."))}
           </p>
           <h3>{visitorText(lang, "소개", "About")}</h3>
-          <p style={{ whiteSpace: "pre-line" }}>
-            {selected.ITEMCNTNTS ||
-              (visitorText(lang, "상세 소개가 제공되지 않았습니다.", "A detailed description is not available."))}
-          </p>
+          <LocalizedDescription text={selected.ITEMCNTNTS || visitorText(lang, "상세 소개가 제공되지 않았습니다.", "A detailed description is not available.")} lang={lang}/>
+          {!(eventCategory&&eventExpired(selected,today))&&!(category==='festivals'&&!eventEndDate(selected))&&<AffiliateOffers lang={lang} placeIds={[selected.routePlaceId||selected.contentid&&'kto-'+selected.contentid||selected.UC_SEQ]} />}
           {selected.CNTCT_TEL && <p>{selected.CNTCT_TEL}</p>}
           {selected.locationBasis === "official_linked_venue" && (
             <p className="muted">
@@ -662,6 +658,7 @@ export function OfficialPlaces({
                 disabled={
                   routeBusy ||
                   (eventCategory && eventExpired(selected, today)) ||
+                  (category === 'festivals' && !eventEndDate(selected)) ||
                   (category === "exhibitions" &&
                     selected.res_no &&
                     !selected.locationRequested)

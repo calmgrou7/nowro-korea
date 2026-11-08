@@ -18,6 +18,7 @@ import { kopisPerformances, kopisDetail } from './kopis.mjs';
 import { renderPageMetadata, pageMetadata } from '../shared/page-metadata.ts';
 import {publicSearchContent,searchSitemap,searchRss} from '../shared/search-content.ts';
 import {growthConfig,saveGrowthConfig} from './growth.mjs';
+import {affiliateConfig,saveAffiliate,suggestAffiliateMatches,reviewAffiliate,publicAffiliateOffers} from './affiliates.mjs';
 import {
   ownBusiness,
   submitBusiness,
@@ -312,6 +313,17 @@ export function createApp(store, options = {}) {
         case 'GET /api/growth-config': {
           const config=growthConfig(store);out={gaId:config.gaId,enabled:config.enabled};break;
         }
+        case 'GET /api/affiliate-offers':
+          out={offers:publicAffiliateOffers(store,(url.searchParams.get('places')||'').split(',').filter(Boolean),url.searchParams.get('placement')||'activity')};break;
+        case 'GET /api/operator/affiliates':
+          if(s.role!=='admin')throw new ServiceError('FORBIDDEN',403);
+          out={...affiliateConfig(store),areas,places:store.catalog().filter(p=>p.published&&!p.sample)};break;
+        case 'POST /api/operator/affiliates/save':
+          out={offer:saveAffiliate(store,s,body)};break;
+        case 'POST /api/operator/affiliates/suggest':
+          out=suggestAffiliateMatches(store,s);break;
+        case 'POST /api/operator/affiliates/review':
+          out=reviewAffiliate(store,s,body);break;
         case 'GET /api/operator/growth':
           if(s.role!=='admin')throw new ServiceError('FORBIDDEN',403);
           out=growthConfig(store);break;

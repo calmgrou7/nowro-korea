@@ -1,4 +1,5 @@
 import type { Lang } from "../shared/types.ts";
+import {urlLanguage} from '../shared/site-language';
 export const languages: Lang[] = ["en", "ko", "ja", "zh-CN", "zh-TW"];
 export const names = ["EN", "KR", "JP", "简体", "繁體"];
 const copy: Record<string, string[]> = {
@@ -655,7 +656,7 @@ export function t(key: string, lang: Lang) {
   );
 }
 export function initialLanguage(): Lang {
-  const requested=new URLSearchParams(location.search).get('lang');
+  const requested=urlLanguage(new URL(location.href));
   if(languages.includes(requested as Lang))return requested as Lang;
   try {
     const stored = localStorage.getItem("nowro-language");
