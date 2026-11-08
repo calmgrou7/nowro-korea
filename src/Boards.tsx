@@ -1,3 +1,4 @@
+import { visitorText } from "./visitor-copy";
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import { syncPageMetadata } from '../shared/page-metadata';
@@ -50,7 +51,7 @@ export function Boards({
   const [query, setQuery] = useState(
     () => new URLSearchParams(location.search),
   );
-  const L = (ko: string, en: string) => (lang === "ko" ? ko : en);
+  const L = (ko: string, en: string) => visitorText(lang, ko, en);
   useEffect(()=>{if(page)syncPageMetadata();},[query,page]);
   useEffect(() => {
     const back = () => setQuery(new URLSearchParams(location.search));

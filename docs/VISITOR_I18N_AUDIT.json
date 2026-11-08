@@ -1,0 +1,537 @@
+[
+  {
+    "file": "App",
+    "ko": "결제 확인 스탬프가 등록되었습니다.",
+    "en": "Paid-visit stamp registered."
+  },
+  {
+    "file": "App",
+    "ko": "공식 API 장소 기반 예상 코스입니다. 운영시간·요금·예약 여부는 방문 전 확인해주세요.",
+    "en": "Route uses official API places. Hours, fees and reservations require venue confirmation."
+  },
+  {
+    "file": "App",
+    "ko": "이 장소는 위치 정보 확인 후 코스에 추가할 수 있습니다. 현재는 지도에서 위치를 확인해주세요.",
+    "en": "This place is not available for route planning yet. Please check its location on the map."
+  },
+  {
+    "file": "App",
+    "ko": "종료된 일정은 코스에 포함할 수 없습니다. 해당 항목을 해제해주세요.",
+    "en": "Ended events cannot be included in a route. Please deselect them."
+  },
+  {
+    "file": "App",
+    "ko": "일부 항목은 위치·일정 확인이 필요해 아직 코스로 계산할 수 없습니다. 해당 항목을 해제해주세요.",
+    "en": "Some items are not route-ready. Deselect items whose location or schedule is unverified."
+  },
+  {
+    "file": "App",
+    "ko": "장소 정보 확인 필요",
+    "en": "Place details unavailable"
+  },
+  {
+    "file": "App",
+    "ko": "계획용 예상 · 영업·요금 미확인",
+    "en": "Planning estimate · hours and fees unverified"
+  },
+  {
+    "file": "App",
+    "ko": "포함할 장소: ",
+    "en": "Include: "
+  },
+  {
+    "file": "App",
+    "ko": "선택 해제",
+    "en": "Clear"
+  },
+  {
+    "file": "App",
+    "ko": "선택한 장소: ",
+    "en": "Selected places: "
+  },
+  {
+    "file": "App",
+    "ko": "선택 해제",
+    "en": "Clear"
+  },
+  {
+    "file": "App",
+    "ko": "출발점 기준 도보 3km · 대중교통/차량 8km 내 인접 구·군도 함께 추천합니다. 실제 이동시간은 예상치입니다.",
+    "en": "Includes nearby districts within 3 km on foot or 8 km by transit/car from your start. Travel times are estimates."
+  },
+  {
+    "file": "App",
+    "ko": "운영시간·요금·예약 여부 미확인 장소를 계획용 코스에 포함합니다. 방문 가능 여부와 실제 비용은 직접 확인해야 합니다.",
+    "en": "Include places with unverified hours, fees and reservations in a planning-only route. Confirm availability and actual costs before visiting."
+  },
+  {
+    "file": "App",
+    "ko": "로그인한 운영 계정입니다. 업체 승인과 상품 게시 심사는 별도로 진행됩니다.",
+    "en": "Signed-in operator account. Business approval and listing publication are reviewed separately."
+  },
+  {
+    "file": "App",
+    "ko": "결제 확인 → 현장 QR 발급 → 고객 스캔 → 서버 스탬프 등록. 실제 결제 연동 전에는 로컬 테스트만 가능합니다.",
+    "en": "Payment confirmation → on-site QR → customer scan → server stamp. Local testing only until payments are connected."
+  },
+  {
+    "file": "App",
+    "ko": "테스트 결제 참조번호",
+    "en": "Test receipt reference"
+  },
+  {
+    "file": "App",
+    "ko": "결제 금액 (KRW)",
+    "en": "Payment amount (KRW)"
+  },
+  {
+    "file": "App",
+    "ko": "테스트 결제 확인됨",
+    "en": "Test payment confirmed"
+  },
+  {
+    "file": "App",
+    "ko": "테스트 결제 확인",
+    "en": "Confirm test payment"
+  },
+  {
+    "file": "App",
+    "ko": "hero_title_ko",
+    "en": "hero_title_en"
+  },
+  {
+    "file": "App",
+    "ko": "hero_intro_ko",
+    "en": "hero_intro_en"
+  },
+  {
+    "file": "App",
+    "ko": "부산 축제 이미지 준비 중",
+    "en": "Busan festival cover"
+  },
+  {
+    "file": "App",
+    "ko": "사진: 부산광역시 축제 API · 자료 이미지",
+    "en": "Photo: Busan festival API · archive image"
+  },
+  {
+    "file": "App",
+    "ko": "공식 출처",
+    "en": "Official source"
+  },
+  {
+    "file": "App",
+    "ko": "지금 있는 곳과 남은 시간, 예산에 맞춰 여행코스를 만들어보세요.",
+    "en": "Plan a route around your location, available time and budget."
+  },
+  {
+    "file": "App",
+    "ko": "바로 코스 만들기",
+    "en": "Build my route"
+  },
+  {
+    "file": "App",
+    "ko": "저장한 장소로 나만의 코스 만들기",
+    "en": "Build a route from your saved places"
+  },
+  {
+    "file": "App",
+    "ko": "마음에 드는 장소를 모아두고, 저장 화면에서 함께 갈 장소를 골라보세요.",
+    "en": "Collect places you like, then choose your stops together in Saved."
+  },
+  {
+    "file": "App",
+    "ko": "저장한 장소 보기",
+    "en": "View saved places"
+  },
+  {
+    "file": "App",
+    "ko": "새로운 소식",
+    "en": "News"
+  },
+  {
+    "file": "App",
+    "ko": "공식 데이터 출처",
+    "en": "Official data sources"
+  },
+  {
+    "file": "App",
+    "ko": "공식 관광 데이터",
+    "en": "Official tourism data"
+  },
+  {
+    "file": "App",
+    "ko": "부산에서 전국으로",
+    "en": "Busan to all of Korea"
+  },
+  {
+    "file": "App",
+    "ko": "공식 데이터 출처",
+    "en": "Official data source"
+  },
+  {
+    "file": "App",
+    "ko": "스탬프·굿즈는 준비 중이에요",
+    "en": "Stamps & goods are coming soon"
+  },
+  {
+    "file": "App",
+    "ko": "지금은 부산의 장소와 로컬 콘텐츠를 먼저 만나보세요.",
+    "en": "For now, discover Busan places and local stories first."
+  },
+  {
+    "file": "App",
+    "ko": "나만의 여행코스",
+    "en": "Your travel route"
+  },
+  {
+    "file": "App",
+    "ko": "장소를 선택하고 시간·예산을 맞춘 뒤 코스를 확인하세요.",
+    "en": "Choose your stops, set your time and budget, then review your route."
+  },
+  {
+    "file": "App",
+    "ko": "저장한 장소에서 선택",
+    "en": "Choose saved places"
+  },
+  {
+    "file": "App",
+    "ko": "장소 선택",
+    "en": "Choose places"
+  },
+  {
+    "file": "App",
+    "ko": "조건 설정",
+    "en": "Set preferences"
+  },
+  {
+    "file": "App",
+    "ko": "코스 확인·저장",
+    "en": "Review and save"
+  },
+  {
+    "file": "App",
+    "ko": "코스는 이동과 방문을 위한 계획안입니다. 실제 운영시간·요금과 예약 필요 여부는 공식 안내에서 확인해주세요.",
+    "en": "Routes are travel plans. Confirm opening hours, prices and reservations with the official venue."
+  },
+  {
+    "file": "App",
+    "ko": "지역별 가이드",
+    "en": "Local guides"
+  },
+  {
+    "file": "App",
+    "ko": "저장",
+    "en": "Saved"
+  },
+  {
+    "file": "App",
+    "ko": "장소를 모아 코스로 만들거나, 저장한 여행코스를 다시 확인하세요.",
+    "en": "Choose saved places for a new route, or reopen a route you have saved."
+  },
+  {
+    "file": "App",
+    "ko": "저장한 코스",
+    "en": "Saved routes"
+  },
+  {
+    "file": "App",
+    "ko": "코스",
+    "en": "Routes"
+  },
+  {
+    "file": "App",
+    "ko": "혜택·샵",
+    "en": "Offers & shop"
+  },
+  {
+    "file": "App",
+    "ko": "할인권과 굿즈 쇼핑몰을 준비하고 있어요",
+    "en": "Discounts and NOWRO goods are coming soon"
+  },
+  {
+    "file": "App",
+    "ko": "초기에는 검증된 부산 여행 정보와 상점 콘텐츠를 무료로 제공합니다.",
+    "en": "We are starting with free, carefully checked Busan travel and local business information."
+  },
+  {
+    "file": "App",
+    "ko": "스탬프·보상",
+    "en": "Stamps & rewards"
+  },
+  {
+    "file": "App",
+    "ko": "스탬프 투어와 완주 보상을 준비하고 있어요",
+    "en": "Stamp tours and completion rewards are coming soon"
+  },
+  {
+    "file": "App",
+    "ko": "현재는 정보 제공과 장소 탐색에 집중하고 있습니다. 실제 운영이 시작되면 이곳에서 안내해드릴게요.",
+    "en": "We are focusing on discovery first. This page will be updated when the real program launches."
+  },
+  {
+    "file": "App",
+    "ko": "상점 로그인은 서버 연결 후 이용할 수 있습니다.",
+    "en": "Shop sign-in will be available after the login server is connected."
+  },
+  {
+    "file": "App",
+    "ko": "상점·전문가 모드",
+    "en": "Shop & creator mode"
+  },
+  {
+    "file": "App",
+    "ko": "상세페이지 링크 복사",
+    "en": "Copy detail link"
+  },
+  {
+    "file": "App",
+    "ko": "계획용 예상 코스 · 영업시간·요금·예약 여부 미확인",
+    "en": "Planning estimate · hours, fees and reservations are unverified"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "장소 사진 준비 중",
+    "en": "Venue photo unavailable"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "kor",
+    "en": "eng"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "동네의 장소와 미식",
+    "en": "Places and dining by district"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "어디를 찾아볼까요?",
+    "en": "Find your next stop"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "코스",
+    "en": "Routes"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "전체 지역 보기",
+    "en": "All districts"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "축제 소개 자료입니다. 지난 연도 일정이 포함될 수 있으므로 올해 개최 일정은 주최기관에서 확인해주세요.",
+    "en": "Festival reference guide. Dates may refer to past editions; confirm current dates with the organizer."
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "전시 API 응답 지연으로 부산문화포털의 공식 공개 일정을 자동으로 보완해 보여드립니다.",
+    "en": "The exhibition API is delayed. Listings are supplemented automatically from the official Busan Culture Portal."
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": " 일부 일정만 불러왔습니다. 전체 일정은 공식 원문에서 확인해주세요.",
+    "en": " Some listings could not be loaded. Check the official portal for the full schedule."
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "관광정보를 불러오는 중입니다.",
+    "en": "Loading places…"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "지난 행사 포함",
+    "en": "Include past events"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "이 목록에서 장소·지역 찾기",
+    "en": "Find a place or neighborhood in this list"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "자료 제공처의 응답이 지연되고 있습니다. 잠시 후 다시 확인해주세요.",
+    "en": "The data provider is taking longer to respond. Please try again later."
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+    "en": "Information is temporarily unavailable. Please try again shortly."
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "다시 불러오기",
+    "en": "Try again"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "부산문화포털에서 확인",
+    "en": "Visit Busan Culture Portal"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "현재 제공된 정보가 없습니다.",
+    "en": "No information is currently available."
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "검색 결과가 없습니다.",
+    "en": "No matching places."
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "저장 취소",
+    "en": "Unsave place"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "장소 저장",
+    "en": "Save place"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "지역 미확인",
+    "en": "Area unverified"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "위치 확인 중",
+    "en": "Locating venue"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "부산",
+    "en": "Busan"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "종료된 일정",
+    "en": "Event ended"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "주소 확인 필요",
+    "en": "Address unverified"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "상세보기 ›",
+    "en": "Details ›"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "이 장소 포함 코스 ＋",
+    "en": "Add to route ＋"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "더 보기",
+    "en": "Show more"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "출처: 부산문화포털 다봄 · 공식 전시 일정",
+    "en": "Source: Busan Culture Portal · official exhibition listings"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "출처: 한국관광공사",
+    "en": "Source: Korea Tourism Organization"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "출처: 부산광역시 · 공식 원문 / NOWRO 등록 콘텐츠",
+    "en": "Source: Busan Metropolitan City / NOWRO listings"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "종료된 일정입니다. 지난 행사 자료로 확인해주세요.",
+    "en": "This event has ended. This listing is for reference."
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "위치",
+    "en": "Location"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "공식 시설의 주소와 지도 위치를 확인하고 있습니다.",
+    "en": "Checking the address and map location of the official venue…"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "주소 확인 필요",
+    "en": "Address to be confirmed"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "운영시간·일정",
+    "en": "Hours and dates"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "방문 전 운영기관에 확인해주세요.",
+    "en": "Confirm with the venue before visiting."
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "소개",
+    "en": "About"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "상세 소개가 제공되지 않았습니다.",
+    "en": "A detailed description is not available."
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "공식 전시 안내에 연결된 시설 기준: ",
+    "en": "Officially linked venue: "
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": " · 다른 지점에서 관람한다면 공식 원문의 장소를 확인해주세요.",
+    "en": " · Check the official listing if you plan to visit another branch."
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "현재 장소 저장 및 코스 선택",
+    "en": "Save this place or select it for a route"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "저장됨 · 취소",
+    "en": "Saved · remove"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "저장",
+    "en": "Save"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "현재 장소의 위치·일정 확인이 필요해 코스에 연결하지 못했습니다.",
+    "en": "This place needs verified location or schedule information before it can be added."
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "코스 연결에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    "en": "Unable to connect this place to a route. Please try again."
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "연결 중…",
+    "en": "Connecting…"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "코스 선택",
+    "en": "Select for route"
+  },
+  {
+    "file": "OfficialPlaces",
+    "ko": "지도·길찾기",
+    "en": "Map and directions"
+  }
+]

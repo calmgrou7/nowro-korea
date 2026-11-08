@@ -68,7 +68,7 @@ const representative: Record<string, PlaceMedia> = {
 };
 // Image evidence is separate from business verification and persisted fixture data.
 export function placeMedia(place: Place): PlaceMedia {
-  if (place.id.startsWith('kto-')) return { src: place.image || scenery.gwangalli!.src, alt: place.name.ko, generated:false, credit: place.image ? 'Korea Tourism Organization' : 'Busan reference scenery', source: place.source };
+  if (!place.sample) return { src: place.image || '/brand/logo.webp', alt: place.name.ko, generated:false, credit: place.image ? 'Official tourism source' : 'NOWRO · photo unavailable', source: place.source };
   if (
     place.category === "sea" ||
     place.category === "wellness" ||

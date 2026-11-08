@@ -10,31 +10,13 @@ const SOURCES = {
 };
 
 export function openApiSources() {
-  return Object.entries(SOURCES).map(([id, source]) => ({ id, name: source.name, endpoint: source.endpoint, configured: Boolean(process.env[source.key]) }));
+  return Object.entries(SOURCES).map(([id, source]) => ({ id, name: source.name, endpoint: source.endpoint, website: ({foodie:'https://www.data.go.kr/data/15063507/openapi.do',exhibitions:'https://www.data.go.kr/data/15063737/openapi.do',ocean:'https://www.data.go.kr/data/15063564/openapi.do',festivals:'https://www.data.go.kr/data/15063500/openapi.do',theatre:'https://busandabom.net/',kor:'https://korean.visitkorea.or.kr/',eng:'https://english.visitkorea.or.kr/'}[id]), configured: Boolean(process.env[source.key]) }));
 }
 
 const cache = new Map();
 const pending = new Map();
-let heroCache;
 export async function festivalHero() {
-  if (heroCache && Date.now() - heroCache.at < 3600000) return heroCache.value;
-  const feed = await fetchOpenApi('festivals');
-  for (const item of (feed.items || []).filter(item => /부산불꽃축제/.test(item.MAIN_TITLE || ''))) {
-    try {
-      const url = new URL(item.MAIN_IMG_NORMAL, 'https://www.visitbusan.net');
-      if (url.protocol !== 'https:' || url.hostname !== 'www.visitbusan.net') continue;
-      const response = await fetch(url, { redirect:'error', signal:AbortSignal.timeout(4000) });
-      const reader = response.body?.getReader();
-      const first = await reader?.read();
-      const bytes = first?.value;
-      const valid = response.ok && bytes && ((bytes[0] === 255 && bytes[1] === 216) || (bytes[0] === 137 && bytes[1] === 80) || (bytes[0] === 82 && bytes[1] === 73));
-      await reader?.cancel();
-      if (!valid) continue;
-      const value = { image: url.href, title: item.MAIN_TITLE, source:'https://www.visitbusan.net/', checkedAt:new Date().toISOString(), archival:true };
-      heroCache = {at:Date.now(),value}; return value;
-    } catch {}
-  }
-  return {image:null};
+ return {image:'/images/busan-fireworks.webp',title:'Busan Fireworks Festival',source:'https://www.data.go.kr/data/15063500/openapi.do',archival:true,checkedAt:'2026-11-08T00:00:00.000Z'};
 }
 export async function fetchOpenApi(type, params = {}) {
   if (type === 'theatre') {

@@ -1,3 +1,5 @@
+import { PlaceMaps } from "./PlaceMaps";
+import { visitorText } from "./visitor-copy";
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { recommendationMessage } from "./recommendation-copy";
 import {
@@ -238,9 +240,7 @@ export default function App() {
       history.replaceState({}, "", location.pathname);
       await refresh();
       setToast(
-        lang === "ko"
-          ? "결제 확인 스탬프가 등록되었습니다."
-          : "Paid-visit stamp registered.",
+        visitorText(lang, "결제 확인 스탬프가 등록되었습니다.", "Paid-visit stamp registered."),
       );
     });
   }, [status]);
@@ -376,9 +376,7 @@ export default function App() {
       }
       if (data.routes.length)
         setToast(
-          lang === "ko"
-            ? "공식 API 장소 기반 예상 코스입니다. 운영시간·요금·예약 여부는 방문 전 확인해주세요."
-            : "Route uses official API places. Hours, fees and reservations require venue confirmation.",
+          visitorText(lang, "공식 API 장소 기반 예상 코스입니다. 운영시간·요금·예약 여부는 방문 전 확인해주세요.", "Route uses official API places. Hours, fees and reservations require venue confirmation."),
         );
       setRoutes(data.routes);
       setEmptyReason(data.diagnostic || "conditions_too_restrictive");
@@ -405,9 +403,7 @@ export default function App() {
       );
       if (!chosen) {
         setToast(
-          lang === "ko"
-            ? "이 장소는 위치 정보 확인 후 코스에 추가할 수 있습니다. 현재는 지도에서 위치를 확인해주세요."
-            : "This place is not available for route planning yet. Please check its location on the map.",
+          visitorText(lang, "이 장소는 위치 정보 확인 후 코스에 추가할 수 있습니다. 현재는 지도에서 위치를 확인해주세요.", "This place is not available for route planning yet. Please check its location on the map."),
         );
         return false;
       }
@@ -428,9 +424,7 @@ export default function App() {
     if (!items.length || items.length > 4) return false;
     if (items.some((item) => eventExpired(item))) {
       setToast(
-        lang === "ko"
-          ? "종료된 일정은 코스에 포함할 수 없습니다. 해당 항목을 해제해주세요."
-          : "Ended events cannot be included in a route. Please deselect them.",
+        visitorText(lang, "종료된 일정은 코스에 포함할 수 없습니다. 해당 항목을 해제해주세요.", "Ended events cannot be included in a route. Please deselect them."),
       );
       return false;
     }
@@ -441,9 +435,7 @@ export default function App() {
     );
     if (chosen.some((p) => !p)) {
       setToast(
-        lang === "ko"
-          ? "일부 항목은 위치·일정 확인이 필요해 아직 코스로 계산할 수 없습니다. 해당 항목을 해제해주세요."
-          : "Some items are not route-ready. Deselect items whose location or schedule is unverified.",
+        visitorText(lang, "일부 항목은 위치·일정 확인이 필요해 아직 코스로 계산할 수 없습니다. 해당 항목을 해제해주세요.", "Some items are not route-ready. Deselect items whose location or schedule is unverified."),
       );
       return false;
     }
@@ -577,7 +569,7 @@ export default function App() {
           <Clock size={14} />
           {p.stay} min <span>·</span> {krw(p.costMax)}
         </p>
-        <span className="sample-label">{T("sample")}</span>
+        {p.sample && <span className="sample-label">{T("sample")}</span>}
         <ArrowUpRight className="corner-arrow" size={20} />
       </div>
     </button>
@@ -593,7 +585,7 @@ export default function App() {
       </div>
       <h3>
         {r.stops
-          .map((s) => { const place = catalog!.places.find((p) => p.id === s.placeId); return place ? name(place) : (lang === "ko" ? "장소 정보 확인 필요" : "Place details unavailable"); })
+          .map((s) => { const place = catalog!.places.find((p) => p.id === s.placeId); return place ? name(place) : (visitorText(lang, "장소 정보 확인 필요", "Place details unavailable")); })
           .join(" → ")}
       </h3>
       <p>{T("reason")}</p>
@@ -614,9 +606,7 @@ export default function App() {
         {clock(r.startAt)}–{clock(r.endAt)} · {T(r.conditions.transport)} ·{" "}
         {r.sample
           ? T("sample")
-          : lang === "ko"
-            ? "계획용 예상 · 영업·요금 미확인"
-            : "Planning estimate · hours and fees unverified"}
+          : visitorText(lang, "계획용 예상 · 영업·요금 미확인", "Planning estimate · hours and fees unverified")}
       </small>
       <button className="secondary full" onClick={() => setSelected(r)}>
         {T("view")}
@@ -673,20 +663,20 @@ export default function App() {
     <section id="planner" className="planner" aria-label={T("plan")}>
       {c.requiredPlaceId && (
         <p className="notice">
-          {lang === "ko" ? "포함할 장소: " : "Include: "}
+          {visitorText(lang, "포함할 장소: ", "Include: ")}
           {catalog.places.find((p) => p.id === c.requiredPlaceId)?.name[lang] ||
             c.requiredPlaceId}
           <button
             className="text-btn"
             onClick={() => update("requiredPlaceId", undefined)}
           >
-            {lang === "ko" ? "선택 해제" : "Clear"}
+            {visitorText(lang, "선택 해제", "Clear")}
           </button>
         </p>
       )}
       {!!c.requiredPlaceIds?.length && (
         <p className="notice">
-          {lang === "ko" ? "선택한 장소: " : "Selected places: "}
+          {visitorText(lang, "선택한 장소: ", "Selected places: ")}
           {c.requiredPlaceIds
             .map(
               (id) => catalog.places.find((p) => p.id === id)?.name[lang] || id,
@@ -696,7 +686,7 @@ export default function App() {
             className="text-btn"
             onClick={() => update("requiredPlaceIds", undefined)}
           >
-            {lang === "ko" ? "선택 해제" : "Clear"}
+            {visitorText(lang, "선택 해제", "Clear")}
           </button>
         </p>
       )}
@@ -735,7 +725,7 @@ export default function App() {
               ))}
             </select>
             {area && <small className="muted">{area.aliases[lang]}</small>}
-            <small className="muted">{lang === "ko" ? "출발점 기준 도보 3km · 대중교통/차량 8km 내 인접 구·군도 함께 추천합니다. 실제 이동시간은 예상치입니다." : "Includes nearby districts within 3 km on foot or 8 km by transit/car from your start. Travel times are estimates."}</small>
+            <small className="muted">{visitorText(lang, "출발점 기준 도보 3km · 대중교통/차량 8km 내 인접 구·군도 함께 추천합니다. 실제 이동시간은 예상치입니다.", "Includes nearby districts within 3 km on foot or 8 km by transit/car from your start. Travel times are estimates.")}</small>
             <button
               type="button"
               className="text-btn"
@@ -827,9 +817,7 @@ export default function App() {
             checked={!!c.allowPlanningEstimates}
             onChange={(e) => update("allowPlanningEstimates", e.target.checked)}
           />
-          {lang === "ko"
-            ? "운영시간·요금·예약 여부 미확인 장소를 계획용 코스에 포함합니다. 방문 가능 여부와 실제 비용은 직접 확인해야 합니다."
-            : "Include places with unverified hours, fees and reservations in a planning-only route. Confirm availability and actual costs before visiting."}
+          {visitorText(lang, "운영시간·요금·예약 여부 미확인 장소를 계획용 코스에 포함합니다. 방문 가능 여부와 실제 비용은 직접 확인해야 합니다.", "Include places with unverified hours, fees and reservations in a planning-only route. Confirm availability and actual costs before visiting.")}
         </label>
       )}
           <button className="primary main-cta" disabled={busy}>
@@ -1082,10 +1070,7 @@ export default function App() {
   return (
     <>
       <EmailLinkSignIn lang={lang} onChange={refresh} />
-      <div className="preview-banner">
-        <ShieldCheck size={14} />
-        {T("banner")}
-      </div>
+
       <header className="topbar">
         <button
           className="brand brand-logo"
@@ -1119,7 +1104,7 @@ export default function App() {
                 onClick={() => navigate(id)}
                 aria-current={tab === id ? "page" : undefined}
               >
-                {lang === "ko" ? ko : en}
+                {visitorText(lang, ko, en)}
               </button>
             ))}
           </nav>
@@ -1182,9 +1167,7 @@ export default function App() {
             </div>
             <p className="notice">
               {status?.session.authenticated
-                ? lang === "ko"
-                  ? "로그인한 운영 계정입니다. 업체 승인과 상품 게시 심사는 별도로 진행됩니다."
-                  : "Signed-in operator account. Business approval and listing publication are reviewed separately."
+                ? visitorText(lang, "로그인한 운영 계정입니다. 업체 승인과 상품 게시 심사는 별도로 진행됩니다.", "Signed-in operator account. Business approval and listing publication are reviewed separately.")
                 : T("operatorNote")}
             </p>
             {role === "admin" && <AdminDashboard />}
@@ -1269,16 +1252,12 @@ export default function App() {
                   <section className="panel">
                     <h2>On-site stamp code</h2>
                     <p className="muted">
-                      {lang === "ko"
-                        ? "결제 확인 → 현장 QR 발급 → 고객 스캔 → 서버 스탬프 등록. 실제 결제 연동 전에는 로컬 테스트만 가능합니다."
-                        : "Payment confirmation → on-site QR → customer scan → server stamp. Local testing only until payments are connected."}
+                      {visitorText(lang, "결제 확인 → 현장 QR 발급 → 고객 스캔 → 서버 스탬프 등록. 실제 결제 연동 전에는 로컬 테스트만 가능합니다.", "Payment confirmation → on-site QR → customer scan → server stamp. Local testing only until payments are connected.")}
                     </p>
                     {status?.operatorPreview && (
                       <>
                         <label>
-                          {lang === "ko"
-                            ? "테스트 결제 참조번호"
-                            : "Test receipt reference"}
+                          {visitorText(lang, "테스트 결제 참조번호", "Test receipt reference")}
                           <input
                             value={paymentRef}
                             maxLength={80}
@@ -1290,9 +1269,7 @@ export default function App() {
                           />
                         </label>
                         <label>
-                          {lang === "ko"
-                            ? "결제 금액 (KRW)"
-                            : "Payment amount (KRW)"}
+                          {visitorText(lang, "결제 금액 (KRW)", "Payment amount (KRW)")}
                           <input
                             type="number"
                             min={1}
@@ -1322,12 +1299,8 @@ export default function App() {
                           }
                         >
                           {paymentId
-                            ? lang === "ko"
-                              ? "테스트 결제 확인됨"
-                              : "Test payment confirmed"
-                            : lang === "ko"
-                              ? "테스트 결제 확인"
-                              : "Confirm test payment"}
+                            ? visitorText(lang, "테스트 결제 확인됨", "Test payment confirmed")
+                            : visitorText(lang, "테스트 결제 확인", "Confirm test payment")}
                         </button>
                       </>
                     )}
@@ -1548,27 +1521,16 @@ export default function App() {
                   </div>
                   <div className="hero-image">
                     <img
-                      src={festivalCover?.image || "/brand/logo.webp"}
+                      src="/images/busan-fireworks.webp"
                       alt={festivalCover?.title || "NOWRO"}
-                      style={
-                        !festivalCover?.image
-                          ? {
-                              objectFit: "contain",
-                              padding: "20%",
-                              background: "#e5e7e9",
-                            }
-                          : undefined
-                      }
-                      onError={() => setFestivalCover(null)}
+                      onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
                       fetchPriority="high"
                     />
                     <div className="image-label">
                       <span>
                         <MapPin size={14} />
                         {festivalCover?.title ||
-                          (lang === "ko"
-                            ? "부산 축제 이미지 준비 중"
-                            : "Busan festival cover")}
+                          (visitorText(lang, "부산 축제 이미지 준비 중", "Busan festival cover"))}
                       </span>
                       <small>
                         <a
@@ -1579,9 +1541,7 @@ export default function App() {
                           target="_blank"
                           rel="noreferrer"
                         >
-                          {lang === "ko"
-                            ? "사진: 부산광역시 축제 API · 자료 이미지"
-                            : "Photo: Busan festival API · archive image"}
+                          {visitorText(lang, "사진: 부산광역시 축제 API · 자료 이미지", "Photo: Busan festival API · archive image")}
                         </a>{" "}
                         ·{" "}
                         <a
@@ -1589,7 +1549,7 @@ export default function App() {
                           target="_blank"
                           rel="noreferrer"
                         >
-                          {lang === "ko" ? "공식 출처" : "Official source"}
+                          {visitorText(lang, "공식 출처", "Official source")}
                         </a>
                       </small>
                     </div>
@@ -1609,39 +1569,33 @@ export default function App() {
                   <span className="eyebrow">YOUR NEXT MOVE</span>
                   <h2>{T("plan")}</h2>
                   <p>
-                    {lang === "ko"
-                      ? "지금 있는 곳과 남은 시간, 예산에 맞춰 여행코스를 만들어보세요."
-                      : "Plan a route around your location, available time and budget."}
+                    {visitorText(lang, "지금 있는 곳과 남은 시간, 예산에 맞춰 여행코스를 만들어보세요.", "Plan a route around your location, available time and budget.")}
                   </p>
                   <button className="primary" onClick={() => openPlanner()}>
                     <RouteIcon size={17} />
-                    {lang === "ko" ? "바로 코스 만들기" : "Build my route"}
+                    {visitorText(lang, "바로 코스 만들기", "Build my route")}
                   </button>
                 </section>
                 <section className="home-saved">
                   <div className="panel">
                     <h2>
-                      {lang === "ko"
-                        ? "저장한 장소로 나만의 코스 만들기"
-                        : "Build a route from your saved places"}
+                      {visitorText(lang, "저장한 장소로 나만의 코스 만들기", "Build a route from your saved places")}
                     </h2>
                     <p className="muted">
-                      {lang === "ko"
-                        ? "마음에 드는 장소를 모아두고, 저장 화면에서 함께 갈 장소를 골라보세요."
-                        : "Collect places you like, then choose your stops together in Saved."}
+                      {visitorText(lang, "마음에 드는 장소를 모아두고, 저장 화면에서 함께 갈 장소를 골라보세요.", "Collect places you like, then choose your stops together in Saved.")}
                     </p>
                     <button
                       className="primary"
                       onClick={() => navigate("TRIP")}
                     >
                       <Bookmark size={16} />
-                      {lang === "ko" ? "저장한 장소 보기" : "View saved places"}
+                      {visitorText(lang, "저장한 장소 보기", "View saved places")}
                     </button>
                   </div>
                 </section>
                 {siteContent?.news_title && (
                   <section className="section news-board">
-                    <h2>{lang === "ko" ? "새로운 소식" : "News"}</h2>
+                    <h2>{visitorText(lang, "새로운 소식", "News")}</h2>
                     <article className="source-card">
                       {siteContent.news_image?.startsWith("https://") && (
                         <img
@@ -1725,22 +1679,18 @@ export default function App() {
                   hidden
                   className="data-sources"
                   aria-label={
-                    lang === "ko" ? "공식 데이터 출처" : "Official data sources"
+                    visitorText(lang, "공식 데이터 출처", "Official data sources")
                   }
                 >
                   <div className="section-heading">
                     <div>
                       <span className="eyebrow">OFFICIAL DATA</span>
                       <h2>
-                        {lang === "ko"
-                          ? "공식 관광 데이터"
-                          : "Official tourism data"}
+                        {visitorText(lang, "공식 관광 데이터", "Official tourism data")}
                       </h2>
                     </div>
                     <span className="muted">
-                      {lang === "ko"
-                        ? "부산에서 전국으로"
-                        : "Busan to all of Korea"}
+                      {visitorText(lang, "부산에서 전국으로", "Busan to all of Korea")}
                     </span>
                   </div>
                   <div className="source-grid">
@@ -1748,15 +1698,13 @@ export default function App() {
                       <a
                         className="source-card"
                         key={source.id}
-                        href={source.endpoint}
+                        href={source.website || "https://www.data.go.kr/"}
                         target="_blank"
                         rel="noreferrer"
                       >
                         <strong>{source.name}</strong>
                         <span>
-                          {lang === "ko"
-                            ? "공식 데이터 출처"
-                            : "Official data source"}
+                          {visitorText(lang, "공식 데이터 출처", "Official data source")}
                         </span>
                       </a>
                     ))}
@@ -1813,14 +1761,10 @@ export default function App() {
                   <div>
                     <span className="eyebrow">COMING SOON</span>
                     <h2>
-                      {lang === "ko"
-                        ? "스탬프·굿즈는 준비 중이에요"
-                        : "Stamps & goods are coming soon"}
+                      {visitorText(lang, "스탬프·굿즈는 준비 중이에요", "Stamps & goods are coming soon")}
                     </h2>
                     <p className="muted">
-                      {lang === "ko"
-                        ? "지금은 부산의 장소와 로컬 콘텐츠를 먼저 만나보세요."
-                        : "For now, discover Busan places and local stories first."}
+                      {visitorText(lang, "지금은 부산의 장소와 로컬 콘텐츠를 먼저 만나보세요.", "For now, discover Busan places and local stories first.")}
                     </p>
                   </div>
                 </section>
@@ -1832,12 +1776,10 @@ export default function App() {
                   <div>
                     <span className="eyebrow">YOUR TRAVEL ROUTE</span>
                     <h1>
-                      {lang === "ko" ? "나만의 여행코스" : "Your travel route"}
+                      {visitorText(lang, "나만의 여행코스", "Your travel route")}
                     </h1>
                     <p className="muted">
-                      {lang === "ko"
-                        ? "장소를 선택하고 시간·예산을 맞춘 뒤 코스를 확인하세요."
-                        : "Choose your stops, set your time and budget, then review your route."}
+                      {visitorText(lang, "장소를 선택하고 시간·예산을 맞춘 뒤 코스를 확인하세요.", "Choose your stops, set your time and budget, then review your route.")}
                     </p>
                   </div>
                   <button
@@ -1845,16 +1787,14 @@ export default function App() {
                     onClick={() => navigate("TRIP")}
                   >
                     <Bookmark size={16} />
-                    {lang === "ko"
-                      ? "저장한 장소에서 선택"
-                      : "Choose saved places"}
+                    {visitorText(lang, "저장한 장소에서 선택", "Choose saved places")}
                   </button>
                 </div>
                 <ol className="journey-steps">
-                  <li>{lang === "ko" ? "장소 선택" : "Choose places"}</li>
-                  <li>{lang === "ko" ? "조건 설정" : "Set preferences"}</li>
+                  <li>{visitorText(lang, "장소 선택", "Choose places")}</li>
+                  <li>{visitorText(lang, "조건 설정", "Set preferences")}</li>
                   <li>
-                    {lang === "ko" ? "코스 확인·저장" : "Review and save"}
+                    {visitorText(lang, "코스 확인·저장", "Review and save")}
                   </li>
                 </ol>
                 {plannerView}
@@ -1881,9 +1821,7 @@ export default function App() {
                 )}
                 <RouteBenefits lang={lang} hasRoutes={!!routes?.length} />
                 <p className="muted">
-                  {lang === "ko"
-                    ? "코스는 이동과 방문을 위한 계획안입니다. 실제 운영시간·요금과 예약 필요 여부는 공식 안내에서 확인해주세요."
-                    : "Routes are travel plans. Confirm opening hours, prices and reservations with the official venue."}
+                  {visitorText(lang, "코스는 이동과 방문을 위한 계획안입니다. 실제 운영시간·요금과 예약 필요 여부는 공식 안내에서 확인해주세요.", "Routes are travel plans. Confirm opening hours, prices and reservations with the official venue.")}
                 </p>
               </section>
             )}
@@ -1893,7 +1831,7 @@ export default function App() {
                 className="section official-explore"
                 style={tab === "MAP" ? undefined : { display: "none" }}
               >
-                <h1>{lang === "ko" ? "지역별 가이드" : "Local guides"}</h1>
+                <h1>{visitorText(lang, "지역별 가이드", "Local guides")}</h1>
                 <DistrictDirectory
                   areas={catalog.areas}
                   lang={lang}
@@ -1923,22 +1861,20 @@ export default function App() {
             }
             {tab === "TRIP" && (
               <section className="section">
-                <h1>{lang === "ko" ? "저장" : "Saved"}</h1>
+                <h1>{visitorText(lang, "저장", "Saved")}</h1>
                 <p className="muted">
-                  {lang === "ko"
-                    ? "장소를 모아 코스로 만들거나, 저장한 여행코스를 다시 확인하세요."
-                    : "Choose saved places for a new route, or reopen a route you have saved."}
+                  {visitorText(lang, "장소를 모아 코스로 만들거나, 저장한 여행코스를 다시 확인하세요.", "Choose saved places for a new route, or reopen a route you have saved.")}
                 </p>
                 <SavedPlaces lang={lang} onPlan={planSaved} />
                 <div className="section-heading">
                   <div>
                     <span className="eyebrow">YOUR PLANS, IN ONE PLACE</span>
-                    <h2>{lang === "ko" ? "저장한 코스" : "Saved routes"}</h2>
+                    <h2>{visitorText(lang, "저장한 코스", "Saved routes")}</h2>
                   </div>
                   <Bookmark size={30} />
                 </div>
                 <button className="primary" onClick={() => openPlanner()}>
-                  {lang === "ko" ? "코스" : "Routes"}
+                  {visitorText(lang, "코스", "Routes")}
                 </button>
                 <p className="notice">
                   {T(
@@ -1983,18 +1919,14 @@ export default function App() {
             {tab === "PASS" && (
               <section className="section">
                 <span className="eyebrow">NOWRO PASS</span>
-                <h1>{lang === "ko" ? "혜택·샵" : "Offers & shop"}</h1>
+                <h1>{visitorText(lang, "혜택·샵", "Offers & shop")}</h1>
                 <div className="panel coming-soon-panel">
                   <span className="eyebrow">COMING SOON</span>
                   <h2>
-                    {lang === "ko"
-                      ? "할인권과 굿즈 쇼핑몰을 준비하고 있어요"
-                      : "Discounts and NOWRO goods are coming soon"}
+                    {visitorText(lang, "할인권과 굿즈 쇼핑몰을 준비하고 있어요", "Discounts and NOWRO goods are coming soon")}
                   </h2>
                   <p>
-                    {lang === "ko"
-                      ? "초기에는 검증된 부산 여행 정보와 상점 콘텐츠를 무료로 제공합니다."
-                      : "We are starting with free, carefully checked Busan travel and local business information."}
+                    {visitorText(lang, "초기에는 검증된 부산 여행 정보와 상점 콘텐츠를 무료로 제공합니다.", "We are starting with free, carefully checked Busan travel and local business information.")}
                   </p>
                 </div>
                 {/* Coupon and shop flows stay below in the source for the next release. */}
@@ -2072,18 +2004,14 @@ export default function App() {
             {tab === "PASSPORT" && (
               <section className="section">
                 <span className="eyebrow">NOWRO PASSPORT</span>
-                <h1>{lang === "ko" ? "스탬프·보상" : "Stamps & rewards"}</h1>
+                <h1>{visitorText(lang, "스탬프·보상", "Stamps & rewards")}</h1>
                 <div className="panel coming-soon-panel">
                   <span className="eyebrow">COMING SOON</span>
                   <h2>
-                    {lang === "ko"
-                      ? "스탬프 투어와 완주 보상을 준비하고 있어요"
-                      : "Stamp tours and completion rewards are coming soon"}
+                    {visitorText(lang, "스탬프 투어와 완주 보상을 준비하고 있어요", "Stamp tours and completion rewards are coming soon")}
                   </h2>
                   <p>
-                    {lang === "ko"
-                      ? "현재는 정보 제공과 장소 탐색에 집중하고 있습니다. 실제 운영이 시작되면 이곳에서 안내해드릴게요."
-                      : "We are focusing on discovery first. This page will be updated when the real program launches."}
+                    {visitorText(lang, "현재는 정보 제공과 장소 탐색에 집중하고 있습니다. 실제 운영이 시작되면 이곳에서 안내해드릴게요.", "We are focusing on discovery first. This page will be updated when the real program launches.")}
                   </p>
                 </div>
                 <div hidden>
@@ -2169,6 +2097,7 @@ export default function App() {
           </>
         )}
         <footer className="footer">
+          <p className="footer-notice">{T("banner")}</p>
           <span className="brand small brand-logo">
             <img
               src="/brand/logo.webp"
@@ -2193,14 +2122,12 @@ export default function App() {
                 else {
                   setSettings(true);
                   setToast(
-                    lang === "ko"
-                      ? "상점 로그인은 서버 연결 후 이용할 수 있습니다."
-                      : "Shop sign-in will be available after the login server is connected.",
+                    visitorText(lang, "상점 로그인은 서버 연결 후 이용할 수 있습니다.", "Shop sign-in will be available after the login server is connected."),
                   );
                 }
               }}
             >
-              {lang === "ko" ? "상점·전문가 모드" : "Shop & creator mode"}
+              {visitorText(lang, "상점·전문가 모드", "Shop & creator mode")}
               <ArrowUpRight size={14} />
             </button>
           )}
@@ -2250,7 +2177,7 @@ export default function App() {
             }
           >
             <Copy size={16} />
-            {lang === "ko" ? "상세페이지 링크 복사" : "Copy detail link"}
+            {visitorText(lang, "상세페이지 링크 복사", "Copy detail link")}
           </button>
         </Modal>
       )}
@@ -2259,9 +2186,7 @@ export default function App() {
           <p className="notice">
             {selected.sample
               ? T("sample")
-              : lang === "ko"
-                ? "계획용 예상 코스 · 영업시간·요금·예약 여부 미확인"
-                : "Planning estimate · hours, fees and reservations are unverified"}{" "}
+              : visitorText(lang, "계획용 예상 코스 · 영업시간·요금·예약 여부 미확인", "Planning estimate · hours, fees and reservations are unverified")}{" "}
             · {T("estimated")}
           </p>
           <div className="detail-metrics">
@@ -2432,8 +2357,8 @@ export default function App() {
               </>
             )}
           </p>
-          <span className="sample-label">{T("sample")}</span>
-          <p>{place.name.ko}</p>
+          {place.sample && <span className="sample-label">{T("sample")}</span>}
+          <p>{place.name.ko}</p><PlaceMaps item={place} lang={lang} />
           <p>{place.description[lang]}</p>
           <dl className="place-details">
             <div>

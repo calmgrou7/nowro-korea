@@ -1,3 +1,5 @@
+import { PlaceMaps } from "./PlaceMaps";
+import { visitorText } from "./visitor-copy";
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import { Modal } from "./Modal";
@@ -29,7 +31,7 @@ function TourismImage({
           className="tourism-placeholder"
           role="img"
           aria-label={
-            lang === "ko" ? "장소 사진 준비 중" : "Venue photo unavailable"
+            visitorText(lang, "장소 사진 준비 중", "Venue photo unavailable")
           }
         >
           <img src="/brand/logo.webp" alt="NOWRO" />
@@ -45,6 +47,7 @@ function TourismImage({
           onError={() => setFailed(true)}
         />
       )}
+      {src?.includes('haeundae-light-festival.webp') && <figcaption>{visitorText(lang,'지난 회차 공식 자료사진','Official photo from a past edition')}</figcaption>}
     </figure>
   );
 }
@@ -337,16 +340,12 @@ export function OfficialPlaces({
       <div className="section-heading">
         <h2>
           {regional
-            ? lang === "ko"
-              ? "동네의 장소와 미식"
-              : "Places and dining by district"
-            : lang === "ko"
-              ? "어디를 찾아볼까요?"
-              : "Find your next stop"}
+            ? visitorText(lang, "동네의 장소와 미식", "Places and dining by district")
+            : visitorText(lang, "어디를 찾아볼까요?", "Find your next stop")}
         </h2>
         {onPlan && (
           <button className="primary" onClick={() => onPlan()}>
-            {lang === "ko" ? "코스" : "Routes"}
+            {visitorText(lang, "코스", "Routes")}
           </button>
         )}
       </div>
@@ -358,7 +357,7 @@ export function OfficialPlaces({
               : districtNames[1] || districtNames[0]}
           </strong>
           <button className="text-btn" onClick={onClearDistrict}>
-            {lang === "ko" ? "전체 지역 보기" : "All districts"}
+            {visitorText(lang, "전체 지역 보기", "All districts")}
           </button>
         </div>
       )}
@@ -381,31 +380,25 @@ export function OfficialPlaces({
             aria-pressed={category === id}
             onClick={() => setCategory(id)}
           >
-            {lang === "ko" ? ko : en}
+            {visitorText(lang, ko, en)}
           </button>
         ))}
       </div>
       {category === "festivals" && (
         <p className="notice">
-          {lang === "ko"
-            ? "축제 소개 자료입니다. 지난 연도 일정이 포함될 수 있으므로 올해 개최 일정은 주최기관에서 확인해주세요."
-            : "Festival reference guide. Dates may refer to past editions; confirm current dates with the organizer."}
+          {visitorText(lang, "축제 소개 자료입니다. 지난 연도 일정이 포함될 수 있으므로 올해 개최 일정은 주최기관에서 확인해주세요.", "Festival reference guide. Dates may refer to past editions; confirm current dates with the organizer.")}
         </p>
       )}
       {category === "exhibitions" && originFallback && (
         <p className="notice">
-          {lang === "ko"
-            ? "전시 API 응답 지연으로 부산문화포털의 공식 공개 일정을 자동으로 보완해 보여드립니다."
-            : "The exhibition API is delayed. Listings are supplemented automatically from the official Busan Culture Portal."}
+          {visitorText(lang, "전시 API 응답 지연으로 부산문화포털의 공식 공개 일정을 자동으로 보완해 보여드립니다.", "The exhibition API is delayed. Listings are supplemented automatically from the official Busan Culture Portal.")}
           {originPartial &&
-            (lang === "ko"
-              ? " 일부 일정만 불러왔습니다. 전체 일정은 공식 원문에서 확인해주세요."
-              : " Some listings could not be loaded. Check the official portal for the full schedule.")}
+            (visitorText(lang, " 일부 일정만 불러왔습니다. 전체 일정은 공식 원문에서 확인해주세요.", " Some listings could not be loaded. Check the official portal for the full schedule."))}
         </p>
       )}
       {loading && (
         <p role="status">
-          {lang === "ko" ? "관광정보를 불러오는 중입니다." : "Loading places…"}
+          {visitorText(lang, "관광정보를 불러오는 중입니다.", "Loading places…")}
         </p>
       )}
       {eventCategory && (
@@ -419,7 +412,7 @@ export function OfficialPlaces({
                 setLimit(6);
               }}
             />
-            {lang === "ko" ? "지난 행사 포함" : "Include past events"}
+            {visitorText(lang, "지난 행사 포함", "Include past events")}
           </label>
           <small className="muted">
             {lang === "ko"
@@ -429,9 +422,7 @@ export function OfficialPlaces({
         </div>
       )}
       <label>
-        {lang === "ko"
-          ? "이 목록에서 장소·지역 찾기"
-          : "Find a place or neighborhood in this list"}
+        {visitorText(lang, "이 목록에서 장소·지역 찾기", "Find a place or neighborhood in this list")}
         <input
           type="search"
           value={query}
@@ -445,15 +436,11 @@ export function OfficialPlaces({
         <div role="status">
           <p>
             {feedReason === "upstream_timeout"
-              ? lang === "ko"
-                ? "자료 제공처의 응답이 지연되고 있습니다. 잠시 후 다시 확인해주세요."
-                : "The data provider is taking longer to respond. Please try again later."
-              : lang === "ko"
-                ? "정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
-                : "Information is temporarily unavailable. Please try again shortly."}
+              ? visitorText(lang, "자료 제공처의 응답이 지연되고 있습니다. 잠시 후 다시 확인해주세요.", "The data provider is taking longer to respond. Please try again later.")
+              : visitorText(lang, "정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.", "Information is temporarily unavailable. Please try again shortly.")}
           </p>
           <button onClick={() => setRetry((v) => v + 1)}>
-            {lang === "ko" ? "다시 불러오기" : "Try again"}
+            {visitorText(lang, "다시 불러오기", "Try again")}
           </button>
           {category === "exhibitions" && (
             <a
@@ -462,9 +449,7 @@ export function OfficialPlaces({
               target="_blank"
               rel="noreferrer"
             >
-              {lang === "ko"
-                ? "부산문화포털에서 확인"
-                : "Visit Busan Culture Portal"}{" "}
+              {visitorText(lang, "부산문화포털에서 확인", "Visit Busan Culture Portal")}{" "}
               ↗
             </a>
           )}
@@ -472,14 +457,12 @@ export function OfficialPlaces({
       )}
       {!loading && !failed && !items.length && (
         <p>
-          {lang === "ko"
-            ? "현재 제공된 정보가 없습니다."
-            : "No information is currently available."}
+          {visitorText(lang, "현재 제공된 정보가 없습니다.", "No information is currently available.")}
         </p>
       )}
       {!loading && items.length > 0 && !matched.length && (
         <p role="status">
-          {lang === "ko" ? "검색 결과가 없습니다." : "No matching places."}
+          {visitorText(lang, "검색 결과가 없습니다.", "No matching places.")}
         </p>
       )}
       <div className="source-grid">
@@ -507,12 +490,8 @@ export function OfficialPlaces({
                   className="tourism-save"
                   aria-label={
                     savedIds.includes(savedPlaceId(item))
-                      ? lang === "ko"
-                        ? "저장 취소"
-                        : "Unsave place"
-                      : lang === "ko"
-                        ? "장소 저장"
-                        : "Save place"
+                      ? visitorText(lang, "저장 취소", "Unsave place")
+                      : visitorText(lang, "장소 저장", "Save place")
                   }
                   aria-pressed={savedIds.includes(savedPlaceId(item))}
                   onClick={() => savePlace(item)}
@@ -531,20 +510,14 @@ export function OfficialPlaces({
                     )?.[0] ||
                     (category === "exhibitions"
                       ? original.locationRequested
-                        ? lang === "ko"
-                          ? "지역 미확인"
-                          : "Area unverified"
-                        : lang === "ko"
-                          ? "위치 확인 중"
-                          : "Locating venue"
-                      : lang === "ko"
-                        ? "부산"
-                        : "Busan")}
+                        ? visitorText(lang, "지역 미확인", "Area unverified")
+                        : visitorText(lang, "위치 확인 중", "Locating venue")
+                      : visitorText(lang, "부산", "Busan"))}
                 </span>
               </div>
               {eventCategory && eventExpired(item, today) && (
                 <span className="event-ended">
-                  {lang === "ko" ? "종료된 일정" : "Event ended"}
+                  {visitorText(lang, "종료된 일정", "Event ended")}
                 </span>
               )}
               <h3 title={item.MAIN_TITLE || item.TITLE}>
@@ -558,7 +531,7 @@ export function OfficialPlaces({
                 <span>
                   {item.SUBTITLE ||
                     item.PLACE ||
-                    (lang === "ko" ? "주소 확인 필요" : "Address unverified")}
+                    (visitorText(lang, "주소 확인 필요", "Address unverified"))}
                 </span>
               </p>
               {item.ITEMCNTNTS && (
@@ -580,7 +553,7 @@ export function OfficialPlaces({
               )}
               <div className="tourism-actions">
                 <button onClick={() => setSelected(item)}>
-                  {lang === "ko" ? "상세보기 ›" : "Details ›"}
+                  {visitorText(lang, "상세보기 ›", "Details ›")}
                 </button>
                 {onPlan && (
                   <button
@@ -592,7 +565,7 @@ export function OfficialPlaces({
                     }
                     onClick={() => onPlan(item)}
                   >
-                    {lang === "ko" ? "이 장소 포함 코스 ＋" : "Add to route ＋"}
+                    {visitorText(lang, "이 장소 포함 코스 ＋", "Add to route ＋")}
                   </button>
                 )}
               </div>
@@ -602,34 +575,26 @@ export function OfficialPlaces({
       </div>
       {matched.length > limit && (
         <button onClick={() => setLimit((v) => v + 6)}>
-          {lang === "ko" ? "더 보기" : "Show more"} (
+          {visitorText(lang, "더 보기", "Show more")} (
           {Math.min(limit, matched.length)}/{matched.length})
         </button>
       )}
       <p>
         <small className="muted">
           {category === "exhibitions" && originFallback
-            ? lang === "ko"
-              ? "출처: 부산문화포털 다봄 · 공식 전시 일정"
-              : "Source: Busan Culture Portal · official exhibition listings"
+            ? visitorText(lang, "출처: 부산문화포털 다봄 · 공식 전시 일정", "Source: Busan Culture Portal · official exhibition listings")
             : category === "performances"
               ? "출처: KOPIS · 공연예술통합전산망 / 부산문화포털"
               : category === "places" || category === "foodie"
-                ? lang === "ko"
-                  ? "출처: 한국관광공사"
-                  : "Source: Korea Tourism Organization"
-                : lang === "ko"
-                  ? "출처: 부산광역시 · 공식 원문 / NOWRO 등록 콘텐츠"
-                  : "Source: Busan Metropolitan City / NOWRO listings"}
+                ? visitorText(lang, "출처: 한국관광공사", "Source: Korea Tourism Organization")
+                : visitorText(lang, "출처: 부산광역시 · 공식 원문 / NOWRO 등록 콘텐츠", "Source: Busan Metropolitan City / NOWRO listings")}
         </small>
       </p>
       {selected && (
         <Modal title={selected.MAIN_TITLE} close={() => setSelected(null)}>
           {eventCategory && eventExpired(selected, today) && (
             <p className="event-ended">
-              {lang === "ko"
-                ? "종료된 일정입니다. 지난 행사 자료로 확인해주세요."
-                : "This event has ended. This listing is for reference."}
+              {visitorText(lang, "종료된 일정입니다. 지난 행사 자료로 확인해주세요.", "This event has ended. This listing is for reference.")}
             </p>
           )}
           <TourismImage
@@ -637,52 +602,40 @@ export function OfficialPlaces({
             title={selected.MAIN_TITLE}
             lang={lang}
           />
-          <h3>{lang === "ko" ? "위치" : "Location"}</h3>
+          <h3>{visitorText(lang, "위치", "Location")}</h3>
           {category === "exhibitions" &&
             selected.res_no &&
             !selected.locationRequested && (
               <p role="status">
-                {lang === "ko"
-                  ? "공식 시설의 주소와 지도 위치를 확인하고 있습니다."
-                  : "Checking the address and map location of the official venue…"}
+                {visitorText(lang, "공식 시설의 주소와 지도 위치를 확인하고 있습니다.", "Checking the address and map location of the official venue…")}
               </p>
             )}
           <p>
             {selected.SUBTITLE ||
-              (lang === "ko" ? "주소 확인 필요" : "Address to be confirmed")}
+              (visitorText(lang, "주소 확인 필요", "Address to be confirmed"))}
           </p>
-          <h3>{lang === "ko" ? "운영시간·일정" : "Hours and dates"}</h3>
+          <h3>{visitorText(lang, "운영시간·일정", "Hours and dates")}</h3>
           <p>
             {selected.USAGE_DAY_WEEK_AND_TIME ||
-              (lang === "ko"
-                ? "방문 전 운영기관에 확인해주세요."
-                : "Confirm with the venue before visiting.")}
+              (visitorText(lang, "방문 전 운영기관에 확인해주세요.", "Confirm with the venue before visiting."))}
           </p>
-          <h3>{lang === "ko" ? "소개" : "About"}</h3>
+          <h3>{visitorText(lang, "소개", "About")}</h3>
           <p style={{ whiteSpace: "pre-line" }}>
             {selected.ITEMCNTNTS ||
-              (lang === "ko"
-                ? "상세 소개가 제공되지 않았습니다."
-                : "A detailed description is not available.")}
+              (visitorText(lang, "상세 소개가 제공되지 않았습니다.", "A detailed description is not available."))}
           </p>
           {selected.CNTCT_TEL && <p>{selected.CNTCT_TEL}</p>}
           {selected.locationBasis === "official_linked_venue" && (
             <p className="muted">
-              {lang === "ko"
-                ? "공식 전시 안내에 연결된 시설 기준: "
-                : "Officially linked venue: "}
+              {visitorText(lang, "공식 전시 안내에 연결된 시설 기준: ", "Officially linked venue: ")}
               {selected.venueName}
-              {lang === "ko"
-                ? " · 다른 지점에서 관람한다면 공식 원문의 장소를 확인해주세요."
-                : " · Check the official listing if you plan to visit another branch."}
+              {visitorText(lang, " · 다른 지점에서 관람한다면 공식 원문의 장소를 확인해주세요.", " · Check the official listing if you plan to visit another branch.")}
             </p>
           )}
           <div
             className="detail-primary-actions"
             aria-label={
-              lang === "ko"
-                ? "현재 장소 저장 및 코스 선택"
-                : "Save this place or select it for a route"
+              visitorText(lang, "현재 장소 저장 및 코스 선택", "Save this place or select it for a route")
             }
           >
             <button
@@ -696,12 +649,8 @@ export function OfficialPlaces({
                 <Bookmark size={18} aria-hidden="true" />
               )}
               {savedIds.includes(savedPlaceId(selected))
-                ? lang === "ko"
-                  ? "저장됨 · 취소"
-                  : "Saved · remove"
-                : lang === "ko"
-                  ? "저장"
-                  : "Save"}
+                ? visitorText(lang, "저장됨 · 취소", "Saved · remove")
+                : visitorText(lang, "저장", "Save")}
             </button>
             {onPlan && (
               <button
@@ -722,15 +671,11 @@ export function OfficialPlaces({
                     if (ok !== false) setSelected(null);
                     else
                       setDetailMessage(
-                        lang === "ko"
-                          ? "현재 장소의 위치·일정 확인이 필요해 코스에 연결하지 못했습니다."
-                          : "This place needs verified location or schedule information before it can be added.",
+                        visitorText(lang, "현재 장소의 위치·일정 확인이 필요해 코스에 연결하지 못했습니다.", "This place needs verified location or schedule information before it can be added."),
                       );
                   } catch {
                     setDetailMessage(
-                      lang === "ko"
-                        ? "코스 연결에 실패했습니다. 잠시 후 다시 시도해주세요."
-                        : "Unable to connect this place to a route. Please try again.",
+                      visitorText(lang, "코스 연결에 실패했습니다. 잠시 후 다시 시도해주세요.", "Unable to connect this place to a route. Please try again."),
                     );
                   } finally {
                     setRouteBusy(false);
@@ -739,12 +684,8 @@ export function OfficialPlaces({
               >
                 <Route size={18} aria-hidden="true" />
                 {routeBusy
-                  ? lang === "ko"
-                    ? "연결 중…"
-                    : "Connecting…"
-                  : lang === "ko"
-                    ? "코스 선택"
-                    : "Select for route"}
+                  ? visitorText(lang, "연결 중…", "Connecting…")
+                  : visitorText(lang, "코스 선택", "Select for route")}
               </button>
             )}
           </div>
@@ -769,18 +710,8 @@ export function OfficialPlaces({
                 : undefined
             }
           />
-          <a
-            className="action-link"
-            href={
-              "https://www.google.com/maps/search/?api=1&query=" +
-              encodeURIComponent(selected.SUBTITLE || selected.MAIN_TITLE)
-            }
-            target="_blank"
-            rel="noreferrer"
-          >
-            <MapPin size={16} aria-hidden="true" />
-            {lang === "ko" ? "지도·길찾기" : "Map and directions"} ↗
-          </a>
+          <PlaceMaps item={selected} lang={lang} />
+
           <p>
             <small className="muted">
               {["https://www.kopis.or.kr/", "https://busandabom.net/"].some(

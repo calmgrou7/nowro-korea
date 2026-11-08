@@ -73,7 +73,7 @@ export function ListingDetail({
       <p>{text(d, lang, "summary")}</p>
       <div className="listing-facts">
         <b>
-          {money(d.priceMin)} – {money(d.priceMax)}
+          {d.priceMax > 0 ? `${money(d.priceMin)} – ${money(d.priceMax)}` : curatedEvents.some(event => event.data.titleKo === d.titleKo) ? "" : L("Free", "무료")}
         </b>
         <span>
           {d.duration} {L("min", "분")}
@@ -293,7 +293,7 @@ export function PublicListings({
             >
               <div className="place-art">
                 <img
-                  src={v.data.images[0]}
+                  src={v.data.images[0] || "/brand/logo.webp"}
                   alt={text(v.data, lang, "title")}
                   loading="lazy"
                 />
@@ -303,7 +303,7 @@ export function PublicListings({
                 <span className="eyebrow">{v.data.businessName}</span>
                 <h3>{text(v.data, lang, "title")}</h3>
                 <p>
-                  {money(v.data.priceMin)} – {money(v.data.priceMax)}
+                  {v.data.priceMax > 0 ? `${money(v.data.priceMin)} – ${money(v.data.priceMax)}` : curatedEvents.some(event => event.id === v.id) ? "" : L("Free", "무료")}
                 </p>
                 <p>{text(v.data, lang, "summary")}</p>
                 {v.data.eventStart && (

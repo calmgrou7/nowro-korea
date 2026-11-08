@@ -1,3 +1,4 @@
+import { visitorText } from "./visitor-copy";
 import { useEffect, useState } from "react";
 import { eventExpired } from "../shared/event-dates";
 const KEY = "nowro-saved-places-v1";
@@ -61,7 +62,7 @@ export function SavedPlaces({
     window.addEventListener("nowro-saved", update);
     return () => window.removeEventListener("nowro-saved", update);
   }, []);
-  const L = (ko: string, en: string) => (lang === "ko" ? ko : en);
+  const L = (ko: string, en: string) => visitorText(lang, ko, en);
   return (
     <section className="panel">
       <h2>

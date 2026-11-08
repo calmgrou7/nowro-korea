@@ -2821,3 +2821,14 @@ input, select, textarea { font-size: 16px; border-radius: var(--radius-control);
 .planner-submit .estimate-consent { display:flex; align-items:flex-start; gap:8px; font-size:12px; line-height:1.5; margin-bottom:10px; font-weight:400; }
 .estimate-consent input { flex:0 0 auto; width:18px; height:18px; margin:2px 0; }
 .route-feedback { color:#9b321f; font-size:13px; line-height:1.5; margin:10px 0 0; }
+.home-sections .planner-entry { background:white; color:#20282b; }
+.home-sections .planner-entry h2 { color:#20282b; }
+.home-sections .planner-entry p { color:#47545b; }
+.home-sections .planner-entry .eyebrow { color:#52681f; }
+@media(min-width:768px) { .bottom-nav { display:none !important; } body { padding-bottom:0; } }
+.place-map-links { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:12px 0; }
+.place-map-links .action-link { display:inline-flex; align-items:center; gap:6px; min-height:42px; padding:8px 12px; font-size:12px; line-height:1.4; text-decoration:none; border:1px solid var(--border); border-radius:10px; background:white; color:#087da7; }
+.nearby-shop-card .place-map-links { gap:6px; }
+.footer-notice { flex-basis:100%; color:#52616a; font-size:12px; line-height:1.6; margin:0 0 10px; }
+.place-art img[src="/brand/logo.webp"] { object-fit:contain; padding:18%; background:#e5e7e9; opacity:.45; mix-blend-mode:multiply; }
+@media(max-width:767px) { .bottom-nav { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; width:100%; } .bottom-nav > button { min-width:0; } body { padding-bottom:90px; } }

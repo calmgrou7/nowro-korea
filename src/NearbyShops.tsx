@@ -1,3 +1,5 @@
+import { PlaceMaps } from "./PlaceMaps";
+import { visitorText } from "./visitor-copy";
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import { savePlace, readSavedPlaces, savedPlaceId } from "./SavedPlaces";
@@ -101,7 +103,7 @@ export function NearbyShops({
           ? "cafe"
           : "food";
   const visible = items.filter((p) => filter === "all" || group(p) === filter);
-  const L = (ko: string, en: string) => (lang === "ko" ? ko : en);
+  const L = (ko: string, en: string) => visitorText(lang, ko, en);
   useEffect(() => {
     let active = true;
     setItems([]);
@@ -299,19 +301,7 @@ export function NearbyShops({
                     </button>
                   )}
                 </div>
-                <a
-                  className="action-link nearby-map"
-                  href={
-                    "https://www.google.com/maps/search/?api=1&query=" +
-                    encodeURIComponent(p.addr1 || p.title)
-                  }
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <MapPin size={15} aria-hidden="true" />
-                  {L("지도 보기", "View map")}
-                  <span aria-hidden="true">↗</span>
-                </a>
+                <PlaceMaps item={p} lang={lang} />
               </article>
             );
           })}
