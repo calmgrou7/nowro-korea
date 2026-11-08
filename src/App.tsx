@@ -1620,7 +1620,7 @@ export default function App() {
                 <div className="section-heading">
                   <div>
                     <span className="eyebrow">YOUR PLANS, IN ONE PLACE</span>
-                    <h1>{lang === 'ko' ? '코스 추천 · 저장한 여행' : 'Plan a route · Saved trips'}</h1>
+                    <h1>{lang === 'ko' ? '저장한 여행' : 'Saved trips'}</h1>
                   </div>
                   <Bookmark size={30} />
                 </div>
