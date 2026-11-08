@@ -2592,3 +2592,41 @@ dd {
   margin-top: 20px;
   overflow-wrap: anywhere;
 }
+
+/* Shared visual standards for public pages, forms and detail dialogs. */
+:root {
+  --font-ui: "DM Sans", "Noto Sans KR", "Malgun Gothic", Arial, sans-serif;
+  --text-body: 15px;
+  --text-label: 13px;
+  --text-small: 12px;
+  --radius-card: 20px;
+  --radius-control: 12px;
+}
+body, button, input, select, textarea, h1, h2, h3, .brand { font-family: var(--font-ui); }
+body { font-size: var(--text-body); line-height: 1.6; }
+.page { width: 100%; max-width: 1240px; padding: 32px 32px 100px; }
+.topbar { max-width: 1240px; margin-inline: auto; }
+.section, .data-sources { margin-top: 32px; }
+.section h1 { font-size: clamp(28px, 3vw, 38px); line-height: 1.25; letter-spacing: -.8px; }
+.section h2, .section-heading h2, .planner-heading h2, .data-sources h2, .panel h2, .modal > header h2 { font-size: clamp(23px, 2.5vw, 30px); line-height: 1.35; font-weight: 700; letter-spacing: -.6px; }
+.source-card h3, .place-card h3, .route-card h3, .modal h3 { font-size: 18px; line-height: 1.45; font-weight: 700; letter-spacing: -.3px; }
+.section-heading { align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.source-card, .place-card, .route-card, .panel { border-radius: var(--radius-card); }
+.source-card p, .card-copy p, .modal > p, .panel > p { font-size: var(--text-body); line-height: 1.7; }
+.primary, .secondary, .source-card > button, .quick-categories > button { font-size: 14px; font-weight: 600; min-height: 44px; border-radius: var(--radius-control); }
+input, select, textarea { font-size: 16px; border-radius: var(--radius-control); }
+.planner label, .form-block label, .data-sources > label { font-size: var(--text-label); line-height: 1.5; }
+.notice, .muted, .preview-banner { line-height: 1.6; }
+.notice { font-size: var(--text-label); padding: 14px 16px; border-radius: var(--radius-control); }
+.bottom-nav > button { font-size: var(--text-small); }
+.modal { padding: 28px; border-radius: 24px; }
+.home-sections { gap: 24px; }
+.home-sections > .planner { margin-top: 0; }
+@media (max-width: 720px) {
+  .page { padding: 24px 16px 100px; }
+  .section, .data-sources { margin-top: 24px; }
+  .section-heading { gap: 12px; margin-bottom: 20px; }
+  .source-grid, .places-grid, .route-grid { gap: 16px; }
+  .modal { padding: 20px; border-radius: 20px; }
+  .primary, .secondary, .quick-categories > button { min-height: 44px; }
+}
