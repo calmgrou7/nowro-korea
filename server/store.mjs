@@ -95,10 +95,12 @@ export class Store {
     }
   }
   catalog() {
-    return this.db
+    const official = JSON.parse(this.db.prepare("SELECT value FROM config WHERE key='tourism_catalog'").get()?.value || '[]');
+    const local = this.db
       .prepare("SELECT data FROM places")
       .all()
       .map((r) => JSON.parse(r.data));
+    return official.length ? [...official, ...local.filter(p => !p.sample)] : local;
   }
   session(id) {
     const s =

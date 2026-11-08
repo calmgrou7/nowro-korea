@@ -326,6 +326,9 @@ export default function App() {
   async function generate(conditions = c) {
     await action(async () => {
       const data = await api("recommend", { conditions });
+      const updatedCatalog = await api('catalog');
+      setCatalog(updatedCatalog);
+      if (updatedCatalog.places.some((p: Place) => p.planningEstimate)) setToast(lang === 'ko' ? '공식 API 장소 기반 예상 코스입니다. 운영시간·요금·예약 여부는 방문 전 확인해주세요.' : 'Route uses official API places. Hours, fees and reservations require venue confirmation.');
       setRoutes(data.routes);
       setTab("NOW");
       api("events", { name: "recommend" }).catch(() => {});

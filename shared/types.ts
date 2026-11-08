@@ -10,6 +10,8 @@ export type Area = {
   aliases: Localized;
 };
 export type Place = {
+  image?: string;
+  planningEstimate?: boolean;
   id: string;
   areaId: string;
   name: Localized;

@@ -8,6 +8,7 @@ import { extract } from "./ai.mjs";
 import { AuthService } from "./auth.mjs";
 import { androidAssociation } from "../shared/android-app.mjs";
 import { fetchOpenApi, openApiSources } from "./busan-openapi.mjs";
+import { syncTourismCatalog } from './tourism-catalog.mjs';
 import {
   ownBusiness,
   submitBusiness,
@@ -290,6 +291,7 @@ export function createApp(store, options = {}) {
           out = { content: store.updateSiteContent(s, body) };
           break;
         case "GET /api/catalog":
+          if (process.env.KTO_KOREAN_API_KEY) await syncTourismCatalog(store, areas);
           out = {
             cities,
             areas,
@@ -307,8 +309,9 @@ export function createApp(store, options = {}) {
           out = store.wallet(s);
           break;
         case "POST /api/recommend":
+          if (process.env.KTO_KOREAN_API_KEY) await syncTourismCatalog(store, areas);
           out = {
-            routes: recommend(body.conditions, store.catalog()),
+            routes: recommend(body.conditions, store.catalog().filter(p => !process.env.KTO_KOREAN_API_KEY || !p.sample)),
             engine: "rules",
             routing: "conservative-estimate",
           };
