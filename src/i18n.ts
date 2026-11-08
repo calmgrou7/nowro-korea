@@ -585,11 +585,11 @@ const copy: Record<string, string[]> = {
     "預覽說明：儲存的路線可能包含出發/返回位置和旅行偏好。訪客記錄在工作階段到期時清理（最長7天），會員記錄保留在帳戶中。選用分析的事件名保留30天。上線前需確定保留期限、帳戶刪除和跨境傳輸流程。",
   ],
   analytics: [
-    "Allow optional usage analytics",
-    "동의: 선택 이용 분석",
-    "任意の利用分析に同意",
-    "同意可选使用分析",
-    "同意選用使用分析",
+    "Optional: allow usage analytics, including Google Analytics when connected (page views, campaign links and feature use; no names, email or precise location). You can withdraw here.",
+    "선택: 이용 분석에 동의합니다. 연결 시 Google 애널리틱스로 페이지·홍보 링크·기능 이용을 분석하며 이름·이메일·정확한 위치는 보내지 않습니다. 여기서 동의를 철회할 수 있습니다.",
+    "任意：接続時のGoogle Analyticsを含む利用分析に同意します。ページ・キャンペーン・機能の利用を分析し、氏名・メール・正確な位置は送信しません。ここで撤回できます。",
+    "可选：同意使用分析（连接后包含 Google Analytics），分析页面、推广链接及功能使用，不发送姓名、邮箱或精确位置，可在此撤回。",
+    "可選：同意使用分析（連接後包含 Google Analytics），分析頁面、推廣連結及功能使用，不傳送姓名、電郵或精確位置，可在此撤回。",
   ],
   locationConsent: [
     "Allow location for route planning",
@@ -655,6 +655,8 @@ export function t(key: string, lang: Lang) {
   );
 }
 export function initialLanguage(): Lang {
+  const requested=new URLSearchParams(location.search).get('lang');
+  if(languages.includes(requested as Lang))return requested as Lang;
   try {
     const stored = localStorage.getItem("nowro-language");
     if (languages.includes(stored as Lang)) return stored as Lang;

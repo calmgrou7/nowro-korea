@@ -1,4 +1,5 @@
 import { visitorText } from "./visitor-copy";
+import {analyticsPage,track} from './analytics';
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import { syncPageMetadata } from '../shared/page-metadata';
@@ -80,6 +81,7 @@ export function Boards({
   const selected = posts.find(
     (p) => p.board === board?.id && p.id === query.get("post"),
   );
+  useEffect(()=>{if(page){analyticsPage();if(selected)track('view_item','post-'+selected.id);}},[page,query.toString(),selected?.id]);
   const go = (id?: string, post?: string) => {
     const url = new URL(location.href);
     url.searchParams.set("tab", "ABOUT");

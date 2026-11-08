@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import { BoardAdmin } from './Boards';
+import {GrowthPanel} from './GrowthPanel';
 
 export function AdminDashboard() {
   const [form, setForm] = useState<any>({});
@@ -44,6 +45,7 @@ export function AdminDashboard() {
     <label>Hero image URL<input value={form.hero_image || ""} onChange={e => set("hero_image", e.target.value)} placeholder="https://..." /></label>
     <label>Or upload an image<input type="file" accept="image/*" onChange={e => uploadImage(e.target.files?.[0])} /></label>
     {form.hero_image && <img className="admin-image-preview" src={form.hero_image} alt="Homepage preview" />}
+    <GrowthPanel />
     <BoardAdmin />
     <section className="panel"><h3>공연 API 연결</h3><p>부산문화포털 공연번호를 한 줄에 하나씩 입력하세요. 최대 5건의 상세정보를 조회하며 종료된 공연은 숨깁니다. 예시 번호를 실제 공연으로 등록하지 마세요.</p><textarea rows={5} value={performanceIds} onChange={e=>setPerformanceIds(e.target.value)} /><button onClick={async()=>{try{await api('operator/performance-ids',{ids:performanceIds.split(/\s+/).filter(Boolean)});setMessage('공연번호 저장 완료. 실제 공개 여부는 API 응답에 따라 달라집니다.');}catch{setMessage('공연번호 형식·개수 또는 관리자 로그인을 확인해주세요.');}}}>공연 API 연결 저장</button></section>
     <h3>새로운 소식 · 공지사항</h3>

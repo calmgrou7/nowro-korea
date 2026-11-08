@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import ts from 'typescript';
 test('bookmarks deduplicate across views, toggle off, preserve unrelated places and notify',()=>{
  const data=new Map();let events=0;
- const context={exports:{},require:()=>({}),localStorage:{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)},window:{dispatchEvent:()=>events++},Event:class{}};
+ const context={exports:{},require:name=>name==='./analytics'?{track:()=>{}}:{},localStorage:{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)},window:{dispatchEvent:()=>events++},Event:class{}};
  vm.runInNewContext(ts.transpileModule(fs.readFileSync(new URL('../src/SavedPlaces.tsx',import.meta.url),'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX}}).outputText,context);
  const {savePlace,readSavedPlaces}=context.exports;
  savePlace({contentid:'10',UC_SEQ:'places-10',routePlaceId:'kto-10'});savePlace({UC_SEQ:'other'});

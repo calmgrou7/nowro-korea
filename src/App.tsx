@@ -1,4 +1,7 @@
 import { PlaceMaps } from "./PlaceMaps";
+import {Analytics} from './AnalyticsLoader';
+import {track} from './analytics';
+import {syncPageMetadata} from '../shared/page-metadata';
 import { visitorText } from "./visitor-copy";
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { recommendationMessage } from "./recommendation-copy";
@@ -154,6 +157,7 @@ export default function App() {
   }, [oauthHandled]);
   function openListing(v: Listing) {
     setListing(v);
+    track('view_item','listing-'+v.id);
     if (!allListings.length)
       api("listings")
         .then((response) => setAllListings(response.listings))
@@ -287,7 +291,7 @@ export default function App() {
     setWallet(nextWallet);
     setOperator(records);
     setConsent({
-      analytics: !!nextConsent.analytics,
+      analytics: !!nextConsent.analytics && nextConsent.version === 'analytics-2026-11-08',
       location: !!nextConsent.location,
     });
     return st;
@@ -297,6 +301,7 @@ export default function App() {
   }, []);
   useEffect(() => {
     document.documentElement.lang = lang;
+    const current=new URL(location.href);current.searchParams.set('lang',lang);history.replaceState(history.state,'',current);syncPageMetadata();
     try {
       localStorage.setItem("nowro-language", lang);
     } catch {}
@@ -379,6 +384,7 @@ export default function App() {
           visitorText(lang, "공식 API 장소 기반 예상 코스입니다. 운영시간·요금·예약 여부는 방문 전 확인해주세요.", "Route uses official API places. Hours, fees and reservations require venue confirmation."),
         );
       setRoutes(data.routes);
+      if(data.routes.length)track('generate_route');
       setEmptyReason(data.diagnostic || "conditions_too_restrictive");
       setTab("ROUTES");
       api("events", { name: "recommend" }).catch(() => {});
@@ -496,6 +502,7 @@ export default function App() {
   }
   const openPlace = (p: Place) => {
     setPlace(p);
+    track('view_item',p.id);
     setReport(false);
     api("events", { name: "place_view" }).catch(() => {});
   };
@@ -1069,6 +1076,7 @@ export default function App() {
   );
   return (
     <>
+      <Analytics consent={consent.analytics && status?.session?.role==='traveler'} tab={tab} lang={lang}/>
       <EmailLinkSignIn lang={lang} onChange={refresh} />
 
       <header className="topbar">
@@ -1490,11 +1498,11 @@ export default function App() {
                       <span className="status-dot" />
                       YOUR KOREA. RIGHT NOW.
                     </span>
-                    <h2>
+                    <h1>
                       {siteContent?.[
                         lang === "ko" ? "hero_title_ko" : "hero_title_en"
                       ] || T("hero")}
-                    </h2>
+                    </h1>
                     <p>
                       {siteContent?.[
                         lang === "ko" ? "hero_intro_ko" : "hero_intro_en"
@@ -2317,6 +2325,7 @@ export default function App() {
                     placeIds: selected.stops.map((s) => s.placeId),
                     conditions: selected.conditions,
                   });
+                  track('save_route');
                   await refresh();
                   setToast(T("saved"));
                 })

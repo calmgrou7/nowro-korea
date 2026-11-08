@@ -15,7 +15,9 @@ import { nearbyShops } from './nearby.mjs';
 import { exhibitionLocation } from './exhibition-location.mjs';
 import { locationCandidates } from './location-candidates.mjs';
 import { kopisPerformances, kopisDetail } from './kopis.mjs';
-import { renderPageMetadata } from '../shared/page-metadata.ts';
+import { renderPageMetadata, pageMetadata } from '../shared/page-metadata.ts';
+import {publicSearchContent,searchSitemap,searchRss} from '../shared/search-content.ts';
+import {growthConfig,saveGrowthConfig} from './growth.mjs';
 import {
   ownBusiness,
   submitBusiness,
@@ -54,6 +56,10 @@ export function createApp(store, options = {}) {
       res.end(JSON.stringify(data));
     };
     try {
+      if(req.method==='GET'&&['/sitemap.xml','/feed.xml'].includes(url.pathname)){
+        res.writeHead(200,{'Content-Type':'application/xml; charset=utf-8'});
+        const posts=boardPosts(store);return res.end(url.pathname==='/sitemap.xml'?searchSitemap(posts):searchRss(posts));
+      }
       if (req.method === "GET" && url.pathname === "/api/health")
         return send(200, { ok: true });
       if (req.method === 'GET' && url.pathname === '/api/festival-hero') return send(200, await festivalHero());
@@ -99,7 +105,12 @@ export function createApp(store, options = {}) {
             ? "no-cache"
             : "public,max-age=3600",
         });
-        return res.end(file.endsWith('index.html')?renderPageMetadata(readFileSync(file,'utf8'),url):readFileSync(file));
+        if(file.endsWith('index.html')){
+          const posts=boardPosts(store),raw=readFileSync(file,'utf8');
+          const html=pageMetadata(url).noindex?raw:raw.replace('<div id="root"></div>','<div id="root">'+publicSearchContent(url,posts)+'</div>');
+          return res.end(renderPageMetadata(html,url,{posts,growth:growthConfig(store)}));
+        }
+        return res.end(readFileSync(file));
       }
       const cookie = req.headers.cookie
         ?.split(";")
@@ -292,6 +303,14 @@ export function createApp(store, options = {}) {
         case "GET /api/site-content":
           out = { content: store.siteContent() };
           break;
+        case 'GET /api/growth-config': {
+          const config=growthConfig(store);out={gaId:config.gaId,enabled:config.enabled};break;
+        }
+        case 'GET /api/operator/growth':
+          if(s.role!=='admin')throw new ServiceError('FORBIDDEN',403);
+          out=growthConfig(store);break;
+        case 'POST /api/operator/growth':
+          out=saveGrowthConfig(store,s,body);break;
         case 'GET /api/boards':
           out = {posts:boardPosts(store)};
           break;

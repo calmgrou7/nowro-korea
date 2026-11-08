@@ -241,7 +241,7 @@ html {
 @media(max-width:720px) {
  .home-sections > .hero-photo-intro { min-height: 390px; }
  .hero-photo-intro .hero-copy { width:100%; min-height:390px; padding:28px 24px 100px; }
- .hero-photo-intro .hero-copy h2 { font-size:36px; }
+ .hero-photo-intro .hero-copy :is(h1,h2) { font-size:36px; }
  .hero-photo-intro .hero-foot { display:none; }
  .hero-photo-intro .image-label { bottom:12px; right:12px; max-width:220px; }
 }
@@ -675,7 +675,7 @@ p {
   background: var(--lime);
   border-radius: 50%;
 }
-.hero h2 {
+.hero :is(h1,h2) {
   font-size: clamp(36px, 4.1vw, 55px);
   line-height: 1.13;
   letter-spacing: -2.5px;
@@ -1908,7 +1908,7 @@ dd {
   .hero-copy {
     padding-top: 53px;
   }
-  .hero h2 {
+  .hero :is(h1,h2) {
     font-size: 57px;
   }
 }
@@ -1931,7 +1931,7 @@ dd {
   .hero {
     min-height: 400px;
   }
-  .hero h2 {
+  .hero :is(h1,h2) {
     font-size: 42px;
   }
   .planner-grid {
@@ -2118,7 +2118,7 @@ dd {
   .hero-copy {
     padding: 27px 25px 21px;
   }
-  .hero h2 {
+  .hero :is(h1,h2) {
     font-size: 38px;
     letter-spacing: -1.7px;
     margin: 18px 0 13px;
@@ -2763,7 +2763,7 @@ input, select, textarea { font-size: 16px; border-radius: var(--radius-control);
 .home-sections > .planner { margin-top: 0; }
 .home-sections > .hero-photo-intro { min-height: 280px; }
 .home-sections > .hero-photo-intro > .hero-copy { min-height:280px; padding:26px 32px; width:70%; }
-.home-sections > .hero-photo-intro > .hero-copy h2 { font-size:clamp(30px,3.5vw,42px); margin:12px 0; line-height:1.15; }
+.home-sections > .hero-photo-intro > .hero-copy :is(h1,h2) { font-size:clamp(30px,3.5vw,42px); margin:12px 0; line-height:1.15; }
 .home-sections > .hero-photo-intro > .hero-copy > p { margin-bottom:14px; }
 .home-sections > .hero-photo-intro .hero-foot { display:none; }
 @media(max-width:720px) {
@@ -2807,7 +2807,7 @@ input, select, textarea { font-size: 16px; border-radius: var(--radius-control);
  .bottom-nav > button span { max-width:100%; overflow-wrap:anywhere; }
  .home-sections > .hero-photo-intro { min-height:0; }
  .home-sections > .hero-photo-intro > .hero-copy { width:100%; min-height:0; padding:24px 20px 106px; background:transparent; }
- .home-sections > .hero-photo-intro > .hero-copy h2 { font-size:clamp(28px,8vw,36px); line-height:1.14; }
+ .home-sections > .hero-photo-intro > .hero-copy :is(h1,h2) { font-size:clamp(28px,8vw,36px); line-height:1.14; }
  .home-sections > .hero-photo-intro .hero-image { position:absolute; inset:0; height:100%; min-height:100%; }
  .home-sections > .hero-photo-intro .image-label { top:auto; left:20px; right:20px; bottom:12px; max-width:none; }
  .home-sections > .hero-photo-intro .image-label > span { display:none; }

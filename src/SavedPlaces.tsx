@@ -1,4 +1,5 @@
 import { visitorText } from "./visitor-copy";
+import {track} from './analytics';
 import { useEffect, useState } from "react";
 import { eventExpired } from "../shared/event-dates";
 const KEY = "nowro-saved-places-v1";
@@ -41,6 +42,7 @@ export function savePlace(item: any) {
   const next = current.filter((p) => savedPlaceId(p) !== id);
   localStorage.setItem(KEY, JSON.stringify(exists ? next : [...next, item]));
   window.dispatchEvent(new Event("nowro-saved"));
+  track(exists?'remove_saved_place':'save_place',id);
 }
 export function SavedPlaces({
   lang,

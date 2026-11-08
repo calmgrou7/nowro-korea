@@ -1,0 +1,17 @@
+# NOWRO Korea
+
+> Public Korea travel information, starting with Busan. This file is a supplementary site guide, not a requirement or guarantee of AI-search inclusion.
+
+## Public pages
+- [English home](https://nowrokorea.com/?lang=en): Busan festivals, performances, exhibitions and experiences.
+- [Korean home](https://nowrokorea.com/?lang=ko): 부산 축제·공연·전시·체험.
+- [Local guides](https://nowrokorea.com/?tab=MAP&lang=en): Attractions and dining across Busan's 16 districts.
+- [Routes](https://nowrokorea.com/?tab=ROUTES&lang=en): Planning estimates for nearby stops, time, budget and transport.
+- [About and guides](https://nowrokorea.com/?tab=ABOUT&lang=en): About NOWRO, user guides and partner information.
+- [Sitemap](https://nowrokorea.com/sitemap.xml): Public pages and published board articles.
+- [News RSS](https://nowrokorea.com/feed.xml): Published board articles, excluding drafts.
+
+## Information boundaries
+Sources include Korea Tourism Organization, Busan public tourism data, KOPIS, Busan Culture Portal and approved provider submissions. Public data may be cached, outdated, incomplete or unavailable. Past events are hidden by default; an undated listing does not confirm a current event. Routes are estimates, not bookings, and do not confirm opening status, price, inventory, accessibility or reservations. Read each official source before travelling.
+
+English and Korean are the primary public search languages. Japanese and Chinese interface support is being expanded; do not assume every listing has an official translation. Saved places, account data, login credentials and administrator content are not public source material.

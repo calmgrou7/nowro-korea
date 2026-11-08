@@ -484,7 +484,7 @@ export class Store {
       .prepare("INSERT OR REPLACE INTO consent VALUES (?,?,?,?,?)")
       .run(
         s.user_id,
-        "draft-2026-10-05",
+        "analytics-2026-11-08",
         Number(!!b.analytics),
         Number(!!b.location),
         new Date().toISOString(),
@@ -492,7 +492,7 @@ export class Store {
     if (!b.analytics)
       this.db.prepare("DELETE FROM events WHERE user_id=?").run(s.user_id);
     return {
-      version: "draft-2026-10-05",
+      version: "analytics-2026-11-08",
       analytics: !!b.analytics,
       location: !!b.location,
     };

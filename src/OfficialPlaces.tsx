@@ -1,4 +1,5 @@
 import { PlaceMaps } from "./PlaceMaps";
+import {track} from './analytics';
 import { visitorText } from "./visitor-copy";
 import { useEffect, useState } from "react";
 import { api } from "./api";
@@ -101,6 +102,7 @@ export function OfficialPlaces({
   const [routeBusy, setRouteBusy] = useState(false);
   const [detailMessage, setDetailMessage] = useState("");
   useEffect(() => setDetailMessage(""), [selected?.UC_SEQ]);
+  useEffect(()=>{if(selected?.UC_SEQ)track('view_item',String(selected.UC_SEQ));},[selected?.UC_SEQ]);
   useEffect(() => {
     if (!selected?.kopisId) return;
     let active = true;
