@@ -6,7 +6,7 @@ function TourismImage({ src, title, lang }: { src?: string; title: string; lang:
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [src]);
   const fallback = !valid || failed;
-  return <figure className="tourism-image"><img src={fallback ? '/images/gwangalli.webp' : src!.replace(/^http:\/\/tong.visitkorea.or.kr\//, 'https://tong.visitkorea.or.kr/')} alt={fallback ? (lang === 'ko' ? '부산 광안리 대표 풍경' : 'Reference scenery of Gwangalli, Busan') : title} loading="lazy" onError={() => { if (!fallback) setFailed(true); }} />{fallback && <figcaption>{lang === 'ko' ? '부산 대표 이미지 · 해당 장소 사진 아님' : 'Busan reference image · not a venue photo'}</figcaption>}</figure>;
+  return <figure className={'tourism-image' + (fallback ? ' tourism-image-placeholder' : '')}>{fallback ? <div className="tourism-placeholder" role="img" aria-label={lang === 'ko' ? '장소 사진 준비 중' : 'Venue photo unavailable'}><img src="/brand/logo.webp" alt="NOWRO" /></div> : <img src={src!.replace(/^http:\/\/tong.visitkorea.or.kr\//, 'https://tong.visitkorea.or.kr/')} alt={title} loading="lazy" onError={() => setFailed(true)} />}</figure>;
 }
 export function OfficialPlaces({ lang, onPlan }: { lang: string; onPlan?: (item?: any) => void }) {
   const [items, setItems] = useState<any[]>([]);
