@@ -18,7 +18,7 @@ const copy: Record<string, string[]> = {
   ],
   navNOW: ["Today", "오늘", "今日", "今天", "今天"],
   navMAP: ["Map", "지도", "地図", "地图", "地圖"],
-  navTRIP: ["Routes", "코스", "ルート", "路线", "路線"],
+  navTRIP: ["Plan a route", "코스 추천", "ルート", "路线", "路線"],
   navPASS: ["Offers & Shop", "혜택·샵", "特典", "优惠", "優惠"],
   navPASSPORT: ["Stamps & rewards", "스탬프·보상", "スタンプ・特典", "印章与奖励", "印章與獎勵"],
   quickFind: [

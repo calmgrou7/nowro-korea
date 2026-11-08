@@ -1170,8 +1170,21 @@ input[type="checkbox"] {
   color: var(--muted);
 }
 .bottom-nav {
-  display: none;
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  justify-content: center;
+  gap: 30px;
+  padding: 10px 20px;
+  background: var(--white);
+  border-top: 1px solid var(--border);
 }
+.bottom-nav > button { display: grid; justify-items: center; gap: 4px; min-width: 90px; border: 0; background: transparent; color: var(--muted); padding: 8px; }
+.bottom-nav > button.active { color: var(--ink); background: var(--lime-soft); border-radius: 14px; }
+body { padding-bottom: 90px; }
 .route-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

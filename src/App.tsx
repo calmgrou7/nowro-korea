@@ -341,6 +341,10 @@ export default function App() {
       );
     });
   }
+  function openPlanner() {
+    setTab('NOW');
+    setTimeout(() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
   function gps() {
     if (!consent.location) {
       setSettings(true);
@@ -1094,7 +1098,7 @@ export default function App() {
                     </div>
                   </div>
                 </section>
-                <OfficialPlaces lang={lang} />
+                <OfficialPlaces lang={lang} onPlan={openPlanner} />
                 {siteContent?.news_title && <section className="section news-board"><h2>{lang === 'ko' ? '새로운 소식' : 'News'}</h2><article className="source-card">{siteContent.news_image?.startsWith('https://') && <img src={siteContent.news_image} alt="" style={{width:'100%',maxHeight:320,objectFit:'cover'}} />}<h3>{siteContent.news_title}</h3><p style={{whiteSpace:'pre-line'}}>{siteContent.news_body}</p></article></section>}
                 <section hidden className="data-sources" aria-label={lang === "ko" ? "공식 데이터 출처" : "Official data sources"}>
                   <div className="section-heading">
@@ -1609,17 +1613,18 @@ export default function App() {
               </div>
             )}
             {tab === "MAP" && (
-              <section className="section official-explore"><OfficialPlaces lang={lang} /></section>
+              <section className="section official-explore"><OfficialPlaces lang={lang} onPlan={openPlanner} /></section>
             )}
             {tab === "TRIP" && (
               <section className="section">
                 <div className="section-heading">
                   <div>
                     <span className="eyebrow">YOUR PLANS, IN ONE PLACE</span>
-                    <h1>TRIP</h1>
+                    <h1>{lang === 'ko' ? '코스 추천 · 저장한 여행' : 'Plan a route · Saved trips'}</h1>
                   </div>
                   <Bookmark size={30} />
                 </div>
+                <button className="primary" onClick={openPlanner}>{lang === 'ko' ? '새 코스 추천 받기' : 'Build a new route'}</button>
                 <p className="notice">
                   {T(
                     status?.session.authenticated

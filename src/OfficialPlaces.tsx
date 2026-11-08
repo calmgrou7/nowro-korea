@@ -8,7 +8,7 @@ function TourismImage({ src, title, lang }: { src?: string; title: string; lang:
   const fallback = !valid || failed;
   return <figure className="tourism-image"><img src={fallback ? '/images/gwangalli.webp' : src!.replace(/^http:\/\/tong.visitkorea.or.kr\//, 'https://tong.visitkorea.or.kr/')} alt={fallback ? (lang === 'ko' ? '부산 광안리 대표 풍경' : 'Reference scenery of Gwangalli, Busan') : title} loading="lazy" onError={() => { if (!fallback) setFailed(true); }} />{fallback && <figcaption>{lang === 'ko' ? '부산 대표 이미지 · 해당 장소 사진 아님' : 'Busan reference image · not a venue photo'}</figcaption>}</figure>;
 }
-export function OfficialPlaces({ lang }: { lang: string }) {
+export function OfficialPlaces({ lang, onPlan }: { lang: string; onPlan?: () => void }) {
   const [items, setItems] = useState<any[]>([]);
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -23,7 +23,7 @@ export function OfficialPlaces({ lang }: { lang: string }) {
   const extra = listings.filter(v => category === 'festivals' ? v.data.kind === 'event' : category === 'ocean' ? v.data.kind === 'experience' || v.data.kind === 'service' : false).map(v => ({ UC_SEQ: v.id, MAIN_TITLE: lang === 'ko' ? v.data.titleKo : v.data.titleEn, ADDR1: v.data.address, ITEMCNTNTS: lang === 'ko' ? v.data.descriptionKo : v.data.descriptionEn, MAIN_IMG_NORMAL: v.data.images[0], USAGE_DAY_WEEK_AND_TIME: v.data.eventStart ? v.data.eventStart + ' – ' + v.data.eventEnd : v.data.hours, sourceLabel: 'NOWRO · ' + v.data.businessName }));
   const matched = [...items, ...extra].filter(item => [item.title, item.MAIN_TITLE, item.addr1, item.ADDR1, item.GUGUN_NM, item.PLACE].join(' ').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   useEffect(() => { let active = true; setItems([]); setLoading(true); setFailed(false); api('openapi/' + (category === 'places' ? (lang === 'ko' ? 'kor' : 'eng') : category)).then(v => { if(active) { setItems(Array.isArray(v.items) ? v.items : []); setFailed(v.status === 'temporarily_unavailable'); } }).catch(() => { if(active) setFailed(true); }).finally(() => { if(active) setLoading(false); }); return () => { active = false; }; }, [lang, category, retry]);
-  return <section className="data-sources"><h2>{lang === 'ko' ? '어디를 찾아볼까요?' : 'Find your next stop'}</h2>
+  return <section className="data-sources"><div className="section-heading"><h2>{lang === 'ko' ? '어디를 찾아볼까요?' : 'Find your next stop'}</h2>{onPlan && <button className="primary" onClick={onPlan}>{lang === 'ko' ? '코스 추천 받기' : 'Plan a route'}</button>}</div>
     <div className="quick-categories">{[['places','관광지','Places'],['foodie','푸디투어','Food tours'],['ocean','체험','Experiences'],['festivals','축제 안내','Festival guide']].map(([id,ko,en]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{lang === 'ko' ? ko : en}</button>)}</div>
     {category === 'festivals' && <p className="notice">{lang === 'ko' ? '축제 소개 자료입니다. 지난 연도 일정이 포함될 수 있으므로 올해 개최 일정은 주최기관에서 확인해주세요.' : 'Festival reference guide. Dates may refer to past editions; confirm current dates with the organizer.'}</p>}
     {loading && <p role="status">{lang === 'ko' ? '관광정보를 불러오는 중입니다.' : 'Loading places…'}</p>}
@@ -35,6 +35,7 @@ export function OfficialPlaces({ lang }: { lang: string }) {
       <TourismImage src={item.MAIN_IMG_NORMAL} title={item.MAIN_TITLE || item.TITLE} lang={lang} />
       <h3>{item.MAIN_TITLE || item.TITLE}</h3><p>{item.SUBTITLE || item.PLACE}</p>
       <button onClick={() => setSelected(item)}>{lang === 'ko' ? '상세 정보 보기' : 'View details'}</button>
+      {onPlan && <button onClick={onPlan}>{lang === 'ko' ? '코스 추천으로 이동' : 'Go to route planner'}</button>}
       {item.ITEMCNTNTS && <details><summary>{lang === 'ko' ? '소개 보기' : 'Read description'}</summary><p>{item.ITEMCNTNTS}</p></details>}
       {original.USAGE_DAY_WEEK_AND_TIME && <details><summary>{lang === 'ko' ? '운영시간·일정' : 'Hours and dates'}</summary><p>{original.USAGE_DAY_WEEK_AND_TIME}</p></details>}
       <a href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.SUBTITLE || item.MAIN_TITLE)} target="_blank" rel="noreferrer">{lang === 'ko' ? '지도에서 보기' : 'View on map'} ↗</a>
