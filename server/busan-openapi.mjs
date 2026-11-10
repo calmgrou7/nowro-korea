@@ -1,4 +1,5 @@
 import { loadExhibitionsWithFallback } from './exhibition-origin.mjs';
+import {combinedFestivals} from './festival-feed.mjs';
 const SOURCES = {
   foodie: { name: "Busan Foodie Tour", endpoint: "https://apis.data.go.kr/6260000/FoodieService", key: "BUSAN_FOODIE_API_KEY" },
   exhibitions: { name: "Busan Culture Exhibitions", endpoint: "https://apis.data.go.kr/6260000/BusanCultureExhibitService", key: "BUSAN_EXHIBIT_API_KEY" },
@@ -40,6 +41,8 @@ export async function fetchOpenApi(type, params = {}) {
   return request;
 }
 async function loadOpenApi(type, params = {}) {
+  if(type==='festivals')return combinedFestivals(()=>loadOpenApi('busan-festivals'),process.env.KTO_KOREAN_API_KEY);
+  if(type==='busan-festivals')type='festivals';
   const source = SOURCES[type];
   if (!source) throw new Error("UNKNOWN_OPEN_API");
   const serviceKey = process.env[source.key];

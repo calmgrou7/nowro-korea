@@ -392,7 +392,7 @@ export function OfficialPlaces({
       </div>
       {category === "festivals" && (
         <p className="notice">
-          {visitorText(lang, "축제 소개 자료입니다. 지난 연도 일정이 포함될 수 있으므로 올해 개최 일정은 주최기관에서 확인해주세요.", "Festival reference guide. Dates may refer to past editions; confirm current dates with the organizer.")}
+          {visitorText(lang, "진행 중·개최 예정 행사를 한국관광공사와 부산시 공식 자료에서 불러옵니다. 방문 전 주최기관에서 운영 일정을 확인하세요.", "Current and upcoming events from official Korea Tourism Organization and Busan sources. Confirm operating schedules with the organizer before visiting.")}
         </p>
       )}
       {category === "exhibitions" && originFallback && (
@@ -589,7 +589,7 @@ export function OfficialPlaces({
               ? "출처: KOPIS · 공연예술통합전산망 / 부산문화포털"
               : category === "places" || category === "foodie"
                 ? visitorText(lang, "출처: 한국관광공사", "Source: Korea Tourism Organization")
-                : visitorText(lang, "출처: 부산광역시 · 공식 원문 / NOWRO 등록 콘텐츠", "Source: Busan Metropolitan City / NOWRO listings")}
+                : visitorText(lang, "출처: 한국관광공사 · 부산광역시 / NOWRO 등록 콘텐츠", "Source: Korea Tourism Organization · Busan Metropolitan City / NOWRO listings")}
         </small>
       </p>
       {selected && (

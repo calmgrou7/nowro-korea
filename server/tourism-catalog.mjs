@@ -178,9 +178,9 @@ export function ingestPublicContent(store, areas, type, items) {
       published: true,
       planningEstimate: true,
       image: item.MAIN_IMG_NORMAL || "",
-      availableFrom: start
+      availableFrom: item.eventStart || (start
         ? `${start[1]}-${start[2].padStart(2, "0")}-${start[3].padStart(2, "0")}`
-        : undefined,
+        : undefined),
       availableUntil: end || undefined,
     };
     const previous = JSON.parse(
