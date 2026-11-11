@@ -44,6 +44,16 @@ export function savePlace(item: any) {
   window.dispatchEvent(new Event("nowro-saved"));
   track(exists?'remove_saved_place':'save_place',id);
 }
+function SavedPlaceImage({item}:{item:any}) {
+  const candidate=[item.MAIN_IMG_NORMAL,item.firstimage,item.firstimage2,item.image,item.poster,item.data?.photos?.[0]].find(v=>typeof v==='string'&&v.length);
+  const src=String(candidate||'').replace(/^http:\/\/tong.visitkorea.or.kr\//,'https://tong.visitkorea.or.kr/');
+  const [failed,setFailed]=useState(false);
+  useEffect(()=>setFailed(false),[src]);
+  const valid=/^https?:\/\//.test(src)||/^\/images\//.test(src)||/^data:image\/(jpeg|png|webp);base64,/.test(src);
+  return <span className={'saved-place-thumbnail'+(!valid||failed?' is-placeholder':'')}>
+    <img src={!valid||failed?'/brand/logo.webp':src} alt={item.MAIN_TITLE||item.title||'NOWRO'} loading="lazy" onError={()=>setFailed(true)} />
+  </span>;
+}
 export function SavedPlaces({
   lang,
   onPlan,
@@ -102,7 +112,8 @@ export function SavedPlaces({
                   )
                 }
               />
-              <span>
+              <SavedPlaceImage item={item} />
+              <span className="saved-place-copy">
                 <strong>{item.MAIN_TITLE || item.title}</strong>
                 <small>{item.SUBTITLE || item.ADDR1 || item.addr1}</small>
                 {eventExpired(item) && (

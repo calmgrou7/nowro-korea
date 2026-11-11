@@ -254,6 +254,10 @@ html {
 .saved-places-grid .saved-place-row strong { display:block; font-size:15px; line-height:1.45; overflow-wrap:anywhere; }
 .saved-places-grid .saved-place-row small { display:block; margin-top:6px; color:var(--muted); font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
 .saved-places-grid .saved-place-row button { align-self:flex-end; font-size:12px; padding:6px 0; }
+.saved-places-grid .saved-place-row .saved-place-thumbnail { display:flex; align-items:center; justify-content:center; flex:0 0 76px; width:76px; height:90px; overflow:hidden; border-radius:10px; background:#e5e7e9; }
+.saved-place-thumbnail img { display:block; width:100%; height:100%; object-fit:contain; }
+.saved-place-thumbnail.is-placeholder img { width:80%; height:auto; opacity:.25; mix-blend-mode:multiply; filter:grayscale(1); }
+.saved-place-copy { flex:1; }
 @media(max-width:900px) { .saved-places-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:480px) { .saved-places-grid { grid-template-columns:minmax(0,1fr); gap:10px; } }
 .source-card > .tourism-image .tourism-placeholder { border-radius: 0; }
