@@ -245,10 +245,17 @@ html {
  .hero-photo-intro .hero-foot { display:none; }
  .hero-photo-intro .image-label { bottom:12px; right:12px; max-width:220px; }
 }
-.saved-place-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 0; border-bottom:1px solid var(--border); }
-.saved-place-row label { display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
-.saved-place-row input { width:20px; height:20px; flex-shrink:0; }
-.saved-place-row small { display:block; color:var(--muted); }
+.saved-places-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:20px 0; }
+.saved-places-grid .saved-place-row { display:flex; flex-direction:column; align-items:stretch; justify-content:space-between; gap:12px; min-width:0; padding:18px; border:1px solid var(--border); border-radius:16px; background:var(--surface,#fff); text-align:left; }
+.saved-places-grid .saved-place-row.is-selected { border-color:var(--lime,#c5f542); background:var(--lime-soft); }
+.saved-places-grid .saved-place-row label { display:flex; flex-direction:row; align-items:flex-start; gap:10px; flex:1; min-width:0; cursor:pointer; }
+.saved-places-grid .saved-place-row input { width:18px; height:18px; flex:0 0 18px; margin:3px 0 0; }
+.saved-places-grid .saved-place-row label > span { min-width:0; text-align:left; }
+.saved-places-grid .saved-place-row strong { display:block; font-size:15px; line-height:1.45; overflow-wrap:anywhere; }
+.saved-places-grid .saved-place-row small { display:block; margin-top:6px; color:var(--muted); font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
+.saved-places-grid .saved-place-row button { align-self:flex-end; font-size:12px; padding:6px 0; }
+@media(max-width:900px) { .saved-places-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:480px) { .saved-places-grid { grid-template-columns:minmax(0,1fr); gap:10px; } }
 .source-card > .tourism-image .tourism-placeholder { border-radius: 0; }
 .data-sources .quick-categories button[aria-pressed="true"] { background: var(--ink); color: var(--white); }
 .source-card span { color: var(--muted); font-size: .85rem; }

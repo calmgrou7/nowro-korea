@@ -87,10 +87,10 @@ export function SavedPlaces({
           )}
         </p>
       )}
-      {items.map((item) => {
+      <div className="saved-places-grid">{items.map((item) => {
         const id = savedPlaceId(item);
         return (
-          <div className="saved-place-row" key={id}>
+          <div className={"saved-place-row"+(checked.includes(id)?" is-selected":"")} key={id}>
             <label>
               <input
                 type="checkbox"
@@ -127,7 +127,7 @@ export function SavedPlaces({
             </button>
           </div>
         );
-      })}
+      })}</div>
       <button
         className="primary"
         disabled={!checked.length || checked.length > 4}
