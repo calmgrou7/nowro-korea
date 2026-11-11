@@ -43,7 +43,9 @@ test("Android app shortcuts restore valid tabs and retain deep-link parameters",
     "TRIP",
   );
   assert.equal(changed.searchParams.get("listing"), "abc");
-  assert.equal(readAppTab(changed.search), "TRIP");
+  assert.equal(readAppTab(changed.search), "ROUTES");
+  assert.equal(readAppTab('?tab=TRIP'), 'ROUTES');
+  assert.equal(changed.searchParams.get('tab'), 'ROUTES');
   assert.equal(appTabUrl(changed.href, "NOW").searchParams.has("tab"), false);
 });
 

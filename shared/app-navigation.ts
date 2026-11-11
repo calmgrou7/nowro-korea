@@ -2,9 +2,11 @@ export const appTabs = ["NOW", "MAP", "ROUTES", "TRIP", "PASS", "PASSPORT", "ABO
 export type AppTab = (typeof appTabs)[number];
 export function readAppTab(search: string): AppTab {
   const value = new URLSearchParams(search).get("tab");
+  if(value === "TRIP") return "ROUTES";
   return appTabs.includes(value as AppTab) ? (value as AppTab) : "NOW";
 }
 export function appTabUrl(href: string, tab: AppTab) {
+  if(tab === "TRIP") tab = "ROUTES";
   const url = new URL(href);
   if (tab !== 'ABOUT') { url.searchParams.delete('board'); url.searchParams.delete('post'); }
   if (tab === "NOW") url.searchParams.delete("tab");

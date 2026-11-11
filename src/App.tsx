@@ -76,7 +76,6 @@ const tabs = [
   { id: "NOW" as Tab, icon: Compass },
   { id: "MAP" as Tab, icon: Map },
   { id: "ROUTES" as Tab, icon: RouteIcon },
-  { id: "TRIP" as Tab, icon: Bookmark },
 ];
 const icons: Record<string, typeof Waves> = {
   sea: Waves,
@@ -553,6 +552,10 @@ export default function App() {
   function navigate(id: Tab) {
     setTab(id);
     window.scrollTo({ top: 0, behavior: "instant" });
+  }
+  function openRouteLibrary() {
+    setTab("ROUTES");
+    requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById("route-library")?.scrollIntoView({behavior:"smooth",block:"start"})));
   }
   const art = (p: Place, small = false) => (
     <div className={`place-art photo ${small ? "small" : ""}`}>
@@ -1107,7 +1110,6 @@ export default function App() {
               { id: "NOW" as Tab, ko: "홈", en: "Home" },
               { id: "MAP" as Tab, ko: "지역가이드", en: "Local guides" },
               { id: "ROUTES" as Tab, ko: "코스", en: "Routes" },
-              { id: "TRIP" as Tab, ko: "저장", en: "Saved" },
               { id: "ABOUT" as Tab, ko: "나우로 소개", en: "About NOWRO" },
             ].map(({ id, ko, en }) => (
               <button
@@ -1590,14 +1592,14 @@ export default function App() {
                       {visitorText(lang, "저장한 장소로 나만의 코스 만들기", "Build a route from your saved places")}
                     </h2>
                     <p className="muted">
-                      {visitorText(lang, "마음에 드는 장소를 모아두고, 저장 화면에서 함께 갈 장소를 골라보세요.", "Collect places you like, then choose your stops together in Saved.")}
+                      {visitorText(lang, "마음에 드는 장소를 모아두고, 코스 화면에서 함께 갈 장소를 골라보세요.", "Collect places you like, then choose your stops together in Routes.")}
                     </p>
                     <button
                       className="primary"
-                      onClick={() => navigate("TRIP")}
+                      onClick={openRouteLibrary}
                     >
                       <Bookmark size={16} />
-                      {visitorText(lang, "저장한 장소 보기", "View saved places")}
+                      {visitorText(lang, "내 장소로 코스 만들기", "Plan with my places")}
                     </button>
                   </div>
                 </section>
@@ -1793,7 +1795,7 @@ export default function App() {
                   </div>
                   <button
                     className="action-link"
-                    onClick={() => navigate("TRIP")}
+                    onClick={openRouteLibrary}
                   >
                     <Bookmark size={16} />
                     {visitorText(lang, "저장한 장소에서 선택", "Choose saved places")}
@@ -1868,12 +1870,8 @@ export default function App() {
                 />
               </section>
             }
-            {tab === "TRIP" && (
-              <section className="section">
-                <h1>{visitorText(lang, "저장", "Saved")}</h1>
-                <p className="muted">
-                  {visitorText(lang, "장소를 모아 코스로 만들거나, 저장한 여행코스를 다시 확인하세요.", "Choose saved places for a new route, or reopen a route you have saved.")}
-                </p>
+            {tab === "ROUTES" && (
+              <section className="section" id="route-library">
                 <SavedPlaces lang={lang} onPlan={planSaved} />
                 <div className="section-heading">
                   <div>
@@ -1882,9 +1880,6 @@ export default function App() {
                   </div>
                   <Bookmark size={30} />
                 </div>
-                <button className="primary" onClick={() => openPlanner()}>
-                  {visitorText(lang, "코스", "Routes")}
-                </button>
                 <p className="notice">
                   {T(
                     status?.session.authenticated

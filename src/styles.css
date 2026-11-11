@@ -2831,7 +2831,8 @@ input, select, textarea { font-size: 16px; border-radius: var(--radius-control);
 .nearby-shop-card .place-map-links { gap:6px; }
 .footer-notice { flex-basis:100%; color:#52616a; font-size:12px; line-height:1.6; margin:0 0 10px; }
 .place-art img[src="/brand/logo.webp"] { object-fit:contain; padding:18%; background:#e5e7e9; opacity:.45; mix-blend-mode:multiply; }
-@media(max-width:767px) { .bottom-nav { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; width:100%; } .bottom-nav > button { min-width:0; } body { padding-bottom:90px; } }
+@media(max-width:767px) { .bottom-nav { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; width:100%; } .bottom-nav > button { min-width:0; } body { padding-bottom:90px; } }
+#route-library { scroll-margin-top:100px; }
 .affiliate-offers,.route-share { margin:16px 0; padding:14px; border:1px solid var(--border); border-radius:14px; background:#f7faf5; min-width:0; }
 .affiliate-offers h3,.route-share h3 { margin:0 0 8px; font-size:16px; line-height:1.4; }
 .affiliate-offers h3 small { font-size:11px; font-weight:500; color:var(--muted); }

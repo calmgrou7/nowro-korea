@@ -4,7 +4,10 @@ import { syncPageMetadata } from "../shared/page-metadata";
 
 export function useTabNavigation() {
   const [tab, update] = useState<AppTab>(() => readAppTab(location.search));
-  useEffect(() => syncPageMetadata(), [tab]);
+  useEffect(() => {
+    if(new URLSearchParams(location.search).get('tab') === 'TRIP') history.replaceState(history.state,'',appTabUrl(location.href,'ROUTES'));
+    syncPageMetadata();
+  }, [tab]);
   useEffect(() => {
     const previous = history.scrollRestoration;
     history.scrollRestoration = "manual";
@@ -31,7 +34,7 @@ export function useTabNavigation() {
       );
       history.pushState({ nowroScrollY: 0 }, "", url);
     }
-    update(next);
+    update(readAppTab(url.search));
     requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'instant'}));
   }, []);
   return [tab, navigate] as const;
