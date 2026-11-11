@@ -66,6 +66,7 @@ import { starterStampAreaIds } from "../shared/catalog";
 import { AdminDashboard } from "./AdminDashboard";
 import { OfficialPlaces } from "./OfficialPlaces";
 import { SavedPlaces } from "./SavedPlaces";
+import {savedRouteStatus} from '../shared/saved-route';
 import { Boards } from "./Boards";
 import { RouteBenefits } from "./RouteBenefits";
 import { eventExpired } from "../shared/event-dates";
@@ -429,26 +430,30 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "instant" });
     return true;
   }
+  async function recheckSaved(items:any[]) {
+    const paths=new Set<string>();
+    for(const item of items){
+      const id=String(item.routePlaceId||item.UC_SEQ||'');
+      if(id.includes('festivals')||item.ktoContentId)paths.add('openapi/festivals');
+      if(id.includes('ocean'))paths.add('openapi/ocean');
+      if(item.kopisId)paths.add('performance-detail?id='+encodeURIComponent(item.kopisId));
+      if(item.res_no)paths.add('exhibition-location?id='+encodeURIComponent(item.res_no));
+    }
+    await Promise.allSettled([...paths].slice(0,8).map(path=>api(path)));
+    const latest=await api('catalog');setCatalog(latest);
+  }
   async function planSaved(items: any[]) {
     if (!items.length || items.length > 4) return false;
-    if (items.some((item) => eventExpired(item))) {
-      setToast(
-        visitorText(lang, "종료된 일정은 코스에 포함할 수 없습니다. 해당 항목을 해제해주세요.", "Ended events cannot be included in a route. Please deselect them."),
-      );
-      return false;
-    }
     const refreshed = await api("catalog").catch(() => catalog);
     if (refreshed) setCatalog(refreshed);
-    const chosen = items.map((item) =>
-      refreshed?.places.find((p: Place) => p.id === item.routePlaceId),
-    );
-    if (chosen.some((p) => !p)) {
+    const chosen = items.map(item=>savedRouteStatus(item,refreshed?.places||[]));
+    const points=chosen.flatMap(result=>result.place?[result.place]:[]);
+    if (chosen.some(result=>result.reason)) {
       setToast(
-        visitorText(lang, "일부 항목은 위치·일정 확인이 필요해 아직 코스로 계산할 수 없습니다. 해당 항목을 해제해주세요.", "Some items are not route-ready. Deselect items whose location or schedule is unverified."),
+        visitorText(lang, `최신 정보에서 ${items.length-points.length}곳은 확인이 필요합니다. 보관 목록은 유지되며, 가능한 ${points.length}곳으로 진행합니다.`, `${items.length-points.length} places need verification and remain saved. Continuing with ${points.length} verified places.`),
       );
-      return false;
     }
-    const points = chosen as Place[];
+    if(!points.length)return false;
     setC((old) => ({
       ...old,
       areaId: points[0].areaId,
@@ -1872,7 +1877,7 @@ export default function App() {
             }
             {tab === "ROUTES" && (
               <section className="section" id="route-library">
-                <SavedPlaces lang={lang} onPlan={planSaved} />
+                <SavedPlaces lang={lang} onPlan={planSaved} places={catalog.places} onRefresh={recheckSaved} />
                 <div className="section-heading">
                   <div>
                     <span className="eyebrow">YOUR PLANS, IN ONE PLACE</span>

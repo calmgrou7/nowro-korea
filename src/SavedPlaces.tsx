@@ -1,7 +1,8 @@
 import { visitorText } from "./visitor-copy";
 import {track} from './analytics';
 import { useEffect, useState } from "react";
-import { eventExpired } from "../shared/event-dates";
+import {savedRouteStatus} from '../shared/saved-route';
+import type {Place} from '../shared/types';
 const KEY = "nowro-saved-places-v1";
 export function savedPlaceId(item: any): string {
   const legacy = String(item.UC_SEQ || "").match(
@@ -57,12 +58,17 @@ function SavedPlaceImage({item}:{item:any}) {
 export function SavedPlaces({
   lang,
   onPlan,
+  places,
+  onRefresh,
 }: {
   lang: string;
   onPlan: (items: any[]) => void;
+  places: Place[];
+  onRefresh: (items:any[])=>Promise<void>;
 }) {
   const [items, setItems] = useState<any[]>(readSavedPlaces);
   const [checked, setChecked] = useState<string[]>([]);
+  const [refreshing,setRefreshing]=useState(false),[refreshMessage,setRefreshMessage]=useState('');
   useEffect(() => {
     const update = () => {
       const next = readSavedPlaces();
@@ -75,6 +81,9 @@ export function SavedPlaces({
     return () => window.removeEventListener("nowro-saved", update);
   }, []);
   const L = (ko: string, en: string) => visitorText(lang, ko, en);
+  const selectedItems=items.filter(item=>checked.includes(savedPlaceId(item)));
+  const readyItems=selectedItems.filter(item=>!savedRouteStatus(item,places).reason);
+  const excluded=selectedItems.length-readyItems.length;
   return (
     <section className="panel">
       <h2>
@@ -89,6 +98,7 @@ export function SavedPlaces({
           "Saved on this device. Select up to four nearby places, including stops across district boundaries.",
         )}
       </p>
+      {!!items.length&&<><button className="secondary" disabled={refreshing} onClick={async()=>{setRefreshing(true);try{await onRefresh(items);setRefreshMessage(L('공식 자료 조회를 마쳤습니다. 확인되지 않은 항목은 계속 보관되며, 아래 카드에서 상태를 확인하세요.','Official lookup completed. Unverified items remain saved; check each card for its current status.'));}catch{setRefreshMessage(L('정보를 다시 확인하지 못했습니다. 잠시 후 다시 시도해주세요.','Could not refresh information. Please try again shortly.'));}finally{setRefreshing(false);}}}>{refreshing?L('확인 중…','Checking…'):L('공식 정보 다시 확인','Recheck official information')}</button><p className="muted" role="status">{refreshMessage}</p></>}
       {!items.length && (
         <p>
           {L(
@@ -99,12 +109,12 @@ export function SavedPlaces({
       )}
       <div className="saved-places-grid">{items.map((item) => {
         const id = savedPlaceId(item);
+        const reason=savedRouteStatus(item,places).reason;
         return (
           <div className={"saved-place-row"+(checked.includes(id)?" is-selected":"")} key={id}>
             <label>
               <input
                 type="checkbox"
-                disabled={eventExpired(item)}
                 checked={checked.includes(id)}
                 onChange={(e) =>
                   setChecked((v) =>
@@ -116,9 +126,9 @@ export function SavedPlaces({
               <span className="saved-place-copy">
                 <strong>{item.MAIN_TITLE || item.title}</strong>
                 <small>{item.SUBTITLE || item.ADDR1 || item.addr1}</small>
-                {eventExpired(item) && (
+                {reason && (
                   <small className="event-ended">
-                    {L("종료된 일정", "Event ended")}
+                    {reason==='ended'?L('종료된 행사 · 코스 제외','Event ended · excluded from route'):reason==='location'?L('위치 확인 필요 · 코스 제외','Location needs verification · excluded'):reason==='schedule'?L('행사 일정 확인 필요 · 코스 제외','Event dates need verification · excluded'):L('최신 장소 정보 확인 필요 · 코스 제외','Updated place information needed · excluded')}
                   </small>
                 )}
               </span>
@@ -139,15 +149,16 @@ export function SavedPlaces({
           </div>
         );
       })}</div>
+      {excluded>0&&<p className="notice" role="status">{L(`선택한 ${selectedItems.length}곳 중 ${excluded}곳은 확인이 필요합니다. 보관 목록에 남겨두고, 확인된 ${readyItems.length}곳으로 코스를 만듭니다.`,`Of ${selectedItems.length} selected places, ${excluded} need verification. They remain saved; the route will use ${readyItems.length} verified places.`)}</p>}
       <button
         className="primary"
-        disabled={!checked.length || checked.length > 4}
+        disabled={refreshing || !readyItems.length || readyItems.length > 4}
         onClick={() =>
-          onPlan(items.filter((x) => checked.includes(savedPlaceId(x))))
+          onPlan(readyItems)
         }
       >
-        {L("선택한 장소로 코스 만들기", "Plan with selected places")} (
-        {checked.length}/4)
+        {excluded?L('가능한 장소로 코스 만들기','Plan with verified places'):L("선택한 장소로 코스 만들기", "Plan with selected places")} (
+        {readyItems.length}/4)
       </button>
     </section>
   );
