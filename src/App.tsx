@@ -1805,7 +1805,7 @@ export default function App() {
             }
             {tab === "ROUTES" && (
               <section className="section routes-page">
-                <div className="section-heading">
+                <div className="section-heading subpage-banner routes-banner">
                   <div>
                     <span className="eyebrow">YOUR TRAVEL ROUTE</span>
                     <h1>
@@ -1859,13 +1859,13 @@ export default function App() {
                 </p>
               </section>
             )}
-            {tab === "ABOUT" && <Boards lang={lang} page />}
+            {tab === "ABOUT" && <Boards lang={lang} page onApply={() => setSettings(true)} />}
             {
               <section
                 className="section official-explore"
                 style={tab === "MAP" ? undefined : { display: "none" }}
               >
-                <h1>{visitorText(lang, "지역별 가이드", "Local guides")}</h1>
+                <h1 className="subpage-banner district-banner">{visitorText(lang, "지역별 가이드", "Local guides")}</h1>
                 <DistrictDirectory
                   areas={catalog.areas}
                   lang={lang}

@@ -8,9 +8,11 @@ import {boards} from "../shared/board-guides";
 export function Boards({
   lang,
   page = false,
+  onApply,
 }: {
   lang: string;
   page?: boolean;
+  onApply?: () => void;
 }) {
   const [posts, setPosts] = useState<any[]>([]),
     [failed, setFailed] = useState(false),
@@ -76,7 +78,7 @@ export function Boards({
           }
         >
           <div
-            className={"board-cover " + (b.id !== "busan" ? "board-logo" : "")}
+            className="board-cover"
           >
             <img src={b.image} alt="" />
           </div>
@@ -121,7 +123,7 @@ export function Boards({
       </nav>
       {!board ? (
         <>
-          <div className="about-hero">
+          <div className="about-hero subpage-banner about-banner">
             <span className="eyebrow">YOUR KOREA. RIGHT NOW.</span>
             <h1>
               {L(
@@ -177,7 +179,7 @@ export function Boards({
         </>
       ) : (
         <>
-          <header className="board-heading">
+          <header className="board-heading subpage-banner" style={{backgroundImage: `linear-gradient(90deg, #10202ce8, #10202c70), url(${board.image})`}}>
             <span className="eyebrow">NOWRO JOURNAL</span>
             <h1>{L(board.title, board.en)}</h1>
             <p>{L(board.description, board.enDescription)}</p>
@@ -214,6 +216,7 @@ export function Boards({
                 </span>
                 <h2>{L(board.title, board.en)}</h2>
                 <p>{L(board.body, board.enBody)}</p>
+                {board.id === "partners" && onApply && <button className="primary" onClick={onApply}>{L("업체 등록 신청", "Register your business")}</button>}
               </article>
               <h2>{L("게시판 소식", "Board updates")}</h2>
               {loading ? (
