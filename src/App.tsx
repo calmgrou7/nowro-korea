@@ -563,7 +563,15 @@ export default function App() {
     setTab(id);
     window.scrollTo({ top: 0, behavior: "instant" });
   }
+  function startRecommendedRoute() {
+    ++recommendationSeq.current;
+    setRoutes(null);
+    setRouteFeedback("");
+    setC(old => ({ ...old, requiredPlaceId: undefined, requiredPlaceIds: undefined }));
+    void openPlanner();
+  }
   function openRouteLibrary() {
+    setRouteSettingsOpen(false);
     setTab("ROUTES");
     requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById("route-library")?.scrollIntoView({behavior:"smooth",block:"start"})));
   }
@@ -716,8 +724,8 @@ export default function App() {
       )}
       <div className="planner-heading">
         <div>
-          <span className="eyebrow">YOUR NEXT MOVE</span>
-          <h2>{T("plan")}</h2>
+          
+          <h2>{c.requiredPlaceId || c.requiredPlaceIds?.length ? visitorText(lang, "선택한 장소의 여행 조건", "Preferences for your selected stops") : visitorText(lang, "추천 코스 조건 설정", "Recommended route preferences")}</h2>
         </div>
         <span className="no-login">
           <ShieldCheck size={15} />
@@ -1592,32 +1600,21 @@ export default function App() {
                   onPlanMany={planSaved}
                   searchQuery={homeSearchQuery}
                 />
-                <section className="panel planner-entry">
-                  <span className="eyebrow">YOUR NEXT MOVE</span>
-                  <h2>{T("plan")}</h2>
-                  <p>
-                    {visitorText(lang, "지금 있는 곳과 남은 시간, 예산에 맞춰 여행코스를 만들어보세요.", "Plan a route around your location, available time and budget.")}
-                  </p>
-                  <button className="primary" onClick={() => openPlanner()}>
-                    <RouteIcon size={17} />
-                    {visitorText(lang, "바로 코스 만들기", "Build my route")}
-                  </button>
-                </section>
-                <section className="home-saved">
-                  <div className="panel">
-                    <h2>
-                      {visitorText(lang, "저장한 장소로 나만의 코스 만들기", "Build a route from your saved places")}
-                    </h2>
-                    <p className="muted">
-                      {visitorText(lang, "마음에 드는 장소를 모아두고, 코스 화면에서 함께 갈 장소를 골라보세요.", "Collect places you like, then choose your stops together in Routes.")}
-                    </p>
-                    <button
-                      className="primary"
-                      onClick={openRouteLibrary}
-                    >
-                      <Bookmark size={16} />
-                      {visitorText(lang, "내 장소로 코스 만들기", "Plan with my places")}
-                    </button>
+                <section className="route-choices">
+                  <h2>{visitorText(lang, "여행코스 만들기", "Plan your route")}</h2>
+                  <div className="route-choice-grid">
+                    <article>
+                      <RouteIcon aria-hidden="true" />
+                      <h3>{visitorText(lang, "갈 곳을 추천받고 싶어요", "Suggest places for me")}</h3>
+                      <p>{visitorText(lang, "출발지와 남은 시간, 예산을 정하면 나우로가 방문할 장소와 순서를 추천해요.", "Set your starting point, time and budget. NOWRO suggests where to go and in what order.")}</p>
+                      <button className="primary" onClick={startRecommendedRoute}>{visitorText(lang, "추천 조건 설정", "Set route preferences")}</button>
+                    </article>
+                    <article>
+                      <Bookmark aria-hidden="true" />
+                      <h3>{visitorText(lang, "가고 싶은 곳이 있어요", "I have places in mind")}</h3>
+                      <p>{visitorText(lang, "저장한 장소 중 함께 방문할 곳을 최대 4개 고른 뒤 코스를 만들어요.", "Choose up to four nearby saved places to include in your route.")}</p>
+                      <button className="secondary" onClick={openRouteLibrary}>{visitorText(lang, "저장한 장소 고르기", "Choose saved places")}</button>
+                    </article>
                   </div>
                 </section>
                 {siteContent?.news_title && (

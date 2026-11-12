@@ -36,3 +36,12 @@ h1,h2,h3,.brand,button,input,select,textarea,.image-note{font-family:inherit}h1,
 .about-banner { background-image: linear-gradient(90deg,#10202cf2,#10202c70),url('/images/gwangalli.webp'); }
 .routes-banner .action-link { background: white; color: #172026; }
 @media(max-width:600px){.routes-banner { align-items:flex-start; flex-direction:column; }}
+
+.route-choices { margin-block: 32px; }
+.route-choice-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.route-choice-grid article { display: flex; flex-direction: column; align-items:flex-start; padding:20px; border:1px solid var(--border); border-radius:16px; background:white; }
+.route-choice-grid article:first-child { background:var(--surface); }
+.route-choice-grid h3 { margin:12px 0 4px; }
+.route-choice-grid p { margin:0 0 16px; color:var(--muted); }
+.route-choice-grid button { margin-top:auto; min-height:44px; }
+@media(max-width:600px){.route-choice-grid { grid-template-columns:1fr; }.route-choice-grid article { padding:16px; }}

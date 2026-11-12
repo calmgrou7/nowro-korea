@@ -88,8 +88,8 @@ export function SavedPlaces({
     <section className="panel">
       <h2>
         {L(
-          "저장한 장소로 나만의 코스 만들기",
-          "Create a route from your saved places",
+          "코스에 넣을 장소 고르기",
+          "Choose saved places",
         )}
       </h2>
       <p className="muted">
@@ -104,7 +104,7 @@ export function SavedPlaces({
           {L(
             "홈이나 지역가이드에서 마음에 드는 장소·행사를 저장해주세요.",
             "Save a place or event from Home or Local guides.",
-          )}
+          )} <a className="action-link" href="?tab=MAP">{L("지역가이드 열기", "Open local guides")}</a>
         </p>
       )}
       <div className="saved-places-grid">{items.map((item) => {
