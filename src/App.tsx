@@ -1642,6 +1642,11 @@ export default function App() {
                     </article>
                   </section>
                 )}
+                <section className="home-neighborhoods">
+                  <div className="section-heading"><div><h2>{visitorText(lang,'동네마다 다른 부산','A neighborhood, a new perspective')}</h2><p>{visitorText(lang,'익숙한 여행지에서 한 걸음 더.','Go a little beyond the familiar.')}</p></div><button className="text-btn" onClick={()=>navigate('MAP')}>{visitorText(lang,'지역별 가이드','Local guides')} <ArrowRight size={16}/></button></div>
+                  <div className="neighborhood-photo-grid">{[['gwangalli','SUYEONG-GU · 수영구','광안리에서 천천히','Slow down in Gwangalli'],['yeongdo','YEONGDO-GU · 영도구','바다를 따라, 영도','Follow the coastal lanes']].map(([id,area,ko,en])=><button key={id} className="neighborhood-photo" onClick={()=>{setGuideDistrict(id);navigate('MAP');}}><img src={scenery[id].src} alt={scenery[id].alt} loading="lazy"/><span><small>{area}</small><strong>{visitorText(lang,ko,en)}</strong></span></button>)}</div>
+                  <p className="neighborhood-credits">Photo: <a href={scenery.gwangalli.source} target="_blank" rel="noreferrer">Masterhatch · CC BY-SA 4.0</a> / <a href={scenery.yeongdo.source} target="_blank" rel="noreferrer">Choi2451 · CC0</a></p>
+                </section>
                 <AffiliateOffers lang={lang} placement="preparation" page="home"/>
                 <Boards lang={lang} />
                 <section
