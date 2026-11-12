@@ -1,3 +1,5 @@
+import { matchesDistrict } from "../shared/location-quality";
+import { distinctEvents } from "../shared/event-identity";
 import { PlaceMaps } from "./PlaceMaps";
 import {track} from './analytics';
 import {showEvent} from '../shared/visitor-content';
@@ -251,11 +253,13 @@ export function OfficialPlaces({
         : v.data.hours,
       sourceLabel: "NOWRO · " + v.data.businessName,
     }));
-  const expiredCount = [...items, ...extra].filter(
+  const combined = [...items, ...extra];
+  const visibleItems = eventCategory ? distinctEvents(combined) : combined;
+  const expiredCount = visibleItems.filter(
     (item) => eventCategory && eventExpired(item, today),
   ).length;
-  const undatedCount=category==='festivals'?[...items,...extra].filter(item=>!eventEndDate(item)).length:0;
-  const matched = [...items, ...extra].filter((item) => {
+  const undatedCount=category==='festivals'?visibleItems.filter(item=>!eventEndDate(item)).length:0;
+  const matched = visibleItems.filter((item) => {
     const text = [
       item.title,
       item.MAIN_TITLE,
@@ -266,14 +270,10 @@ export function OfficialPlaces({
     ]
       .join(" ")
       .toLocaleLowerCase();
-    const compact = (v: string) => v.toLocaleLowerCase().replace(/[\s-]/g, "");
     return (
       showEvent(item,category,includePast,today) &&
       text.includes(query.trim().toLocaleLowerCase()) &&
-      (!districtNames.length ||
-        districtNames
-          .filter(Boolean)
-          .some((name) => compact(text).includes(compact(name))))
+      matchesDistrict(item, districtNames)
     );
   });
   useEffect(() => {

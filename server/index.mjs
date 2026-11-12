@@ -1,3 +1,4 @@
+import {distinctEvents} from '../shared/event-identity.ts';
 import http from "node:http";
 import { readFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { resolve, extname, sep } from "node:path";
@@ -193,7 +194,7 @@ export function createApp(store, options = {}) {
       let out;
       if (req.method === "GET" && url.pathname.startsWith("/api/openapi/")) {
         const type = url.pathname.slice("/api/openapi/".length);
-        if (type !== "sources") {const feed=await fetchOpenApi(type,{res_no:url.searchParams.get('res_no')});return send(200,{...feed,items:ingestPublicContent(store,areas,type,feed.items||[])});}
+        if (type !== "sources") {const feed=await fetchOpenApi(type,{res_no:url.searchParams.get('res_no')});return send(200,{...feed,items:ingestPublicContent(store,areas,type,['exhibitions','ocean','festivals','theatre'].includes(type)?distinctEvents(feed.items||[]):feed.items||[])});}
       }
       switch (route) {
         case "GET /api/business/application":
@@ -349,12 +350,12 @@ export function createApp(store, options = {}) {
           break;
         }
         case 'GET /api/performances': {
-          if(process.env.KOPIS_API_KEY) { out=await kopisPerformances(); break; }
+          if(process.env.KOPIS_API_KEY) { out=await kopisPerformances(); out={...out,items:distinctEvents(out.items||[])}; break; }
           const ids = JSON.parse(store.db.prepare("SELECT value FROM config WHERE key='performance_ids'").get()?.value || '[]');
           const feeds = await Promise.all(ids.map(res_no => fetchOpenApi('theatre', {res_no})));
           const today = new Date(Date.now()+9*3600000).toISOString().slice(0,10);
           const items = feeds.flatMap(feed=>feed.items || []).filter(item=>item.title && (item.op_at === 'Y' || !item.op_ed_dt || item.op_ed_dt >= today));
-          out = {items,status:!ids.length?'setup_required':feeds.some(feed=>feed.status === 'ok')?'ok':'temporarily_unavailable'};
+          out = {items:distinctEvents(items),status:!ids.length?'setup_required':feeds.some(feed=>feed.status === 'ok')?'ok':'temporarily_unavailable'};
           break;
         }
         case 'GET /api/performance-detail':

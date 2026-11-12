@@ -1,4 +1,4 @@
-import {eventEndDate} from '../shared/event-dates.ts';
+import {distinctEvents} from '../shared/event-identity.ts';
 const date=v=>/^\d{8}$/.test(String(v))?`${String(v).slice(0,4)}-${String(v).slice(4,6)}-${String(v).slice(6,8)}`:'';
 export function normalizeTourFestival(x){
  const address=String(x.addr1||'');
@@ -24,12 +24,11 @@ export async function tourFestivals(key,{fetcher=fetch,now=new Date()}={}){
  }
  return {items:rows,status:'ok',partial:true};
 }
-const identity=p=>String(p.MAIN_TITLE||'').replace(/\([^)]*\)/g,'').replace(/[^가-힣a-z0-9]/gi,'').toLowerCase()+'|'+eventEndDate(p);
 export async function combinedFestivals(loadBusan,key,options={}){
  const results=await Promise.allSettled([tourFestivals(key,options),loadBusan()]);
  const feeds=results.filter(r=>r.status==='fulfilled').map(r=>r.value);
  if(!feeds.some(f=>f.status==='ok'))throw Error('FESTIVAL_PROVIDERS_UNAVAILABLE');
- const items=[...new Map(feeds.flatMap(f=>f.items||[]).reverse().map(p=>[identity(p),p])).values()];
+ const items=distinctEvents(feeds.flatMap(f=>f.items||[]));
  items.sort((a,b)=>String(a.eventStart||'9999').localeCompare(String(b.eventStart||'9999')));
  return {items,status:'ok',partial:results.some(r=>r.status==='rejected')||feeds.some(f=>f.status!=='ok'||f.partial),updatedAt:new Date().toISOString()};
 }

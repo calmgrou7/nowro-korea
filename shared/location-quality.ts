@@ -5,3 +5,13 @@ export function locationNeedsReview(item: Record<string, unknown>) {
   const declared = String(item.GUGUN_NM || '').trim();
   return found.length > 1 || (found.length === 1 && districts.includes(declared) && found[0] !== declared);
 }
+export function matchesDistrict(item: Record<string, unknown>, names: string[]) {
+  if (!names.length) return true;
+  const address = String(item.ADDR1 || item.addr1 || '');
+  const tokens = (value: string) => value.normalize('NFKC').toLowerCase()
+    .replace(/[-‐‑–]/g, '').split(/[^\p{L}\p{N}]+/u);
+  const addressTokens = tokens(address);
+  const explicit = addressTokens.some(token => districts.includes(token) || /^[a-z]+(?:gu|gun)$/.test(token));
+  const candidates = explicit ? addressTokens : tokens(String(item.GUGUN_NM || ''));
+  return names.some(name => !!name && candidates.includes(tokens(name).join('')));
+}
