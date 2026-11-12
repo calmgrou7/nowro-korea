@@ -8,12 +8,14 @@ export function Modal({
   children,
   historyQuery,
   closeDisabled = false,
+  className = "",
 }: {
   title: string;
   close: () => void;
   children: ReactNode;
   historyQuery?: { key: string; value: string };
   closeDisabled?: boolean;
+  className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const current = useRef({ close, closeDisabled });
@@ -68,7 +70,7 @@ export function Modal({
   return (
     <div className="overlay" onClick={dismiss}>
       <div
-        className="modal"
+        className={"modal " + className}
         ref={ref}
         tabIndex={-1}
         role="dialog"

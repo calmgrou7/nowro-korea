@@ -199,6 +199,9 @@ export default function App() {
     [loadError, setLoadError] = useState(false),
     [toast, setToast] = useState(""),
     [query, setQuery] = useState(""),
+    [homeSearch, setHomeSearch] = useState(""),
+    [homeSearchQuery, setHomeSearchQuery] = useState(""),
+    [routeSettingsOpen, setRouteSettingsOpen] = useState(false),
     [browseArea, setBrowseArea] = useState("all"),
     [filter, setFilter] = useState("all"),
     [mapView, setMapView] = useState(false),
@@ -428,6 +431,8 @@ export default function App() {
     }
     setTab("ROUTES");
     window.scrollTo({ top: 0, behavior: "instant" });
+    setRouteSettingsOpen(true);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>document.getElementById('planner')?.scrollIntoView({behavior:'smooth',block:'start'})));
     return true;
   }
   async function recheckSaved(items:any[]) {
@@ -1575,10 +1580,17 @@ export default function App() {
                     </div>
                   </div>
                 </section>
+                <form className="home-search" role="search" onSubmit={e=>{e.preventDefault();setHomeSearchQuery(homeSearch.trim());document.getElementById('home-discovery')?.scrollIntoView({behavior:'smooth',block:'start'});}}>
+                  <label><Search size={20} aria-hidden="true"/><span className="sr-only">{visitorText(lang,'행사·동네 검색','Find an event or neighborhood')}</span><input type="search" value={homeSearch} onChange={e=>{setHomeSearch(e.target.value);if(!e.target.value)setHomeSearchQuery('');}} placeholder={visitorText(lang,'어디를 찾아볼까요? 행사·동네 검색','What would you like to discover?')} /></label>
+                  <button className="primary" type="submit">{visitorText(lang,'찾아보기','Explore')}<ArrowRight size={18}/></button>
+                </form>
+                <p className="home-search-hint">{visitorText(lang,'부산의 행사·동네를 찾아보고 나만의 코스로 연결하세요.','Find Busan events and neighborhoods, then make the time yours.')}</p>
+                <div id="home-discovery" />
                 <OfficialPlaces
                   lang={lang}
                   onPlan={openPlanner}
                   onPlanMany={planSaved}
+                  searchQuery={homeSearchQuery}
                 />
                 <section className="panel planner-entry">
                   <span className="eyebrow">YOUR NEXT MOVE</span>
@@ -1813,7 +1825,8 @@ export default function App() {
                     {visitorText(lang, "코스 확인·저장", "Review and save")}
                   </li>
                 </ol>
-                {plannerView}
+                <section id="route-library"><SavedPlaces lang={lang} onPlan={planSaved} places={catalog.places} onRefresh={recheckSaved} /></section>
+                <details className="route-conditions" open={routeSettingsOpen} onToggle={e=>setRouteSettingsOpen(e.currentTarget.open)}><summary>{visitorText(lang,'시간·예산·이동수단 설정','Set time, budget and transport')}</summary>{plannerView}</details>
                 {routes !== null && (
                   <section id="results" className="section">
                     <div className="section-heading">
@@ -1876,8 +1889,7 @@ export default function App() {
               </section>
             }
             {tab === "ROUTES" && (
-              <section className="section" id="route-library">
-                <SavedPlaces lang={lang} onPlan={planSaved} places={catalog.places} onRefresh={recheckSaved} />
+              <section className="section" id="saved-routes"><details className="saved-routes-disclosure"><summary>{visitorText(lang,'보관한 코스','Previously saved routes')} · {wallet.trips.length}</summary>
                 <div className="section-heading">
                   <div>
                     <span className="eyebrow">YOUR PLANS, IN ONE PLACE</span>
@@ -1923,7 +1935,7 @@ export default function App() {
                     </button>
                   </div>
                 )}
-              </section>
+              </details></section>
             )}
             {tab === "PASS" && (
               <section className="section">

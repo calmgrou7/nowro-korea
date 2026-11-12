@@ -15,10 +15,12 @@ function TourismImage({
   src,
   title,
   lang,
+  poster = false,
 }: {
   src?: string;
   title: string;
   lang: string;
+  poster?: boolean;
 }) {
   const valid = /^https?:\/\//.test(src || "") || /^\/images\//.test(src || "");
   const [failed, setFailed] = useState(false);
@@ -27,7 +29,7 @@ function TourismImage({
   return (
     <figure
       className={
-        "tourism-image" + (fallback ? " tourism-image-placeholder" : "")
+        "tourism-image" + (poster ? " is-poster" : "") + (fallback ? " tourism-image-placeholder" : "")
       }
     >
       {fallback ? (
@@ -62,6 +64,7 @@ export function OfficialPlaces({
   districtNames = [],
   onClearDistrict,
   regional = false,
+  searchQuery,
 }: {
   lang: string;
   onPlan?: (item?: any) => void | boolean | Promise<void | boolean>;
@@ -69,6 +72,7 @@ export function OfficialPlaces({
   districtNames?: string[];
   onClearDistrict?: () => void;
   regional?: boolean;
+  searchQuery?: string;
 }) {
   const [items, setItems] = useState<any[]>([]);
   const [failed, setFailed] = useState(false);
@@ -78,6 +82,7 @@ export function OfficialPlaces({
   const [originPartial, setOriginPartial] = useState(false);
   const [category, setCategory] = useState(regional ? "places" : "festivals");
   const [query, setQuery] = useState("");
+  useEffect(()=>{if(searchQuery!==undefined)setQuery(searchQuery);},[searchQuery]);
   const [limit, setLimit] = useState(6);
   useEffect(() => setLimit(6), [districtNames.join("|")]);
   const [retry, setRetry] = useState(0);
@@ -391,9 +396,9 @@ export function OfficialPlaces({
         ))}
       </div>
       {category === "festivals" && (
-        <p className="notice">
+        <details className="event-help"><summary>{visitorText(lang,'행사 일정 안내','About event schedules')}</summary><p>
           {visitorText(lang, "진행 중·개최 예정 행사를 한국관광공사와 부산시 공식 자료에서 불러옵니다. 방문 전 주최기관에서 운영 일정을 확인하세요.", "Current and upcoming events from official Korea Tourism Organization and Busan sources. Confirm operating schedules with the organizer before visiting.")}
-        </p>
+        </p></details>
       )}
       {category === "exhibitions" && originFallback && (
         <p className="notice">
@@ -428,7 +433,7 @@ export function OfficialPlaces({
           {category === "festivals" && !includePast && expiredCount > 0 && <small className="muted">{visitorText(lang,"이 숫자는 부산 전체 축제 수가 아닙니다. 지난 회차 자료는 ‘지난 행사 포함’에서 볼 수 있습니다.","This is not a count of all Busan festivals. Turn on Include past events to browse past editions.")}</small>}
         </div>
       )}
-      <label>
+      {searchQuery===undefined&&<label>
         {visitorText(lang, "이 목록에서 장소·지역 찾기", "Find a place or neighborhood in this list")}
         <input
           type="search"
@@ -438,7 +443,7 @@ export function OfficialPlaces({
             setLimit(6);
           }}
         />
-      </label>
+      </label>}
       {failed && (
         <div role="status">
           <p>
@@ -490,6 +495,7 @@ export function OfficialPlaces({
               <div className="tourism-card-media">
                 <TourismImage
                   src={item.MAIN_IMG_NORMAL}
+                  poster={!!(original.ktoContentId || original.kopisId || original.res_no)}
                   title={item.MAIN_TITLE || item.TITLE}
                   lang={lang}
                 />
@@ -593,18 +599,18 @@ export function OfficialPlaces({
         </small>
       </p>
       {selected && (
-        <Modal title={selected.MAIN_TITLE} close={() => setSelected(null)}>
+        <Modal className="official-detail-modal" title={selected.MAIN_TITLE} close={() => setSelected(null)}>
           {eventCategory && eventExpired(selected, today) && (
             <p className="event-ended">
               {visitorText(lang, "종료된 일정입니다. 지난 행사 자료로 확인해주세요.", "This event has ended. This listing is for reference.")}
             </p>
           )}
-          <TourismImage
+          <div className="official-detail-layout"><TourismImage
             src={selected.MAIN_IMG_NORMAL}
             title={selected.MAIN_TITLE}
             lang={lang}
           />
-          <h3>{visitorText(lang, "위치", "Location")}</h3>
+          <div className="official-detail-summary"><h3>{visitorText(lang, "위치", "Location")}</h3>
           {category === "exhibitions" &&
             selected.res_no &&
             !selected.locationRequested && (
@@ -621,9 +627,6 @@ export function OfficialPlaces({
             {selected.USAGE_DAY_WEEK_AND_TIME ||
               (visitorText(lang, "방문 전 운영기관에 확인해주세요.", "Confirm with the venue before visiting."))}
           </p>
-          <h3>{visitorText(lang, "소개", "About")}</h3>
-          <LocalizedDescription text={selected.ITEMCNTNTS || visitorText(lang, "상세 소개가 제공되지 않았습니다.", "A detailed description is not available.")} lang={lang}/>
-          {!(eventCategory&&eventExpired(selected,today))&&!(category==='festivals'&&!eventEndDate(selected))&&<AffiliateOffers lang={lang} placeIds={[selected.routePlaceId||selected.contentid&&'kto-'+selected.contentid||selected.UC_SEQ]} />}
           {selected.CNTCT_TEL && <p>{selected.CNTCT_TEL}</p>}
           {selected.locationBasis === "official_linked_venue" && (
             <p className="muted">
@@ -695,6 +698,11 @@ export function OfficialPlaces({
               {detailMessage}
             </p>
           )}
+          </div></div>
+          <section className="official-detail-about"><h3>{visitorText(lang, "소개", "About")}</h3>
+          <LocalizedDescription text={selected.ITEMCNTNTS || visitorText(lang, "상세 소개가 제공되지 않았습니다.", "A detailed description is not available.")} lang={lang}/>
+          {!(eventCategory&&eventExpired(selected,today))&&!(category==='festivals'&&!eventEndDate(selected))&&<AffiliateOffers lang={lang} placeIds={[selected.routePlaceId||selected.contentid&&'kto-'+selected.contentid||selected.UC_SEQ]} />}
+          </section>
           <NearbyShops
             item={selected}
             lang={lang}
