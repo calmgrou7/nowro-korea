@@ -1,6 +1,6 @@
 import { fetchOpenApi } from "./busan-openapi.mjs";
 import { eventEndDate } from "../shared/event-dates.ts";
-import { locationNeedsReview } from "../shared/location-quality.ts";
+import { locationNeedsReview, matchesDistrict } from "../shared/location-quality.ts";
 export async function syncTourismCatalog(store, areas, load=fetchOpenApi) {
   await Promise.any([
     load('kor').then(feed=>{if(feed.status!=='ok'||!ingestTourismPlaces(store,areas,feed.items||[]).length)throw Error('NO_READY_PLACES');}),
@@ -12,7 +12,7 @@ export function ingestTourismPlaces(store, areas, items) {
     const lat = Number(item.mapy),
       lng = Number(item.mapx);
     const area = areas.find((a) =>
-      String(item.addr1 || "").includes(a.name.ko),
+      matchesDistrict(item, [a.name.ko, a.name.en]),
     );
     if (
       !area ||
@@ -114,7 +114,7 @@ export function ingestPublicContent(store, areas, type, items) {
     const address = String(item.ADDR1 || item.PLACE || "");
     const district = String(item.GUGUN_NM || "");
     const area = areas.find(
-      (a) => district === a.name.ko || address.includes(a.name.ko),
+      (a) => matchesDistrict({ADDR1: address, GUGUN_NM: district}, [a.name.ko, a.name.en]),
     );
     const sourceId = type === "kopis" ? item.kopisId : item.UC_SEQ;
     if (

@@ -445,11 +445,12 @@ export default function App() {
       if(item.res_no)paths.add('exhibition-location?id='+encodeURIComponent(item.res_no));
     }
     await Promise.allSettled([...paths].slice(0,8).map(path=>api(path)));
-    const latest=await api('catalog');setCatalog(latest);
+    const latest=await api('catalog');setCatalog(latest);return latest;
   }
   async function planSaved(items: any[]) {
     if (!items.length || items.length > 4) return false;
-    const refreshed = await api("catalog").catch(() => catalog);
+    const missing = items.filter(item => savedRouteStatus(item, catalog?.places || []).reason);
+    const refreshed = await (missing.length ? recheckSaved(missing) : api("catalog")).catch(() => catalog);
     if (refreshed) setCatalog(refreshed);
     const chosen = items.map(item=>savedRouteStatus(item,refreshed?.places||[]));
     const points=chosen.flatMap(result=>result.place?[result.place]:[]);
@@ -458,13 +459,28 @@ export default function App() {
         visitorText(lang, `최신 정보에서 ${items.length-points.length}곳은 확인이 필요합니다. 보관 목록은 유지되며, 가능한 ${points.length}곳으로 진행합니다.`, `${items.length-points.length} places need verification and remain saved. Continuing with ${points.length} verified places.`),
       );
     }
-    if(!points.length)return false;
+    if (!points.length) {
+      setToast(visitorText(lang, "선택한 장소의 위치나 일정을 확인할 수 없어요. 다른 장소를 선택해주세요.", "These stops have no verified location or schedule. Choose another place."));
+      return false;
+    }
+    const from = points.map(p => p.availableFrom || "").sort().at(-1) || "";
+    const until = points.map(p => p.availableUntil || "9999-12-31").sort()[0];
+    if (from > until) {
+      setToast(visitorText(lang, "선택한 행사들의 기간이 겹치지 않아요. 함께 방문할 수 있는 행사만 선택해주세요.", "These events have no dates in common. Choose events you can visit on the same day."));
+      return false;
+    }
+    const currentDate = koreaInput(c.startAt).slice(0, 10);
+    const suggestedDate = currentDate < from ? from : currentDate > until ? until : currentDate;
+    const adjustDate = suggestedDate !== currentDate && !c.deadline;
+    if (adjustDate) setToast(visitorText(lang, `행사 기간에 맞춰 여행 날짜를 ${suggestedDate}로 설정했어요.`, `Travel date set to ${suggestedDate} to fit your events.`));
+    setRouteFeedback("");
     setC((old) => ({
       ...old,
+      startAt: adjustDate ? koreaISO(suggestedDate + koreaInput(old.startAt).slice(10)) || old.startAt : old.startAt,
       areaId: points[0].areaId,
       origin: points[0].point,
       requiredPlaceId: undefined,
-      requiredPlaceIds: points.map((p) => p.id),
+      requiredPlaceIds: [...new Set(points.map(p => p.id))],
     }));
     setRoutes(null);
     return openPlanner();
@@ -1827,7 +1843,7 @@ export default function App() {
                     {visitorText(lang, "코스 확인·저장", "Review and save")}
                   </li>
                 </ol>
-                <section id="route-library"><SavedPlaces lang={lang} onPlan={planSaved} places={catalog.places} onRefresh={recheckSaved} /></section>
+                <section id="route-library"><SavedPlaces lang={lang} onPlan={planSaved} places={catalog.places} onRefresh={async items => { await recheckSaved(items); }} /></section>
                 <details className="route-conditions" open={routeSettingsOpen} onToggle={e=>setRouteSettingsOpen(e.currentTarget.open)}><summary>{visitorText(lang,'시간·예산·이동수단 설정','Set time, budget and transport')}</summary>{plannerView}</details>
                 {routes !== null && (
                   <section id="results" className="section">

@@ -62,7 +62,7 @@ export function SavedPlaces({
   onRefresh,
 }: {
   lang: string;
-  onPlan: (items: any[]) => void;
+  onPlan: (items: any[]) => Promise<boolean>;
   places: Place[];
   onRefresh: (items:any[])=>Promise<void>;
 }) {
@@ -116,6 +116,7 @@ export function SavedPlaces({
               <input
                 type="checkbox"
                 checked={checked.includes(id)}
+                disabled={refreshing || (!checked.includes(id) && checked.length >= 4)}
                 onChange={(e) =>
                   setChecked((v) =>
                     e.target.checked ? [...v, id] : v.filter((x) => x !== id),
@@ -149,16 +150,17 @@ export function SavedPlaces({
           </div>
         );
       })}</div>
-      {excluded>0&&<p className="notice" role="status">{L(`선택한 ${selectedItems.length}곳 중 ${excluded}곳은 확인이 필요합니다. 보관 목록에 남겨두고, 확인된 ${readyItems.length}곳으로 코스를 만듭니다.`,`Of ${selectedItems.length} selected places, ${excluded} need verification. They remain saved; the route will use ${readyItems.length} verified places.`)}</p>}
+      {excluded>0&&<p className="notice" role="status">{L(`선택한 ${selectedItems.length}곳 중 ${excluded}곳은 확인이 필요합니다. 코스 만들기를 누르면 최신 정보를 다시 조회합니다.`,`Of ${selectedItems.length} selected places, ${excluded} need verification. We will check the latest information before planning.`)}</p>}
       <button
         className="primary"
-        disabled={refreshing || !readyItems.length || readyItems.length > 4}
-        onClick={() =>
-          onPlan(readyItems)
-        }
+        disabled={refreshing || !selectedItems.length}
+        onClick={async () => {
+          setRefreshing(true);
+          try { await onPlan(selectedItems); } finally { setRefreshing(false); }
+        }}
       >
-        {excluded?L('가능한 장소로 코스 만들기','Plan with verified places'):L("선택한 장소로 코스 만들기", "Plan with selected places")} (
-        {readyItems.length}/4)
+        {refreshing?L('확인 중…','Checking…'):excluded?L('다시 확인하고 코스 만들기','Check stops and plan'):L("선택한 장소로 코스 만들기", "Plan with selected places")} (
+        {selectedItems.length}/4)
       </button>
     </section>
   );
