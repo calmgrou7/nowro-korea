@@ -82,6 +82,22 @@ function validate(input) {
       fail("INVALID_BUSINESS_WEBSITE");
   }
   if (input.consent !== true) fail("BUSINESS_CONSENT_REQUIRED");
+  if (input.schemaVersion === 2) {
+    for (const [key,min,max] of [['hours',2,1000],['menu',2,2000],['publicPhone',0,50],['blog',0,500]]) {
+      if(typeof input[key]!=='string'||input[key].trim().length<min||input[key].length>max) fail('INVALID_BUSINESS_APPLICATION');
+      data[key]=input[key].trim();
+    }
+    if(data.blog){let u;try{u=new URL(data.blog);}catch{fail('INVALID_BUSINESS_WEBSITE');}if(u.protocol!=='https:'||u.username||u.password)fail('INVALID_BUSINESS_WEBSITE');}
+    if(!['food','cafe','shopping','experience','culture','wellness'].includes(input.category))fail('INVALID_BUSINESS_APPLICATION');
+    const image=value=>{
+      if(typeof value!=='string'||value.length>900000||!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(value))fail('INVALID_BUSINESS_IMAGE');
+      const b=Buffer.from(value.split(',')[1],'base64');
+      const valid=value.startsWith('data:image/jpeg;')?b[0]===255&&b[1]===216&&b[2]===255:value.startsWith('data:image/png;')?b.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])):b.toString('ascii',0,4)==='RIFF'&&b.toString('ascii',8,12)==='WEBP';
+      if(!valid)fail('INVALID_BUSINESS_IMAGE');return value;
+    };
+    if(!Array.isArray(input.shopImages)||input.shopImages.length<1||input.shopImages.length>3||input.imageRights!==true)fail('BUSINESS_IMAGES_REQUIRED');
+    Object.assign(data,{schemaVersion:2,category:input.category,registrationImage:image(input.registrationImage),shopImages:input.shopImages.map(image),imageRights:true});
+  }
   return {
     ...data,
     areaId: input.areaId,
@@ -189,6 +205,18 @@ export function reviewBusiness(store, s, body) {
       store.db
         .prepare("UPDATE users SET role=?,place_id=NULL WHERE id=?")
         .run(body.action === "approve" ? "partner" : "traveler", row.owner_id);
+    }
+    const approvedData=JSON.parse(row.data);
+    if(body.action==='approve' && approvedData.schemaVersion===2){
+      const d=approvedData;
+      // Explicit public allowlist: never copy the certificate or review contacts.
+      const publicData={kind:'shop',category:d.category,areaId:d.areaId,businessName:d.businessName,
+        titleKo:d.businessName,titleEn:d.businessName,summaryKo:d.description.slice(0,180),summaryEn:d.description.slice(0,180),
+        descriptionKo:d.description,descriptionEn:d.description,address:d.address,contact:d.publicPhone,
+        bookingUrl:d.website,blog:d.blog,hours:d.hours,inclusions:d.menu,menu:d.menu,exclusions:'',cancellation:'',promotion:'',
+        eventStart:'',eventEnd:'',images:d.shopImages,imageRights:true,priceMin:0,priceMax:0,priceUnknown:true,duration:0};
+      store.db.prepare("INSERT INTO listings(id,owner_id,data,status,created,updated,review_note) VALUES(?,?,?,'published',?,?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data,status='published',updated=excluded.updated,review_note=excluded.review_note")
+        .run('business-'+row.id,row.owner_id,JSON.stringify(publicData),now,now,body.note.trim());
     }
     if (body.action === "revoke") {
       store.db

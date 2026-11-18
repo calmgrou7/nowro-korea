@@ -1,4 +1,13 @@
 export type BusinessData = {
+  schemaVersion?: number;
+  category?: string;
+  blog?: string;
+  hours?: string;
+  menu?: string;
+  publicPhone?: string;
+  registrationImage?: string;
+  shopImages?: string[];
+  imageRights?: boolean;
   businessName: string;
   areaId: string;
   address: string;

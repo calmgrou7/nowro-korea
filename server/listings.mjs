@@ -22,6 +22,10 @@ function authorized(s) {
 function validate(input, submit) {
   if (!input || typeof input !== "object" || Array.isArray(input)) fail();
   const d = {};
+  d.priceUnknown=input.priceUnknown===true;
+  d.menu=typeof input.menu==='string'?input.menu.slice(0,2000):'';
+  d.blog=typeof input.blog==='string'?input.blog:'';
+  if(d.blog){let u;try{u=new URL(d.blog);}catch{fail('INVALID_BOOKING_URL');}if(u.protocol!=='https:'||u.username||u.password||d.blog.length>500)fail('INVALID_BOOKING_URL');}
   for (const key of [
     "businessName",
     "titleKo",

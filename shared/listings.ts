@@ -1,4 +1,7 @@
 export type ListingData = {
+  priceUnknown?: boolean;
+  blog?: string;
+  menu?: string;
   kind: "shop" | "service" | "experience" | "attraction" | "content" | "event";
   category: string;
   areaId: string;

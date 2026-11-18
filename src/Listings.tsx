@@ -72,12 +72,14 @@ export function ListingDetail({
       <span className="eyebrow">{d.businessName}</span>
       <h2>{text(d, lang, "title") || L("Untitled listing", "등록 제목")}</h2>
       <p>{text(d, lang, "summary")}</p>
+      {d.menu && <section><h3>{L("Menu and services", "메뉴·서비스")}</h3><p style={{whiteSpace:"pre-wrap"}}>{d.menu}</p></section>}
+      {d.blog && <a className="action-link" href={d.blog} target="_blank" rel="noopener noreferrer">{L("Blog / social page", "블로그·SNS")} ↗</a>}
       <div className="listing-facts">
         <b>
-          {d.priceMax > 0 ? `${money(d.priceMin)} – ${money(d.priceMax)}` : curatedEvents.some(event => event.data.titleKo === d.titleKo) ? "" : L("Free", "무료")}
+          {d.priceUnknown ? L("See menu for prices", "가격은 메뉴 참고") : d.priceMax > 0 ? `${money(d.priceMin)} – ${money(d.priceMax)}` : curatedEvents.some(event => event.data.titleKo === d.titleKo) ? "" : L("Free", "무료")}
         </b>
         <span>
-          {d.duration} {L("min", "분")}
+          {d.duration > 0 ? `${d.duration} ${L("min", "분")}` : L("Visit at your own pace", "자유 방문")}
         </span>
       </div>
       <p className="notice">
@@ -304,7 +306,7 @@ export function PublicListings({
                 <span className="eyebrow">{v.data.businessName}</span>
                 <h3>{text(v.data, lang, "title")}</h3>
                 <p>
-                  {v.data.priceMax > 0 ? `${money(v.data.priceMin)} – ${money(v.data.priceMax)}` : curatedEvents.some(event => event.id === v.id) ? "" : L("Free", "무료")}
+                  {v.data.priceUnknown ? L("See menu for prices", "가격은 메뉴 참고") : v.data.priceMax > 0 ? `${money(v.data.priceMin)} – ${money(v.data.priceMax)}` : curatedEvents.some(event => event.id === v.id) ? "" : L("Free", "무료")}
                 </p>
                 <p>{text(v.data, lang, "summary")}</p>
                 {v.data.eventStart && (

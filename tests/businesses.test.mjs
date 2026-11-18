@@ -74,6 +74,31 @@ const listing = {
   imageRights: true,
 };
 
+test('complete shop approval publishes only public fields, while rejection stays private and revocation hides the shop',()=>{
+ const store=new Store();try{
+ const owner=member(store),admin=store.setPreviewRole(store.session(),'admin');
+ const complete={...data,schemaVersion:2,category:'cafe',blog:'https://example.com/blog',hours:'Mon-Sat 10:00-18:00',menu:'Coffee 5000 KRW',publicPhone:'051-123-4567',registrationImage:photo,shopImages:[photo],imageRights:true};
+ assert.throws(()=>submitBusiness(store,owner,{data:{...complete,registrationImage:'data:image/svg+xml;base64,AAAA'}}),/INVALID_BUSINESS_IMAGE/);
+ assert.throws(()=>submitBusiness(store,owner,{data:{...complete,shopImages:[]}}),/BUSINESS_IMAGES_REQUIRED/);
+ assert.throws(()=>submitBusiness(store,owner,{data:{...complete,blog:'javascript:alert(1)'}}),/INVALID_BUSINESS_WEBSITE/);
+ let a=submitBusiness(store,owner,{data:complete});
+ assert.equal(publicListings(store.db).length,0);
+ a=reviewBusiness(store,admin,{...decision(a),action:'reject',note:'Please provide an updated certificate.'});
+ assert.equal(publicListings(store.db).length,0);
+ a=submitBusiness(store,owner,{data:complete});
+ const request=decision(a);a=reviewBusiness(store,admin,request);
+ const published=publicListings(store.db);assert.equal(published.length,1);
+ assert.equal(published[0].data.hours,complete.hours);assert.equal(published[0].data.priceUnknown,true);
+ for(const key of ['registrationImage','contactEmail','contactName','contactPhone'])assert.equal(key in published[0].data,false);
+ assert.equal(published[0].data.contact,complete.publicPhone);
+ assert.throws(()=>reviewBusiness(store,admin,request),/BUSINESS_REVIEW_STALE/);
+ assert.equal(publicListings(store.db).length,1);
+ assert.equal(ownBusiness(store,owner).data.registrationImage,photo);
+ reviewBusiness(store,admin,{...decision(a),action:'revoke',note:'Business registration withdrawn.'});
+ assert.equal(publicListings(store.db).length,0);
+ }finally{store.close();}
+});
+
 test("Only verified members apply; application identity cannot be chosen by the client and all 16 districts validate", () => {
   const store = new Store();
   try {
