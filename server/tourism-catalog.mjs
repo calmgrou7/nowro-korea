@@ -1,6 +1,29 @@
 import { fetchOpenApi } from "./busan-openapi.mjs";
 import { eventEndDate } from "../shared/event-dates.ts";
 import { locationNeedsReview, matchesDistrict } from "../shared/location-quality.ts";
+const catalogRefreshes = new WeakMap();
+export async function loadInitialCatalog(store, areas, load = fetchOpenApi) {
+  let state = catalogRefreshes.get(store);
+  if (!state || (!state.pending && Date.now() - state.finished > 60000)) {
+    state = { pending: true, finished: 0, promise: null };
+    catalogRefreshes.set(store, state);
+    state.promise = syncTourismCatalog(store, areas, load).finally(() => {
+      state.pending = false;
+      state.finished = Date.now();
+    });
+  }
+  // Existing places can render immediately while providers refresh in the background.
+  if (store.catalog().some(place => place.published && !place.sample)) return;
+  let timer;
+  try {
+    await Promise.race([
+      state.promise,
+      new Promise(resolve => { timer = setTimeout(resolve, 1500); }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 export async function syncTourismCatalog(store, areas, load=fetchOpenApi) {
   await Promise.any([
     load('kor').then(feed=>{if(feed.status!=='ok'||!ingestTourismPlaces(store,areas,feed.items||[]).length)throw Error('NO_READY_PLACES');}),

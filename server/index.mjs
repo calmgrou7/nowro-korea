@@ -10,7 +10,7 @@ import { extract } from "./ai.mjs";
 import { AuthService } from "./auth.mjs";
 import { androidAssociation } from "../shared/android-app.mjs";
 import { fetchOpenApi, openApiSources, festivalHero } from "./busan-openapi.mjs";
-import { syncTourismCatalog, ingestPublicContent } from './tourism-catalog.mjs';
+import { syncTourismCatalog, loadInitialCatalog, ingestPublicContent } from './tourism-catalog.mjs';
 import { boardPosts, saveBoardPost } from './boards.mjs';
 import { nearbyShops } from './nearby.mjs';
 import { exhibitionLocation } from './exhibition-location.mjs';
@@ -387,7 +387,7 @@ export function createApp(store, options = {}) {
           out = { content: store.updateSiteContent(s, body) };
           break;
         case "GET /api/catalog":
-          if (process.env.KTO_KOREAN_API_KEY) await syncTourismCatalog(store, areas);
+          if (process.env.KTO_KOREAN_API_KEY) await loadInitialCatalog(store, areas);
           out = {
             cities,
             areas,

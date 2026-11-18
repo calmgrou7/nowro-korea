@@ -34,3 +34,14 @@ test('undated real events never enter a route even when planning estimates are a
  assert.equal(calculate([p.id],conditions,[p]),null);assert.equal(recommendationResponse(conditions,[p]).diagnostic,'selected_event_unconfirmed');
  }finally{store.close();}
 });
+
+test('initial catalog returns during a provider stall and shares the refresh', {timeout:4000}, async()=>{
+ const {loadInitialCatalog}=await import('../server/tourism-catalog.mjs');
+ const store=new Store();let calls=0;const load=()=>{calls++;return new Promise(()=>{});};
+ try {
+  const started=Date.now();
+  await Promise.all([loadInitialCatalog(store,areas,load),loadInitialCatalog(store,areas,load)]);
+  assert.equal(calls,2);
+  assert.ok(Date.now()-started<3000);
+ } finally {store.close();}
+});

@@ -704,7 +704,7 @@ export default function App() {
         <h1>
           NOWRO<span>↗</span>
         </h1>
-        <p>{T("loading")}</p>
+        <p>{visitorText(lang, "여행 정보를 불러오고 있어요.", "Loading your travel guide…")}</p>
       </main>
     );
   const plannerView = (
