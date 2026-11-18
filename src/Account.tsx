@@ -5,10 +5,12 @@ export function Account({
   lang,
   status,
   onChange,
+  partner = false,
 }: {
   lang: Lang;
   status: any;
   onChange: () => Promise<void>;
+  partner?: boolean;
 }) {
   const ko = lang === "ko";
   const linkMode = status?.authEmailMode === "link";
@@ -63,14 +65,14 @@ export function Account({
   };
   return (
     <section className="account-panel">
-      <h3>{ko ? "내 계정" : "Your account"}</h3>
+      <h3>{status?.session.authenticated ? (ko ? '로그인한 계정' : 'Signed-in account') : partner ? (ko ? '먼저 계정을 확인해주세요' : 'First, sign in to your account') : (ko ? '여행을 이어서 시작하세요' : 'Keep your travel plans together')}</h3>
       {status?.session.authenticated ? (
         <>
           <p>{status.session.email}</p>
           <p className="muted">
             {ko
-              ? "이 계정으로 로그인하면 저장한 코스·쿠폰·스탬프를 이어서 이용할 수 있습니다."
-              : "Sign in with this account to access your saved routes, coupons and stamps."}
+              ? "로그인한 계정에서 보관한 여행코스를 확인할 수 있습니다."
+              : "Access your saved travel routes with this account."}
           </p>
           <button
             className="secondary"
@@ -108,8 +110,8 @@ export function Account({
         >
           <p className="muted">
             {ko
-              ? "한국 전화번호 없이 이메일로 로그인하세요. 현재 비회원 기록은 로그인한 계정으로 옮겨집니다."
-              : "Sign in by email without a Korean phone number. Your guest records will move to your account."}
+              ? partner ? "여행객과 같은 계정을 사용합니다. 로그인 후 아래에서 업체·전문가 등록을 신청하세요." : "Google 또는 이메일로 간편하게 시작하세요. 한국 전화번호는 필요하지 않습니다."
+              : partner ? "Use the same NOWRO account. After signing in, apply for partner access below." : "Continue with Google or email. No Korean phone number needed."}
           </p>
           <button
             type="button"
@@ -123,11 +125,12 @@ export function Account({
           >
             {ko ? "Google로 계속하기" : "Continue with Google"}
           </button>
-          <p className="muted">{ko ? "또는 이메일로 계속하기" : "or continue with email"}</p>
+          <p className="account-divider">{ko ? "또는 이메일로" : "or use email"}</p>
           <label>
             {ko ? "이메일" : "Email"}
             <input
               type="email"
+              placeholder="you@example.com"
               autoComplete="email"
               required
               maxLength={254}
@@ -136,6 +139,7 @@ export function Account({
               onChange={(e) => setEmail(e.target.value)}
             />
           </label>
+          {!sent && <p className="account-help">{ko ? '처음 방문해도 같은 방법으로 시작할 수 있어요. 비밀번호 없이 메일로 본인을 확인합니다.' : 'New here? Start the same way. Verify by email without a password.'}</p>}
           {sent && (
             <p className="notice">
               {linkMode

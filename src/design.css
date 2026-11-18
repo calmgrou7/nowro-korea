@@ -45,3 +45,31 @@ h1,h2,h3,.brand,button,input,select,textarea,.image-note{font-family:inherit}h1,
 .route-choice-grid p { margin:0 0 16px; color:var(--muted); }
 .route-choice-grid button { margin-top:auto; min-height:44px; }
 @media(max-width:600px){.route-choice-grid { grid-template-columns:1fr; }.route-choice-grid article { padding:16px; }}
+/* Account entry: separate travel, partner applications and preferences. */
+.account-dialog { width: min(100%, 620px); }
+.account-dialog [hidden] { display: none !important; }
+.account-dialog .account-sections { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; padding: 5px; margin: 20px 0 24px; background: #f2f4f3; border-radius: 14px; }
+.account-dialog .account-sections button { min-width: 0; min-height: 46px; padding: 10px 4px; border: 0; border-radius: 10px; background: transparent; color: #52616a; font-size: 14px; font-weight: 600; }
+.account-dialog .account-sections button[aria-pressed="true"] { background: #fff; color: #142d37; box-shadow: 0 1px 4px #142d3714; }
+.account-dialog h3 { font-size: 20px; line-height: 1.4; margin: 0 0 10px; letter-spacing: -.025em; }
+.account-dialog p { line-height: 1.65; overflow-wrap: anywhere; }
+.account-dialog .account-panel { padding: 0; margin: 0; border: 0; }
+.account-dialog .account-panel form { gap: 14px; }
+.account-dialog .account-panel .muted { font-size: 14px; color: #52616a; margin: 0 0 4px; }
+.account-dialog label { display: grid; gap: 8px; font-size: 14px; font-weight: 600; }
+.account-dialog input:not([type="checkbox"]), .account-dialog select, .account-dialog textarea { width: 100%; min-width: 0; font-size: 16px; background: #f7f8f8; border: 1px solid #dce2e5; border-radius: 11px; padding: 13px; }
+.account-dialog .account-help { margin: 0; color: #64717a; font-size: 13px; font-weight: 400; }
+.account-dialog .account-divider { display: flex; align-items: center; gap: 12px; margin: 4px 0; font-size: 13px; color: #64717a; }
+.account-divider::before, .account-divider::after { content: ''; height: 1px; background: #e3e7e8; flex: 1; }
+.account-dialog .account-guest { display: block; width: 100%; margin-top: 16px; padding: 14px; border: 0; background: transparent; color: #31515e; font-weight: 600; }
+.account-dialog .partner-intro { padding: 18px; margin-bottom: 22px; border-radius: 14px; background: #f2f7e8; }
+.account-dialog .partner-intro p { margin: 0; font-size: 14px; }
+.account-dialog .business-application { margin-top: 24px; padding-top: 22px; border-top: 1px solid #e3e7e8; }
+.account-dialog .partner-steps { display: flex; gap: 10px; padding: 0; list-style-position: inside; margin: 16px 0; font-size: 12px; color: #52616a; }
+.account-dialog .partner-steps li { flex: 1; background: #f4f6f5; padding: 10px 8px; border-radius: 8px; }
+.account-dialog .business-application fieldset { border: 0; padding: 0; margin: 20px 0 0; display: grid; gap: 18px; min-width: 0; }
+.account-dialog .business-application legend { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+.account-dialog .checkbox { display: flex; align-items: flex-start; font-weight: 400; line-height: 1.6; }
+.account-dialog .checkbox input { flex: 0 0 auto; margin-top: 4px; }
+.account-dialog .account-preferences { display: grid; gap: 18px; }
+.account-dialog button:focus-visible { outline: 3px solid #177d92; outline-offset: 2px; }

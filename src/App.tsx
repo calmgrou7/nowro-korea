@@ -196,6 +196,7 @@ export default function App() {
     [selected, setSelected] = useState<Route | null>(null),
     [place, setPlace] = useState<Place | null>(null),
     [settings, setSettings] = useState(false),
+    [accountView, setAccountView] = useState<'traveler'|'partner'|'preferences'>('traveler'),
     [busy, setBusy] = useState(false),
     [loadError, setLoadError] = useState(false),
     [toast, setToast] = useState(""),
@@ -493,7 +494,7 @@ export default function App() {
   }
   function gps() {
     if (!consent.location) {
-      setSettings(true);
+      setAccountView('preferences'); setSettings(true);
       setToast(T("gpsConsent"));
       return;
     }
@@ -1187,7 +1188,7 @@ export default function App() {
             aria-label={
               status?.session.authenticated ? T("account") : T("signIn")
             }
-            onClick={() => setSettings(true)}
+            onClick={() => {setAccountView('traveler'); setSettings(true);}}
             title={status?.session.authenticated ? T("account") : T("signIn")}
           >
             <UserRound size={20} />
@@ -1195,7 +1196,7 @@ export default function App() {
           <button
             className="icon-btn"
             aria-label={T("settings")}
-            onClick={() => setSettings(true)}
+            onClick={() => {setAccountView('preferences'); setSettings(true);}}
           >
             <SlidersHorizontal size={20} />
           </button>
@@ -1878,7 +1879,7 @@ export default function App() {
                 </p>
               </section>
             )}
-            {tab === "ABOUT" && <Boards lang={lang} page onApply={() => setSettings(true)} />}
+            {tab === "ABOUT" && <Boards lang={lang} page onApply={() => {setAccountView('partner'); setSettings(true);}} />}
             {
               <section
                 className="section official-explore"
@@ -2155,7 +2156,7 @@ export default function App() {
           <span>
             Your Korea. Right Now.<small>지금, 진짜 한국으로.</small>
           </span>
-          <button className="text-btn" onClick={() => setSettings(true)}>
+          <button className="text-btn" onClick={() => {setAccountView('preferences'); setSettings(true);}}>
             {T("privacy")}
             <ArrowUpRight size={14} />
           </button>
@@ -2165,10 +2166,8 @@ export default function App() {
               onClick={() => {
                 if (status?.operatorPreview) changeRole("partner");
                 else {
+                  setAccountView('partner');
                   setSettings(true);
-                  setToast(
-                    visitorText(lang, "상점 로그인은 서버 연결 후 이용할 수 있습니다.", "Shop sign-in will be available after the login server is connected."),
-                  );
                 }
               }}
             >
@@ -2506,8 +2505,16 @@ export default function App() {
         </Modal>
       )}
       {settings && (
-        <Modal title={T("settings")} close={() => setSettings(false)}>
-          <Account lang={lang} status={status} onChange={refresh} />
+        <Modal className="account-dialog" title={visitorText(lang, '나우로 계정 · 설정', 'NOWRO account & settings')} close={() => setSettings(false)}>
+          <div className="account-sections" role="group" aria-label={visitorText(lang,'이용 목적','Choose a section')}>
+            {(['traveler','partner','preferences'] as const).map(view=><button key={view} type="button" aria-pressed={accountView===view} onClick={()=>setAccountView(view)}>{view==='traveler'?visitorText(lang,'여행객','Traveler'):view==='partner'?visitorText(lang,'업체·전문가','Partner'):visitorText(lang,'이용 설정','Settings')}</button>)}
+          </div>
+          <div hidden={accountView==='preferences'}>
+          {accountView==='partner' && <div className="partner-intro"><h3>{visitorText(lang,'내 공간과 경험을 여행객에게 소개하세요','Introduce your business to travelers')}</h3><p>{visitorText(lang,'로그인 → 업체 신청 → 관리자 승인 후 파트너 기능을 이용할 수 있습니다.','Sign in, submit your application, and access partner tools after approval.')}</p></div>}
+          <Account lang={lang} status={status} onChange={refresh} partner={accountView==='partner'} />
+          {accountView==='traveler' && !status?.session.authenticated && <button className="account-guest" onClick={()=>setSettings(false)}>{visitorText(lang,'로그인 없이 둘러보기 →','Explore without signing in →')}</button>}
+          </div>
+          <div hidden={accountView!=='partner'}>
           {status?.session.role !== "admin" && (
             <BusinessApplicationPanel
               key={status?.session.email || "guest"}
@@ -2523,6 +2530,8 @@ export default function App() {
               }}
             />
           )}
+          </div>
+          <div hidden={accountView!=='preferences'} className="account-preferences">
           <label>
             {T("language")}
             <select
@@ -2592,6 +2601,7 @@ export default function App() {
               </div>
             </>
           )}
+          </div>
         </Modal>
       )}
       {toast && (

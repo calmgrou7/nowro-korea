@@ -105,14 +105,17 @@ export function BusinessApplicationPanel({
     if (signedIn) void load();
   }, [signedIn, status?.session.email]);
   return (
-    <details className="business-application">
-      <summary>{L("Register your business", "업체·전문가 등록 신청")}</summary>
+    <section className="business-application">
+      <h3>{L("Partner application", "업체·전문가 등록 신청")}</h3>
       <p className="muted">
         {L(
-          "Apply → ownership check → partner approval → product registration → publication review. One business per account for this MVP.",
-          "신청 → 소유권 확인 → 전문가 승인 → 상품 등록 → 게시 심사 순서입니다. 초기에는 계정당 업체 1곳을 등록할 수 있습니다.",
+          "For restaurants, cafés, shops and local experience providers. One business per account.",
+          "식당·카페·상점·체험 운영자를 위한 공간입니다. 계정당 업체 1곳을 신청할 수 있습니다.",
         )}
       </p>
+      <ol className="partner-steps" aria-label={L('Application steps', '신청 절차')}>
+        <li>{L('Sign in', '로그인')}</li><li>{L('Submit details', '업체 정보 작성')}</li><li>{L('Review & approval', '검토 후 승인')}</li>
+      </ol>
       {!signedIn ? (
         <p className="notice">
           {L(
@@ -153,7 +156,7 @@ export function BusinessApplicationPanel({
                 }
               }}
             >
-              {L("Open partner studio", "전문가 등록 화면 열기")}
+              {L("Open partner dashboard", "파트너 대시보드 열기")}
             </button>
           )}
           {loaded &&
@@ -185,7 +188,8 @@ export function BusinessApplicationPanel({
                 }}
               >
                 <fieldset disabled={busy}>
-                  <legend>{L("Business details", "업체 정보")}</legend>
+                  <legend>{L("Business and contact details", "업체 및 담당자 정보")}</legend>
+                  <p className="account-help">{L('All fields are required except the website. Review contacts are not shown publicly.', '홈페이지를 제외한 항목은 필수입니다. 심사용 연락처는 공개되지 않습니다.')}</p>
                   {(
                     [
                       ["businessName", L("Business name", "업체명"), 120],
@@ -292,7 +296,7 @@ export function BusinessApplicationPanel({
         </>
       )}
       {message && <p role="status">{message}</p>}
-    </details>
+    </section>
   );
 }
 
