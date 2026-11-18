@@ -421,6 +421,9 @@ export function createApp(store, options = {}) {
         case "POST /api/trips":
           out = store.save(s, body);
           break;
+        case "POST /api/trips/delete-many":
+          out = store.deleteTrips(s, body.ids);
+          break;
         case "POST /api/trips/delete":
           store.deleteTrip(s, body.id);
           out = { ok: true };

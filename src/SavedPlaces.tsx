@@ -13,7 +13,7 @@ export function savedPlaceId(item: any): string {
       ? "kto-" + item.contentid
       : item.kopisId
         ? "kopis-" + item.kopisId
-        : item.routePlaceId ||
+        : item.routePlaceId || (item.res_no ? 'busan-exhibitions-'+item.res_no : '') ||
           (legacy ? "busan-" + legacy[1] + "-" + legacy[2] : item.UC_SEQ) ||
           "",
   );

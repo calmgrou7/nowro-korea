@@ -202,6 +202,16 @@ export class Store {
       .run(id, s.user_id, JSON.stringify(route), new Date().toISOString());
     return { id, route };
   }
+  deleteTrips(s, ids) {
+    this.traveler(s);
+    if (!Array.isArray(ids) || !ids.length || ids.length > 500 || ids.some(id => typeof id !== 'string' || id.length > 100)) throw new ServiceError('INVALID_TRIPS');
+    return this.tx(() => {
+      let deleted=0;
+      const query=this.db.prepare('DELETE FROM trips WHERE id=? AND user_id=?');
+      for (const id of new Set(ids)) deleted+=Number(query.run(id,s.user_id).changes);
+      return {ok:true,deleted};
+    });
+  }
   deleteTrip(s, id) {
     this.traveler(s);
     const r = this.db

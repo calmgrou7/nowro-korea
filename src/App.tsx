@@ -66,7 +66,7 @@ import { starterStampAreaIds } from "../shared/catalog";
 import { AdminDashboard } from "./AdminDashboard";
 import { AdminWorkspace, type AdminPage } from './AdminWorkspace';
 import { OfficialPlaces } from "./OfficialPlaces";
-import { SavedPlaces } from "./SavedPlaces";
+import { SavedPlaces, readSavedPlaces, writeSavedPlaces, savedPlaceId } from "./SavedPlaces";
 import {savedRouteStatus} from '../shared/saved-route';
 import {shortenTrip} from '../shared/trip-edit';
 import { Boards } from "./Boards";
@@ -121,6 +121,7 @@ const defaults: Conditions = {
   tripEnd: "",
 };
 export default function App() {
+  const [selectedTrips,setSelectedTrips]=useState<string[]>([]);
   const [tab, setTab] = useTabNavigation();
   const [guideDistrict, setGuideDistrict] = useState("");
   const [listing, setListing] = useState<Listing | null>(null);
@@ -444,6 +445,11 @@ export default function App() {
     requestAnimationFrame(()=>requestAnimationFrame(()=>document.getElementById('planner')?.scrollIntoView({behavior:'smooth',block:'start'})));
     return true;
   }
+  async function deleteSavedTrips(ids:string[]) {
+    const targets=ids.filter(id=>wallet.trips.some((t:any)=>t.id===id));
+    if(!targets.length||!window.confirm(visitorText(lang,`${targets.length}개 코스를 삭제할까요? 저장한 장소는 유지됩니다.`,`Delete ${targets.length} routes? Saved places will be kept.`)))return;
+    await action(async()=>{await api('trips/delete-many',{ids:targets});setSelectedTrips([]);await refresh();});
+  }
   async function recheckSaved(items:any[]) {
     const paths=new Set<string>();
     for(const item of items){
@@ -451,9 +457,23 @@ export default function App() {
       if(id.includes('festivals')||item.ktoContentId)paths.add('openapi/festivals');
       if(id.includes('ocean'))paths.add('openapi/ocean');
       if(item.kopisId)paths.add('performance-detail?id='+encodeURIComponent(item.kopisId));
-      if(item.res_no)paths.add('exhibition-location?id='+encodeURIComponent(item.res_no));
+      const exhibitionId=item.res_no||id.match(/(?:busan-)?exhibitions-(\d+)$/)?.[1];
+      if(exhibitionId)paths.add('exhibition-location?id='+encodeURIComponent(exhibitionId));
     }
-    await Promise.allSettled([...paths].slice(0,8).map(path=>api(path)));
+    const requests=[...paths];
+    const responses=await Promise.allSettled(requests.map(path=>api(path)));
+    const updates=responses.flatMap((r,i)=>{
+      if(r.status!=='fulfilled')return [];
+      if(r.value.location?.routePlaceId){
+        const res_no=new URLSearchParams(requests[i].split('?')[1]).get('id');
+        return [{...r.value.location,res_no,locationNeedsReview:false}];
+      }
+      return r.value.items||[];
+    });
+    if(updates.length)writeSavedPlaces(readSavedPlaces().map(saved=>{
+      const match=updates.find((u:any)=>savedPlaceId(u)===savedPlaceId(saved)||(u.res_no&&String(u.res_no)===String(saved.res_no)));
+      return match?{...saved,...match}:saved;
+    }));
     const latest=await api('catalog');setCatalog(latest);return latest;
   }
   async function planSaved(items: any[]) {
@@ -461,7 +481,8 @@ export default function App() {
     const missing = items.filter(item => savedRouteStatus(item, catalog?.places || []).reason);
     const refreshed = await (missing.length ? recheckSaved(missing) : api("catalog")).catch(() => catalog);
     if (refreshed) setCatalog(refreshed);
-    const chosen = items.map(item=>savedRouteStatus(item,refreshed?.places||[]));
+    const savedNow=readSavedPlaces();
+    const chosen = items.map(item=>savedRouteStatus(savedNow.find(saved=>savedPlaceId(saved)===savedPlaceId(item))||item,refreshed?.places||[]));
     const points=chosen.flatMap(result=>result.place?[result.place]:[]);
     if (chosen.some(result=>result.reason)) {
       if (points.length && !window.confirm(visitorText(lang,
@@ -1941,10 +1962,15 @@ export default function App() {
                       : "savedGuest",
                   )}
                 </p>
+                {!!wallet.trips.length&&<div className="inline">
+                  <button className="secondary" disabled={busy||!selectedTrips.length} onClick={()=>deleteSavedTrips(selectedTrips)}>{visitorText(lang,'선택 코스 삭제','Delete selected routes')} ({selectedTrips.filter(id=>wallet.trips.some((t:any)=>t.id===id)).length})</button>
+                  <button className="text-btn danger" disabled={busy} onClick={()=>deleteSavedTrips(wallet.trips.map((t:any)=>t.id))}>{visitorText(lang,'코스 전체 삭제','Delete all routes')}</button>
+                </div>}
                 {wallet.trips.length ? (
                   <div className="route-grid">
                     {wallet.trips.map((v: any, i: number) => (
                       <div key={v.id}>
+                        <label className="checkbox"><input type="checkbox" checked={selectedTrips.includes(v.id)} disabled={busy} onChange={e=>setSelectedTrips(old=>e.target.checked?[...old,v.id]:old.filter(id=>id!==v.id))}/>{visitorText(lang,`코스 ${i+1} 선택`,`Select route ${i+1}`)}</label>
                         {routeCard(v.data, i)}
                         <button
                           className="text-btn danger"
