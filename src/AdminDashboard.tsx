@@ -5,7 +5,7 @@ import {GrowthPanel} from './GrowthPanel';
 import {AffiliateAdmin} from './AffiliateAdmin';
 import {OperationsPanel} from './OperationsPanel';
 
-export function AdminDashboard() {
+export function AdminDashboard({page}:{page:import('./AdminWorkspace').AdminPage}) {
   const [form, setForm] = useState<any>({});
   const [message, setMessage] = useState("");
   const [preview, setPreview] = useState(false);
@@ -35,29 +35,33 @@ export function AdminDashboard() {
     try { await api("operator/site-content", form); setMessage("Saved. The homepage content is now updated."); }
     catch (error: any) { setMessage(error?.message === "TOO_LARGE" ? "Image is too large. Choose a smaller image." : "Could not save. Please sign in again as the master administrator."); }
   }
-  return <section className="panel admin-dashboard">
-    <div className="section-heading"><div><span className="eyebrow">MASTER CMS</span><h2>Homepage control center</h2></div></div>
-    <p className="muted">Edit the public homepage copy and hero image. Changes are recorded in the admin audit log.</p>
+  return <section className="admin-dashboard" hidden={!['hero','news','boards','operations','growth','affiliates','performances'].includes(page)}>
+    <div hidden={page!=='hero'} className="panel">
+    <div className="section-heading"><div><span className="eyebrow">MASTER CMS</span><h2>메인 화면 편집</h2></div></div>
+    <p className="muted">메인 제목·소개·대표 이미지를 수정합니다. 변경 내용을 확인한 뒤 게시해주세요.</p>
     <div className="operator-grid">
-      <label>Hero title (English)<input value={form.hero_title_en || ""} onChange={e => set("hero_title_en", e.target.value)} /></label>
-      <label>Hero title (Korean)<input value={form.hero_title_ko || ""} onChange={e => set("hero_title_ko", e.target.value)} /></label>
-      <label>Intro (English)<textarea value={form.hero_intro_en || ""} onChange={e => set("hero_intro_en", e.target.value)} /></label>
-      <label>Intro (Korean)<textarea value={form.hero_intro_ko || ""} onChange={e => set("hero_intro_ko", e.target.value)} /></label>
+      <label>메인 제목 · 영문<input value={form.hero_title_en || ""} onChange={e => set("hero_title_en", e.target.value)} /></label>
+      <label>메인 제목 · 국문<input value={form.hero_title_ko || ""} onChange={e => set("hero_title_ko", e.target.value)} /></label>
+      <label>소개 문구 · 영문<textarea value={form.hero_intro_en || ""} onChange={e => set("hero_intro_en", e.target.value)} /></label>
+      <label>소개 문구 · 국문<textarea value={form.hero_intro_ko || ""} onChange={e => set("hero_intro_ko", e.target.value)} /></label>
     </div>
-    <label>Hero image URL<input value={form.hero_image || ""} onChange={e => set("hero_image", e.target.value)} placeholder="https://..." /></label>
-    <label>Or upload an image<input type="file" accept="image/*" onChange={e => uploadImage(e.target.files?.[0])} /></label>
+    <label>대표 이미지 주소<input value={form.hero_image || ""} onChange={e => set("hero_image", e.target.value)} placeholder="https://..." /></label>
+    <label>이미지 파일 올리기<input type="file" accept="image/*" onChange={e => uploadImage(e.target.files?.[0])} /></label>
     {form.hero_image && <img className="admin-image-preview" src={form.hero_image} alt="Homepage preview" />}
-    <OperationsPanel />
-    <GrowthPanel />
-    <AffiliateAdmin />
-    <BoardAdmin />
-    <section className="panel"><h3>공연 API 연결</h3><p>부산문화포털 공연번호를 한 줄에 하나씩 입력하세요. 최대 5건의 상세정보를 조회하며 종료된 공연은 숨깁니다. 예시 번호를 실제 공연으로 등록하지 마세요.</p><textarea rows={5} value={performanceIds} onChange={e=>setPerformanceIds(e.target.value)} /><button onClick={async()=>{try{await api('operator/performance-ids',{ids:performanceIds.split(/\s+/).filter(Boolean)});setMessage('공연번호 저장 완료. 실제 공개 여부는 API 응답에 따라 달라집니다.');}catch{setMessage('공연번호 형식·개수 또는 관리자 로그인을 확인해주세요.');}}}>공연 API 연결 저장</button></section>
-    <h3>새로운 소식 · 공지사항</h3>
+    </div>
+    <div hidden={page!=='operations'}><OperationsPanel /></div>
+    <div hidden={page!=='growth'}><GrowthPanel /></div>
+    <div hidden={page!=='affiliates'}><AffiliateAdmin /></div>
+    <div hidden={page!=='boards'}><BoardAdmin /></div>
+    <section hidden={page!=='performances'} className="panel"><h3>공연 API 연결</h3><p>부산문화포털 공연번호를 한 줄에 하나씩 입력하세요. 최대 5건의 상세정보를 조회하며 종료된 공연은 숨깁니다. 예시 번호를 실제 공연으로 등록하지 마세요.</p><textarea rows={5} value={performanceIds} onChange={e=>setPerformanceIds(e.target.value)} /><button onClick={async()=>{try{await api('operator/performance-ids',{ids:performanceIds.split(/\s+/).filter(Boolean)});setMessage('공연번호 저장 완료. 실제 공개 여부는 API 응답에 따라 달라집니다.');}catch{setMessage('공연번호 형식·개수 또는 관리자 로그인을 확인해주세요.');}}}>공연 API 연결 저장</button></section>
+    <div hidden={page!=='news'} className="panel"><h3>새로운 소식 · 공지사항</h3>
     <label>공지 제목<input value={form.news_title || ''} onChange={e => set('news_title', e.target.value)} /></label>
     <label>공지 내용<textarea value={form.news_body || ''} onChange={e => set('news_body', e.target.value)} /></label>
     <label>공지 이미지 URL<input value={form.news_image || ''} onChange={e => set('news_image', e.target.value)} placeholder="https://..." /></label>
-    <div className="button-row"><button className="secondary" onClick={saveDraft}>Save draft</button><button className="secondary" onClick={() => setPreview(v => !v)}>{preview ? "Close preview" : "Preview"}</button><button className="primary" onClick={save}>Publish changes</button></div>
+    </div>
+    <div hidden={page!=='hero' && page!=='news'} className="admin-publish-area"><p className="muted">메인 화면과 공지사항의 수정 내용을 함께 저장합니다.</p><div className="button-row"><button className="secondary" onClick={saveDraft}>임시 저장</button><button className="secondary" onClick={() => setPreview(v => !v)}>{preview ? "미리보기 닫기" : "미리보기"}</button><button className="primary" onClick={save}>변경 내용 게시</button></div>
     {preview && <div className="panel admin-preview"><span className="eyebrow">HOMEPAGE PREVIEW</span><h2>{form.hero_title_en || "Your Korea. Right Now."}</h2><p>{form.hero_intro_en || "Discover Busan with NOWRO."}</p>{form.hero_image && <img src={form.hero_image} alt="Preview" />}</div>}
+    </div>
     {message && <p role="status">{message}</p>}
   </section>;
 }

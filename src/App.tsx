@@ -64,6 +64,7 @@ import { Modal } from "./Modal";
 import { DistrictDirectory } from "./DistrictDirectory";
 import { starterStampAreaIds } from "../shared/catalog";
 import { AdminDashboard } from "./AdminDashboard";
+import { AdminWorkspace, type AdminPage } from './AdminWorkspace';
 import { OfficialPlaces } from "./OfficialPlaces";
 import { SavedPlaces } from "./SavedPlaces";
 import {savedRouteStatus} from '../shared/saved-route';
@@ -197,6 +198,7 @@ export default function App() {
     [place, setPlace] = useState<Place | null>(null),
     [settings, setSettings] = useState(false),
     [accountView, setAccountView] = useState<'traveler'|'partner'|'preferences'>('traveler'),
+    [adminPage,setAdminPage] = useState<AdminPage>('operations'),
     [busy, setBusy] = useState(false),
     [loadError, setLoadError] = useState(false),
     [toast, setToast] = useState(""),
@@ -1061,7 +1063,7 @@ export default function App() {
           </div>
         </details>
       </form>
-      <details className="natural">
+      {status?.ai && <details className="natural">
         <summary>
           <Sparkles size={15} />
           {T("natural")}
@@ -1119,7 +1121,7 @@ export default function App() {
             </button>
           </div>
         )}
-      </details>
+      </details>}
     </section>
   );
   return (
@@ -1225,17 +1227,25 @@ export default function App() {
                 ? visitorText(lang, "로그인한 운영 계정입니다. 업체 승인과 상품 게시 심사는 별도로 진행됩니다.", "Signed-in operator account. Business approval and listing publication are reviewed separately.")
                 : T("operatorNote")}
             </p>
-            {role === "admin" && <AdminDashboard />}
+            <AdminWorkspace enabled={role==='admin'} page={adminPage} onPage={setAdminPage}>
+            {role === "admin" && <AdminDashboard page={adminPage} />}
+            <div hidden={role==='admin' && adminPage!=='businesses'}>
             {role === "admin" && (
               <AdminBusinesses lang={lang} areas={catalog.areas} />
             )}
+            </div>
+            <div hidden={role==='admin' && adminPage!=='listings'}>
             <MerchantListings
               lang={lang}
               role={role}
               areas={catalog.areas}
               business={operator?.business}
             />
+            </div>
+            <div hidden={role==='admin' && adminPage!=='rewards'}>
             {role === "admin" && <AdminRewards lang={lang} />}
+            </div>
+            <div hidden={role==='admin' && adminPage!=='tools'}>
             {operator && (role === "admin" || operator.places.length > 0) && (
               <>
                 <div className="operator-grid">
@@ -1531,6 +1541,8 @@ export default function App() {
                 )}
               </>
             )}
+            </div>
+            </AdminWorkspace>
           </section>
         ) : (
           <>
@@ -2582,7 +2594,6 @@ export default function App() {
             />
             {T("analytics")}
           </label>
-          <p className="notice">{T("aiOff")}</p>
           {status?.operatorPreview && (
             <>
               <h3>{T("operators")}</h3>
