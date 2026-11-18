@@ -194,6 +194,8 @@ export class Store {
     this.traveler(s);
     const route = calculate(body.placeIds, body.conditions, this.catalog());
     if (!route) throw new ServiceError("INFEASIBLE_ROUTE");
+    route.schemaVersion = 2;
+    route.placeSnapshots = this.catalog().filter(p => route.stops.some(stop => stop.placeId === p.id));
     const id = randomUUID();
     this.db
       .prepare("INSERT INTO trips VALUES (?,?,?,?)")

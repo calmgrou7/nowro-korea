@@ -67,6 +67,7 @@ import { AdminDashboard } from "./AdminDashboard";
 import { OfficialPlaces } from "./OfficialPlaces";
 import { SavedPlaces } from "./SavedPlaces";
 import {savedRouteStatus} from '../shared/saved-route';
+import {shortenTrip} from '../shared/trip-edit';
 import { Boards } from "./Boards";
 import { RouteBenefits } from "./RouteBenefits";
 import { eventExpired } from "../shared/event-dates";
@@ -305,6 +306,11 @@ export default function App() {
     refresh().catch(() => setLoadError(true));
   }, []);
   useEffect(() => {
+    const report = () => setToast(visitorText(lang, '저장하지 못했습니다. 기존 자료는 유지됩니다. 저장 공간과 브라우저 설정을 확인해주세요.', 'Could not save. Existing data is unchanged. Check browser storage and settings.'));
+    window.addEventListener('nowro-storage-error', report);
+    return () => window.removeEventListener('nowro-storage-error', report);
+  }, [lang]);
+  useEffect(() => {
     document.documentElement.lang = lang;
     const current=new URL(location.href);current.pathname=languagePath(lang);current.searchParams.delete('lang');history.replaceState(history.state,'',current);syncPageMetadata();
     try {
@@ -455,9 +461,9 @@ export default function App() {
     const chosen = items.map(item=>savedRouteStatus(item,refreshed?.places||[]));
     const points=chosen.flatMap(result=>result.place?[result.place]:[]);
     if (chosen.some(result=>result.reason)) {
-      setToast(
-        visitorText(lang, `최신 정보에서 ${items.length-points.length}곳은 확인이 필요합니다. 보관 목록은 유지되며, 가능한 ${points.length}곳으로 진행합니다.`, `${items.length-points.length} places need verification and remain saved. Continuing with ${points.length} verified places.`),
-      );
+      if (points.length && !window.confirm(visitorText(lang,
+        `${items.length-points.length}곳의 위치나 일정을 확인할 수 없습니다. 선택한 장소는 보관됩니다. 확인된 ${points.length}곳만으로 진행할까요?`,
+        `${items.length-points.length} stops have unverified locations or dates. All places remain saved. Continue with only the ${points.length} verified stops?`))) return false;
     }
     if (!points.length) {
       setToast(visitorText(lang, "선택한 장소의 위치나 일정을 확인할 수 없어요. 다른 장소를 선택해주세요.", "These stops have no verified location or schedule. Choose another place."));
@@ -472,7 +478,7 @@ export default function App() {
     const currentDate = koreaInput(c.startAt).slice(0, 10);
     const suggestedDate = currentDate < from ? from : currentDate > until ? until : currentDate;
     const adjustDate = suggestedDate !== currentDate && !c.deadline;
-    if (adjustDate) setToast(visitorText(lang, `행사 기간에 맞춰 여행 날짜를 ${suggestedDate}로 설정했어요.`, `Travel date set to ${suggestedDate} to fit your events.`));
+    if (adjustDate && !window.confirm(visitorText(lang, `선택한 행사들은 ${currentDate}에 함께 방문할 수 없습니다. 여행 날짜를 ${suggestedDate}로 변경할까요?`, `These events cannot all be visited on ${currentDate}. Change your travel date to ${suggestedDate}?`))) return false;
     setRouteFeedback("");
     setC((old) => ({
       ...old,
@@ -633,7 +639,7 @@ export default function App() {
       </div>
       <h3>
         {r.stops
-          .map((s) => { const place = catalog!.places.find((p) => p.id === s.placeId); return place ? name(place) : (visitorText(lang, "장소 정보 확인 필요", "Place details unavailable")); })
+          .map((s) => { const place = catalog!.places.find((p) => p.id === s.placeId) || r.placeSnapshots?.find(p => p.id === s.placeId); return place ? name(place) : (visitorText(lang, "장소 정보 확인 필요", "Place details unavailable")); })
           .join(" → ")}
       </h3>
       <p>{T("reason")}</p>
@@ -2238,14 +2244,17 @@ export default function App() {
             </span>
           </div>
           <p className="muted">{T("costNote")}</p>
+          <p className="muted">{visitorText(lang, '금액은 계획용 추정치이며 실제 총액의 상한을 보장하지 않습니다.', 'Costs are planning estimates, not a guaranteed maximum total.')}</p>
           <div className="timeline">
             {selected.stops.map((s, i) => {
-              const p = catalog.places.find((p) => p.id === s.placeId)!;
+              const current = catalog.places.find((p) => p.id === s.placeId);
+              const p = current || selected.placeSnapshots?.find(p => p.id === s.placeId);
               if (!p) return <p key={s.placeId} className="muted">{lang === 'ko' ? '장소 정보 재확인이 필요합니다. 코스를 다시 만들어주세요.' : 'This place needs rechecking. Please rebuild your route.'}</p>;
               return (
                 <div className="timeline-stop" key={s.placeId}>
                   <span className="stop-number">{i + 1}</span>
                   <div className="timeline-body">
+                    {!current && <p role="status">{visitorText(lang, '저장 당시 정보입니다. 방문 전에 공식 정보를 다시 확인해주세요.', 'Saved information. Check current official details before visiting.')}</p>}
                     <small>
                       {T("travel")} {s.travel} min · {clock(s.arrival)}–
                       {clock(s.departure)}
@@ -2337,12 +2346,7 @@ export default function App() {
               className="secondary"
               disabled={busy}
               onClick={() => {
-                const next = {
-                  ...selected.conditions,
-                  origin: c.origin,
-                  startAt: new Date().toISOString(),
-                  minutes: Math.max(30, selected.conditions.minutes - 30),
-                };
+                const next = shortenTrip(selected.conditions);
                 setC(next);
                 setSelected(null);
                 generate(next);

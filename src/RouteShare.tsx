@@ -20,10 +20,10 @@ export function RouteShare({
       timeZone: "Asia/Seoul",
     }).format(new Date(route.startAt)) + " (Korea / UTC+9)",
     ...route.stops.map((s, i) => {
-      const p = places.find((p) => p.id === s.placeId);
+      const p = places.find((p) => p.id === s.placeId) || route.placeSnapshots?.find(p => p.id === s.placeId);
       return `${i + 1}. ${p?.name[lang as keyof typeof p.name] || p?.name.en || s.placeId}\n${p?.address || ""}`;
     }),
-    `${route.minutes} min · ${ko ? "예상 비용 상한" : "Estimated cost ceiling"} KRW ${route.costMax}`,
+    `${route.minutes} min · ${ko ? "계획용 비용 추정(실제 총액 미확인)" : "Planning cost estimate (actual total unverified)"} KRW ${route.costMax}`,
     ko
       ? "방문 전 운영시간·요금·예약 여부를 확인하세요."
       : "Confirm hours, prices and reservations before visiting.",

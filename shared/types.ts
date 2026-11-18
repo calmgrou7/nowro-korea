@@ -70,6 +70,8 @@ export type Stop = {
   costMax: number;
 };
 export type Route = {
+  schemaVersion?: number;
+  placeSnapshots?: Place[];
   id: string;
   stops: Stop[];
   minutes: number;

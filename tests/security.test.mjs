@@ -34,6 +34,10 @@ test("traveler A cannot see or delete traveler B saved routes", () =>
     const a = s.session(),
       b = s.session();
     const trip = s.save(a, { placeIds: ["g-beach", "g-cafe"], conditions: c });
+    assert.equal(trip.route.schemaVersion, 2);
+    assert.deepEqual(trip.route.placeSnapshots.map(p=>p.id).sort(), ['g-beach','g-cafe']);
+    assert.ok(trip.route.placeSnapshots.every(p=>p.address && p.name.en));
+    assert.deepEqual(s.wallet(a).trips[0].data.placeSnapshots, trip.route.placeSnapshots);
     assert.equal(s.wallet(a).trips.length, 1);
     assert.equal(s.wallet(b).trips.length, 0);
     assert.throws(() => s.deleteTrip(b, trip.id), /NOT_FOUND/);

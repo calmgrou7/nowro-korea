@@ -35,15 +35,29 @@ export function readSavedPlaces(): any[] {
   }
 }
 // Bookmark buttons toggle membership and notify every visible saved-place view.
+export function writeSavedPlaces(next: any[]): boolean {
+  try {
+    const original = localStorage.getItem(KEY);
+    // Preserve malformed originals rather than interpreting them as an empty collection.
+    if (original !== null && !Array.isArray(JSON.parse(original))) throw new Error('INVALID_SAVED_DATA');
+    if (original !== null) localStorage.setItem(KEY + '-backup', original);
+    localStorage.setItem(KEY, JSON.stringify(next));
+    window.dispatchEvent(new Event('nowro-saved'));
+    return true;
+  } catch {
+    window.dispatchEvent(new Event('nowro-storage-error'));
+    return false;
+  }
+}
 export function savePlace(item: any) {
   const id = savedPlaceId(item);
   if (!id) return;
   const current = readSavedPlaces();
   const exists = current.some((p) => savedPlaceId(p) === id);
   const next = current.filter((p) => savedPlaceId(p) !== id);
-  localStorage.setItem(KEY, JSON.stringify(exists ? next : [...next, item]));
-  window.dispatchEvent(new Event("nowro-saved"));
+  if (!writeSavedPlaces(exists ? next : [...next, item])) return false;
   track(exists?'remove_saved_place':'save_place',id);
+  return true;
 }
 function SavedPlaceImage({item}:{item:any}) {
   const candidate=[item.MAIN_IMG_NORMAL,item.firstimage,item.firstimage2,item.image,item.poster,item.data?.photos?.[0]].find(v=>typeof v==='string'&&v.length);
@@ -137,12 +151,8 @@ export function SavedPlaces({
             <button
               className="text-btn"
               onClick={() => {
-                localStorage.setItem(
-                  KEY,
-                  JSON.stringify(items.filter((x) => savedPlaceId(x) !== id)),
-                );
+                if (!writeSavedPlaces(items.filter((x) => savedPlaceId(x) !== id))) return;
                 setChecked((v) => v.filter((x) => x !== id));
-                window.dispatchEvent(new Event("nowro-saved"));
               }}
             >
               {L("삭제", "Remove")}
@@ -156,7 +166,7 @@ export function SavedPlaces({
         disabled={refreshing || !selectedItems.length}
         onClick={async () => {
           setRefreshing(true);
-          try { await onPlan(selectedItems); } finally { setRefreshing(false); }
+          try { await onPlan(selectedItems); } catch { setRefreshMessage(L('정보를 확인하지 못했습니다. 선택은 유지됩니다. 다시 시도해주세요.', 'Could not verify these places. Your selection is unchanged. Please try again.')); } finally { setRefreshing(false); }
         }}
       >
         {refreshing?L('확인 중…','Checking…'):excluded?L('다시 확인하고 코스 만들기','Check stops and plan'):L("선택한 장소로 코스 만들기", "Plan with selected places")} (
