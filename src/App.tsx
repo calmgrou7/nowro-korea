@@ -71,6 +71,7 @@ import {savedRouteStatus} from '../shared/saved-route';
 import {shortenTrip} from '../shared/trip-edit';
 import { Boards } from "./Boards";
 import { RouteBenefits } from "./RouteBenefits";
+import {RouteCost,feeLabel} from './RouteCost';
 import { eventExpired } from "../shared/event-dates";
 import type { Listing } from "../shared/listings.ts";
 const LiveMap = lazy(() => import("./MapView"));
@@ -645,7 +646,7 @@ export default function App() {
         <h3>{name(p)}</h3>
         <p>
           <Clock size={14} />
-          {p.stay} min <span>·</span> {krw(p.costMax)}
+          {p.stay} min <span>·</span> {feeLabel(p,lang)}
         </p>
         {p.sample && <span className="sample-label">{T("sample")}</span>}
         <ArrowUpRight className="corner-arrow" size={20} />
@@ -672,10 +673,10 @@ export default function App() {
           <Clock size={17} />
           <strong>{r.minutes} min</strong>
         </span>
-        <span>
+        <div className="route-price-metric">
           <Wallet size={17} />
-          <strong>{krw(r.costMax)}</strong>
-        </span>
+          <RouteCost route={r} lang={lang}/>
+        </div>
         <span>
           {r.stops.length} {T("stops")}
         </span>
@@ -2273,9 +2274,7 @@ export default function App() {
           </p>
           <div className="detail-metrics">
             <b>{selected.minutes} min</b>
-            <b>
-              {krw(selected.costMin)} – {krw(selected.costMax)}
-            </b>
+            <RouteCost route={selected} lang={lang} detail/>
             <span>
               {clock(selected.startAt)} → {clock(selected.endAt)}
             </span>
@@ -2302,8 +2301,9 @@ export default function App() {
                     </button>
                     <p>
                       {p.name.ko} · {T("stay")} {s.stay} min + {s.wait} min ·{" "}
-                      {krw(s.costMax)}
+                      {selected.unknownPriceCount===undefined?visitorText(lang,'이전 계산 요금','Previous estimate'):feeLabel(s,lang)}
                     </p>
+                    {s.priceText&&<p className="muted">{visitorText(lang,'공식 요금 안내','Official fee information')}: {s.priceText}</p>}
                     <AffiliateOffers lang={lang} placeIds={[p.id]} page="route"/>
                     <div className="stop-actions">
                       <select
@@ -2468,7 +2468,7 @@ export default function App() {
             <div>
               <dt>{T("budget")}</dt>
               <dd>
-                {krw(place.costMin)}–{krw(place.costMax)}
+                {feeLabel(place,lang)}
               </dd>
             </div>
             <div>

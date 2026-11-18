@@ -1,4 +1,5 @@
 import type { Conditions, Place, Point, Route, Stop } from "./types.ts";
+import {placePricing} from './pricing.ts';
 export function distance(a: Point, b: Point) {
   const r = Math.PI / 180;
   const dlat = (b.lat - a.lat) * r,
@@ -118,6 +119,7 @@ export function calculate(
     costMax = 0,
     transportCost = 0;
   const stops: Stop[] = [];
+  let unknownPriceCount=0;
   for (const id of ids) {
     const p = catalog.find((p) => p.id === id && p.published);
     if (
@@ -148,18 +150,22 @@ export function calculate(
       return null;
     now = new Date(now.getTime() + (p.stay + p.wait) * 60000);
     if(p.availableUntil&&new Date(now.getTime()+9*3600000).toISOString().slice(0,10)>p.availableUntil)return null;
+    const price=placePricing(p);
+    if(price.unknown)unknownPriceCount++;
     stops.push({
+      priceStatus:price.unknown?'unknown':p.priceStatus,
+      priceText:p.priceText,
       placeId: id,
       travel,
       arrival,
       departure: now.toISOString(),
       stay: p.stay,
       wait: p.wait,
-      costMin: p.costMin,
-      costMax: p.costMax,
+      costMin: price.costMin,
+      costMax: price.costMax,
     });
-    costMin += p.costMin;
-    costMax += p.costMax;
+    costMin += price.costMin;
+    costMax += price.costMax;
     from = p.point;
   }
   const returnMinutes = c.returnPoint
@@ -179,6 +185,9 @@ export function calculate(
   costMax += transportCost;
   if (minutes > limit || costMax > c.budget) return null;
   return {
+    unknownPriceCount,
+    venueCostMin:costMin-transportCost,
+    venueCostMax:costMax-transportCost,
     id: ids.join("~"),
     stops,
     minutes,

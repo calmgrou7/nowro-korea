@@ -36,6 +36,7 @@ function normalize(p) {
     LAT: p.la,
     LNG: p.lo,
     CNTCT_TEL: p.telno,
+    USAGE_AMOUNT: p.pcseguidance || '',
     MAIN_IMG_NORMAL: (p.poster || "").replace(
       /^http:\/\/www.kopis.or.kr/,
       "https://www.kopis.or.kr",

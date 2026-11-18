@@ -10,6 +10,8 @@ export type Area = {
   aliases: Localized;
 };
 export type Place = {
+  priceStatus?: 'free'|'published'|'unknown';
+  priceText?: string;
   image?: string;
   planningEstimate?: boolean;
   availableFrom?: string;
@@ -60,6 +62,8 @@ export type Conditions = {
   tripEnd: string;
 };
 export type Stop = {
+  priceStatus?: 'free'|'published'|'unknown';
+  priceText?: string;
   placeId: string;
   travel: number;
   arrival: string;
@@ -70,6 +74,9 @@ export type Stop = {
   costMax: number;
 };
 export type Route = {
+  unknownPriceCount?: number;
+  venueCostMin?: number;
+  venueCostMax?: number;
   schemaVersion?: number;
   placeSnapshots?: Place[];
   id: string;

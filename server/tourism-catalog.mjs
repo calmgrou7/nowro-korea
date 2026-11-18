@@ -1,5 +1,6 @@
 import { fetchOpenApi } from "./busan-openapi.mjs";
 import { eventEndDate } from "../shared/event-dates.ts";
+import { officialPricing } from '../shared/pricing.ts';
 import { locationNeedsReview, matchesDistrict } from "../shared/location-quality.ts";
 const catalogRefreshes = new WeakMap();
 export async function loadInitialCatalog(store, areas, load = fetchOpenApi) {
@@ -78,8 +79,7 @@ export function ingestTourismPlaces(store, areas, items) {
         point: { lat, lng },
         category,
         tags: [category],
-        costMin: 0,
-        costMax: category === "food" ? 30000 : 20000,
+        ...officialPricing(item),
         stay: 40,
         wait: 10,
         hours: Array.from({ length: 7 }, (_, day) => ({
@@ -179,8 +179,7 @@ export function ingestPublicContent(store, areas, type, items) {
       point: { lat, lng },
       category,
       tags: [category],
-      costMin: 0,
-      costMax: 20000,
+      ...officialPricing(item),
       stay: 40,
       wait: 10,
       hours: Array.from({ length: 7 }, (_, day) => ({

@@ -95,7 +95,7 @@ export class Store {
     }
   }
   catalog() {
-    const official = JSON.parse(this.db.prepare("SELECT value FROM config WHERE key='tourism_catalog'").get()?.value || '[]');
+    const official = JSON.parse(this.db.prepare("SELECT value FROM config WHERE key='tourism_catalog'").get()?.value || '[]').map(p=>p.planningEstimate&&!p.priceStatus?{...p,costMin:0,costMax:0,priceStatus:'unknown'}:p);
     const local = this.db
       .prepare("SELECT data FROM places")
       .all()
