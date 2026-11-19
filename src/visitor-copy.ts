@@ -1,5 +1,16 @@
 // Shared visitor-facing phrases; Korean and English remain source fallbacks.
 const copy: Record<string, [string,string,string]> = {
+ 'On today':['今日のイベント','今日活动','今日活動'],
+ 'Coming up':['これからのイベント','即将举行的活动','即將舉行的活動'],
+ 'Busan date':['釜山の現地日付','釜山当地日期','釜山當地日期'],
+ ' events':['件','场','場'],
+ 'These events include today in their dates. Check details for opening hours and reservations.':['今日が開催期間に含まれるイベントです。営業時間・予約は詳細をご確認ください。','以下活动在今天的举办日期范围内，开放时间和预约请查看详情。','以下活動在今天的舉辦日期範圍內，開放時間和預約請查看詳情。'],
+ 'These events have not started yet. Browse in start-date order.':['まだ始まっていないイベントを開始日順に表示しています。','以下活动尚未开始，按开始日期排列。','以下活動尚未開始，按開始日期排列。'],
+ 'Translation preview · available translations only; original text is preserved.':['翻訳プレビュー・準備済みの項目のみ翻訳。原文は保持されます。','翻译试用：仅显示已准备的译文，保留原文。','翻譯試用：僅顯示已準備的譯文，保留原文。'],
+ 'Show Korean originals':['韓国語の原文を表示','查看韩语原文','查看韓語原文'],
+ 'Show translations':['翻訳を表示','显示译文','顯示譯文'],
+ 'Ongoing or dates unconfirmed':['常設・日程未確認の情報','常设或日期未确认的资料','常設或日期未確認的資料'],
+
  'About NOWRO':['NOWROについて','关于 NOWRO','關於 NOWRO'], 'Meet NOWRO':['NOWROを知る','了解 NOWRO','了解 NOWRO'],
  'NOWRO guide':['NOWRO利用ガイド','NOWRO 使用指南','NOWRO 使用指南'],
  'Start your Busan trip':['釜山旅行を始めよう','开启釜山之旅','開啟釜山之旅'],

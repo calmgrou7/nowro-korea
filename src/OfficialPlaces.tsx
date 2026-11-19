@@ -1,3 +1,4 @@
+import {apiTranslation} from '../shared/api-translations';
 import { matchesDistrict } from "../shared/location-quality";
 import { distinctEvents } from "../shared/event-identity";
 import { PlaceMaps } from "./PlaceMaps";
@@ -77,6 +78,8 @@ export function OfficialPlaces({
   regional?: boolean;
   searchQuery?: string;
 }) {
+  const [translateContent,setTranslateContent]=useState(true);
+  const tr=(value:unknown)=>apiTranslation(value,lang,translateContent);
   const [items, setItems] = useState<any[]>([]);
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -413,6 +416,7 @@ export function OfficialPlaces({
             (visitorText(lang, " 일부 일정만 불러왔습니다. 전체 일정은 공식 원문에서 확인해주세요.", " Some listings could not be loaded. Check the official portal for the full schedule."))}
         </p>
       )}
+      {lang!=='ko'&&<div className="api-translation-pilot"><span>{visitorText(lang,'번역 시험 · 준비된 항목만 번역하며 원문을 보존합니다.','Translation preview · available translations only; original text is preserved.')}</span><button className="text-btn" aria-pressed={!translateContent} onClick={()=>setTranslateContent(v=>!v)}>{translateContent?visitorText(lang,'한국어 원문 보기','Show Korean originals'):visitorText(lang,'번역 보기','Show translations')}</button></div>}
       {loading && (
         <p role="status">
           {visitorText(lang, "관광정보를 불러오는 중입니다.", "Loading places…")}
@@ -434,7 +438,7 @@ export function OfficialPlaces({
           <small className="muted">
             {lang === "ko"
               ? `검색 결과 ${matched.length}건 · 지난 일정 ${expiredCount}건${category==='festivals'?` / 일정 미확인 ${undatedCount}건`:''}${includePast ? " 포함" : " 숨김"}${category==='festivals'?'':' · 종료일 미확인 자료 포함'}`
-              : `${matched.length} results · ${expiredCount} past listings${category==='festivals'?` / ${undatedCount} undated`:''} ${includePast ? "included" : "hidden"}`}
+              : lang==='ja'?`検索結果 ${matched.length}件 · 終了 ${expiredCount}件${includePast?'を含む':'を非表示'}`: lang==='zh-CN'?`搜索结果 ${matched.length}项 · 已结束 ${expiredCount}项${includePast?'（已显示）':'（已隐藏）'}`:lang==='zh-TW'?`搜尋結果 ${matched.length}項 · 已結束 ${expiredCount}項${includePast?'（已顯示）':'（已隱藏）'}`: `${matched.length} results · ${expiredCount} past listings${category==='festivals'?` / ${undatedCount} undated`:''} ${includePast ? "included" : "hidden"}`}
           </small>
           {category === "festivals" && !includePast && expiredCount > 0 && <small className="muted">{visitorText(lang,"이 숫자는 부산 전체 축제 수가 아닙니다. 지난 회차 자료는 ‘지난 행사 포함’에서 볼 수 있습니다.","This is not a count of all Busan festivals. Turn on Include past events to browse past editions.")}</small>}
         </div>
@@ -525,7 +529,7 @@ export function OfficialPlaces({
                 </button>
                 <span className="tourism-district">
                   <MapPin size={12} aria-hidden="true" />
-                  {original.GUGUN_NM ||
+                  {tr(original.GUGUN_NM ||
                     String(item.SUBTITLE || "").match(
                       /[가-힣]+[구군](?=\s|$)|[A-Za-z]+-(?:gu|gun)/,
                     )?.[0] ||
@@ -533,7 +537,7 @@ export function OfficialPlaces({
                       ? original.locationRequested
                         ? visitorText(lang, "지역 미확인", "Area unverified")
                         : visitorText(lang, "위치 확인 중", "Locating venue")
-                      : visitorText(lang, "부산", "Busan"))}
+                      : visitorText(lang, "부산", "Busan")))}
                 </span>
               </div>
               {eventCategory && eventExpired(item, today) && (
@@ -542,7 +546,7 @@ export function OfficialPlaces({
                 </span>
               )}
               <h3 title={item.MAIN_TITLE || item.TITLE}>
-                {item.MAIN_TITLE || item.TITLE}
+                {tr(item.MAIN_TITLE || item.TITLE)}
               </h3>
               {category === 'festivals' && !eventEndDate(item) && <small className="muted">{visitorText(lang,'개최 일정 미확인 · 올해 행사로 확정된 정보가 아닙니다.','Dates unconfirmed · This listing does not confirm this year’s event.')}</small>}
               <p
@@ -551,12 +555,10 @@ export function OfficialPlaces({
               >
                 <MapPin size={14} aria-hidden="true" />
                 <span>
-                  {item.SUBTITLE ||
-                    item.PLACE ||
-                    (visitorText(lang, "주소 확인 필요", "Address unverified"))}
+                  {tr(item.SUBTITLE || item.PLACE || visitorText(lang, "주소 확인 필요", "Address unverified"))}
                 </span>
               </p>
-              <LocalizedDescription text={item.ITEMCNTNTS} lang={lang} compact/>
+              <LocalizedDescription text={tr(item.ITEMCNTNTS)} lang={lang} compact/>
               {original.USAGE_DAY_WEEK_AND_TIME && (
                 <p
                   className="tourism-schedule"
@@ -599,9 +601,9 @@ export function OfficialPlaces({
         <div className="section-heading"><h3>{visitorText(lang,'이어서 열리는 행사','Coming up')}</h3><span>{upcoming.length}{visitorText(lang,'건',' events')}</span></div>
         <p className="muted">{visitorText(lang,'아직 시작하지 않은 행사입니다. 시작일순으로 살펴보세요.','These events have not started yet. Browse in start-date order.')}</p>
         {!upcoming.length&&<p>{visitorText(lang,'검색 조건에 맞는 예정 행사가 없습니다.','No upcoming events match your search.')}</p>}
-        {upcoming.map(item=><button className="upcoming-event-row" key={item.UC_SEQ||item.contentid||item.res_no} onClick={()=>openEvent(item)}><time dateTime={eventStartDate(item)||undefined}>{eventStartDate(item)}</time><span><strong>{item.title||item.MAIN_TITLE}</strong><small>{item.addr1||item.ADDR1||item.PLACE||item.place_nm}</small></span><span aria-hidden="true">→</span></button>)}
+        {upcoming.map(item=><button className="upcoming-event-row" key={item.UC_SEQ||item.contentid||item.res_no} onClick={()=>openEvent(item)}><time dateTime={eventStartDate(item)||undefined}>{eventStartDate(item)}</time><span><strong>{tr(item.title||item.MAIN_TITLE)}</strong><small>{tr(item.addr1||item.ADDR1||item.PLACE||item.place_nm)}</small></span><span aria-hidden="true">→</span></button>)}
       </section>}
-      {splitByDate&&!loading&&otherDates.length>0&&<details className="other-event-dates"><summary>{visitorText(lang,'상시·일정 미확인 자료','Ongoing or dates unconfirmed')} {includePast&&visitorText(lang,'· 지난 행사 포함','· includes past events')} ({otherDates.length})</summary><p className="muted">{visitorText(lang,'오늘 개최 여부를 확인하지 못했거나 지난 일정인 자료입니다. 상세 안내를 확인해주세요.','Today’s availability is unconfirmed, or the dates have passed. Check the details.')}</p>{otherDates.map(item=><button className="upcoming-event-row" key={item.UC_SEQ||item.contentid||item.res_no} onClick={()=>openEvent(item)}><span><strong>{item.title||item.MAIN_TITLE}</strong><small>{item.addr1||item.ADDR1||item.PLACE||item.place_nm}</small></span><span aria-hidden="true">→</span></button>)}</details>}
+      {splitByDate&&!loading&&otherDates.length>0&&<details className="other-event-dates"><summary>{visitorText(lang,'상시·일정 미확인 자료','Ongoing or dates unconfirmed')} {includePast&&visitorText(lang,'· 지난 행사 포함','· includes past events')} ({otherDates.length})</summary><p className="muted">{visitorText(lang,'오늘 개최 여부를 확인하지 못했거나 지난 일정인 자료입니다. 상세 안내를 확인해주세요.','Today’s availability is unconfirmed, or the dates have passed. Check the details.')}</p>{otherDates.map(item=><button className="upcoming-event-row" key={item.UC_SEQ||item.contentid||item.res_no} onClick={()=>openEvent(item)}><span><strong>{tr(item.title||item.MAIN_TITLE)}</strong><small>{tr(item.addr1||item.ADDR1||item.PLACE||item.place_nm)}</small></span><span aria-hidden="true">→</span></button>)}</details>}
       <p>
         <small className="muted">
           {category === "exhibitions" && originFallback
@@ -614,7 +616,7 @@ export function OfficialPlaces({
         </small>
       </p>
       {selected && (
-        <Modal className="official-detail-modal" title={selected.MAIN_TITLE} close={() => setSelected(null)}>
+        <Modal className="official-detail-modal" title={tr(selected.MAIN_TITLE)} close={() => setSelected(null)}>
           {eventCategory && eventExpired(selected, today) && (
             <p className="event-ended">
               {visitorText(lang, "종료된 일정입니다. 지난 행사 자료로 확인해주세요.", "This event has ended. This listing is for reference.")}
@@ -646,7 +648,7 @@ export function OfficialPlaces({
           {selected.locationBasis === "official_linked_venue" && (
             <p className="muted">
               {visitorText(lang, "공식 전시 안내에 연결된 시설 기준: ", "Officially linked venue: ")}
-              {selected.venueName}
+              {tr(selected.venueName)}
               {visitorText(lang, " · 다른 지점에서 관람한다면 공식 원문의 장소를 확인해주세요.", " · Check the official listing if you plan to visit another branch.")}
             </p>
           )}
