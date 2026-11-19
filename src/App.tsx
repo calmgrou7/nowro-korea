@@ -1628,17 +1628,20 @@ export default function App() {
                 <section className="route-choices">
                   <h2>{visitorText(lang, "여행코스 만들기", "Plan your route")}</h2>
                   <div className="route-choice-grid">
-                    <article>
-                      <RouteIcon aria-hidden="true" />
+                    <article className="route-choice-recommended">
+                      <div className="route-choice-label"><Sparkles size={20} aria-hidden="true" /><span>{visitorText(lang,'나우로가 장소 추천','NOWRO chooses the places')}</span></div>
                       <h3>{visitorText(lang, "내 조건으로 추천받기", "Recommend for my time and budget")}</h3>
-                      <p>{visitorText(lang, "출발지와 남은 시간, 예산을 정하면 나우로가 방문할 장소와 순서를 추천해요.", "Set your starting point, time and budget. NOWRO suggests where to go and in what order.")}</p>
-                      <button className="primary" onClick={startRecommendedRoute}>{visitorText(lang, "추천 조건 설정", "Set route preferences")}</button>
+                      <p>{visitorText(lang, "어디로 갈지 고민될 때, 내 상황에 맞는 장소부터 추천받아요.", "Not sure where to go? Get places that fit your plans.")}</p>
+                      <dl className="route-choice-facts"><dt>{visitorText(lang,'내가 정할 것','You choose')}</dt><dd>{visitorText(lang,'출발 위치 · 남은 시간 · 예산','Starting point · time available · budget')}</dd><dt>{visitorText(lang,'나우로가 할 일','NOWRO does')}</dt><dd>{visitorText(lang,'조건에 맞는 장소 찾기 + 방문 순서 추천','Find suitable places and suggest a visit order')}</dd></dl>
+                      <button className="primary" onClick={startRecommendedRoute}>{visitorText(lang, "내 조건 입력하고 추천받기", "Set my preferences")}</button>
                     </article>
-                    <article>
-                      <Bookmark aria-hidden="true" />
+                    <article className="route-choice-selected">
+                      <div className="route-choice-label"><MapPin size={20} aria-hidden="true" /><span>{visitorText(lang,'내가 장소 선택','You choose the places')}</span></div>
                       <h3>{visitorText(lang, "내가 고른 장소로 동선 만들기", "Plan around my chosen places")}</h3>
-                      <p>{visitorText(lang, "이번에 담은 장소 최대 4곳만 연결합니다. 현재 위치·남은 시간·예산으로 제한하지 않고, 지금 출발하는 장소 간 예상 이동 순서를 비교해요.", "Connect only your chosen stops, starting now. We compare travel order without your current-location, time-limit or budget filters.")}</p>
-                      <button className="secondary" onClick={openRouteLibrary}>{visitorText(lang, "저장한 장소 고르기", "Choose saved places")}</button>
+                      <p>{visitorText(lang, "가고 싶은 곳이 정해졌다면, 이번에 담은 장소만 연결해요.", "Already know where to go? Connect only the places you picked this visit.")}</p>
+                      <dl className="route-choice-facts"><dt>{visitorText(lang,'내가 정할 것','You choose')}</dt><dd>{visitorText(lang,'방문할 장소 최대 4곳 · 이동수단','Up to 4 stops · transport mode')}</dd><dt>{visitorText(lang,'나우로가 할 일','NOWRO does')}</dt><dd>{visitorText(lang,'지금부터 장소 사이 예상 이동시간이 짧은 순서 계산','Compare visit orders for the shortest estimated travel, starting now')}</dd></dl>
+                      <small className="route-choice-note">{visitorText(lang,'내 위치·시간·예산 제한 없이 계산 · 첫 장소까지 이동 제외 · 행사 일정 확인','No current-location, time-limit or budget filters · travel to first stop excluded · event dates checked')}</small>
+                      <button className="secondary" onClick={openRouteLibrary}>{visitorText(lang, "이번에 담은 장소로 동선 만들기", "Plan with my picked places")}</button>
                     </article>
                   </div>
                 </section>
