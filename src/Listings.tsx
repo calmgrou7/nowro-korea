@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Area, Lang } from "../shared/types.ts";
 import type { Listing, ListingData } from "../shared/listings.ts";
+import { ListingRouteEditor } from "./ListingRouteEditor";
 import { api } from "./api";
 import { curatedEvents } from "../shared/curated-events";
 import {LocalizedDescription} from './LocalizedDescription';
@@ -838,6 +839,9 @@ export function MerchantListings({
                 >
                   {L("Archive / stop display", "보관·노출 중지")}
                 </button>
+              )}
+              {role === "admin" && v.status === "published" && (
+                <ListingRouteEditor listing={v} lang={lang} key={v.updated} />
               )}
               {role === "admin" && v.status === "pending" && (
                 <div className="listing-actions">

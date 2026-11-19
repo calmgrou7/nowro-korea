@@ -1,3 +1,4 @@
+import { updateListingRoute } from './listing-routes.mjs';
 import {distinctEvents} from '../shared/event-identity.ts';
 import http from "node:http";
 import { readFileSync, mkdirSync, existsSync, statSync } from "node:fs";
@@ -276,6 +277,18 @@ export function createApp(store, options = {}) {
         }
         case "GET /api/listings":
           out = { listings: publicListings(store.db) };
+          break;
+        case "GET /api/operator/listing-routes":
+          if (s.role !== 'admin') throw new ListingError('FORBIDDEN', 403);
+          out = {
+            places: store.baseCatalog().filter(p => p.published && !p.sample)
+              .map(({ id, areaId, name, address }) => ({ id, areaId, name, address })),
+            links: Object.fromEntries(store.db.prepare('SELECT * FROM listing_routes').all()
+              .map(row => [row.listing_id, JSON.parse(row.settings)])),
+          };
+          break;
+        case "POST /api/operator/listing-routes":
+          out = updateListingRoute(store, s, body);
           break;
         case "GET /api/operator/listings":
           out = { listings: operatorListings(store.db, s) };

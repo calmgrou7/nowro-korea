@@ -10,6 +10,7 @@ export type Area = {
   aliases: Localized;
 };
 export type Place = {
+  partnerListingIds?: string[];
   priceStatus?: 'free'|'published'|'unknown';
   priceText?: string;
   image?: string;
