@@ -13,6 +13,7 @@ import { MapPin, Clock3, Bookmark, Check, Route } from "lucide-react";
 import { savePlace, readSavedPlaces, savedPlaceId } from "./SavedPlaces";
 import { NearbyShops } from "./NearbyShops";
 import { eventExpired, eventEndDate } from "../shared/event-dates";
+import {eventDayGroup,eventStartDate} from '../shared/event-day';
 function TourismImage({
   src,
   title,
@@ -259,7 +260,7 @@ export function OfficialPlaces({
     (item) => eventCategory && eventExpired(item, today),
   ).length;
   const undatedCount=category==='festivals'?visibleItems.filter(item=>!eventEndDate(item)).length:0;
-  const matched = visibleItems.filter((item) => {
+  const matching = visibleItems.filter((item) => {
     const text = [
       item.title,
       item.MAIN_TITLE,
@@ -276,6 +277,11 @@ export function OfficialPlaces({
       matchesDistrict(item, districtNames)
     );
   });
+  const splitByDate=!regional&&eventCategory;
+  const matched=splitByDate?matching.filter(item=>eventDayGroup(item,today)==='today'):matching;
+  const upcoming=splitByDate?matching.filter(item=>eventDayGroup(item,today)==='upcoming').sort((a,b)=>(eventStartDate(a)||'').localeCompare(eventStartDate(b)||'')):[];
+  const otherDates=splitByDate?matching.filter(item=>eventDayGroup(item,today)==='other'):[];
+  const openEvent=(original:any)=>setSelected({...original,UC_SEQ:category+'-'+(original.contentid||original.UC_SEQ||original.res_no),routePlaceId:original.contentid?'kto-'+original.contentid:original.routePlaceId||null,MAIN_TITLE:original.title||original.MAIN_TITLE,SUBTITLE:original.addr1||original.ADDR1||original.PLACE,MAIN_IMG_NORMAL:original.firstimage||original.MAIN_IMG_NORMAL,ITEMCNTNTS:original.ITEMCNTNTS||original.addr2});
   useEffect(() => {
     let active = true;
     setItems([]);
@@ -472,9 +478,11 @@ export function OfficialPlaces({
           {visitorText(lang, "현재 제공된 정보가 없습니다.", "No information is currently available.")}
         </p>
       )}
+      {splitByDate&&!loading&&<div className="section-heading"><h3>{visitorText(lang,'오늘의 행사','On today')}</h3><span className="muted">{new Date(today.getTime()+9*3600000).toISOString().slice(0,10)} · {visitorText(lang,'부산 현지 날짜','Busan date')}</span></div>}
+      {splitByDate&&!loading&&<p className="muted">{visitorText(lang,'오늘이 개최 기간에 포함된 행사입니다. 운영시간·예약 여부는 상세 안내를 확인해주세요.','These events include today in their dates. Check details for opening hours and reservations.')}</p>}
       {!loading && items.length > 0 && !matched.length && (
         <p role="status">
-          {visitorText(lang, "검색 결과가 없습니다.", "No matching places.")}
+          {splitByDate?visitorText(lang,'오늘 일정이 확인된 행사가 없습니다. 아래에서 이어서 열리는 행사와 상시·일정 미확인 정보를 확인하세요.','No events with confirmed dates for today. See upcoming and other listings below.'):visitorText(lang, "검색 결과가 없습니다.", "No matching places.")}
         </p>
       )}
       <div className="source-grid">
@@ -587,6 +595,13 @@ export function OfficialPlaces({
           {Math.min(limit, matched.length)}/{matched.length})
         </button>
       )}
+      {splitByDate&&!loading&&<section className="upcoming-events" aria-label={visitorText(lang,'이어서 열리는 행사','Coming up')}>
+        <div className="section-heading"><h3>{visitorText(lang,'이어서 열리는 행사','Coming up')}</h3><span>{upcoming.length}{visitorText(lang,'건',' events')}</span></div>
+        <p className="muted">{visitorText(lang,'아직 시작하지 않은 행사입니다. 시작일순으로 살펴보세요.','These events have not started yet. Browse in start-date order.')}</p>
+        {!upcoming.length&&<p>{visitorText(lang,'검색 조건에 맞는 예정 행사가 없습니다.','No upcoming events match your search.')}</p>}
+        {upcoming.map(item=><button className="upcoming-event-row" key={item.UC_SEQ||item.contentid||item.res_no} onClick={()=>openEvent(item)}><time dateTime={eventStartDate(item)||undefined}>{eventStartDate(item)}</time><span><strong>{item.title||item.MAIN_TITLE}</strong><small>{item.addr1||item.ADDR1||item.PLACE||item.place_nm}</small></span><span aria-hidden="true">→</span></button>)}
+      </section>}
+      {splitByDate&&!loading&&otherDates.length>0&&<details className="other-event-dates"><summary>{visitorText(lang,'상시·일정 미확인 자료','Ongoing or dates unconfirmed')} {includePast&&visitorText(lang,'· 지난 행사 포함','· includes past events')} ({otherDates.length})</summary><p className="muted">{visitorText(lang,'오늘 개최 여부를 확인하지 못했거나 지난 일정인 자료입니다. 상세 안내를 확인해주세요.','Today’s availability is unconfirmed, or the dates have passed. Check the details.')}</p>{otherDates.map(item=><button className="upcoming-event-row" key={item.UC_SEQ||item.contentid||item.res_no} onClick={()=>openEvent(item)}><span><strong>{item.title||item.MAIN_TITLE}</strong><small>{item.addr1||item.ADDR1||item.PLACE||item.place_nm}</small></span><span aria-hidden="true">→</span></button>)}</details>}
       <p>
         <small className="muted">
           {category === "exhibitions" && originFallback
