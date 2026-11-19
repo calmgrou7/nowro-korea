@@ -4,6 +4,14 @@ import {savedRouteStatus} from '../shared/saved-route.ts';
 import {Store} from '../server/store.mjs';
 const now=new Date('2026-11-11T00:00:00Z');
 const place={id:'busan-festivals-1',published:true,category:'event',point:{lat:35.15,lng:129.12},availableUntil:'2026-11-20'};
+test('TourAPI festival identities reconnect and upcoming dates are not reported as missing location',()=>{
+ const festival={...place,id:'busan-festivals-tour-ko-3437916',availableFrom:'2026-11-26',availableUntil:'2026-12-25'};
+ for(const item of [{ktoContentId:'3437916'},{UC_SEQ:'festivals-tour-ko-3437916'},{routePlaceId:festival.id}]){
+  const status=savedRouteStatus(item,[festival],now);
+  assert.equal(status.reason,'upcoming');assert.equal(status.startDate,'2026-11-26');
+  assert.equal(savedRouteStatus(item,[festival],new Date('2026-11-26T00:00:00Z')).reason,null);
+ }
+});
 test('revalidated catalog resolves old saved flags and exhibition identities',()=>{
  const current={...place,id:'busan-exhibitions-123',category:'culture',checkedAt:now.toISOString()};
  assert.equal(savedRouteStatus({res_no:'123',locationNeedsReview:true},[current],now).reason,null);

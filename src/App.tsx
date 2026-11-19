@@ -326,6 +326,19 @@ export default function App() {
   useEffect(()=>{const restore=()=>{const next=urlLanguage(new URL(location.href));if(next)setLang(next);};addEventListener('popstate',restore);return()=>removeEventListener('popstate',restore);},[]);
   const recommendationSeq = useRef(0);
   const selectedRequest = useRef<Conditions|null>(null);
+  const [catalogSyncing,setCatalogSyncing]=useState(false);
+  useEffect(()=>{
+    let active=true,sequence=0;
+    const sync=async()=>{
+      const request=++sequence;setCatalogSyncing(true);
+      try{const latest=await api('catalog');if(active&&request===sequence)setCatalog(latest);}
+      catch{/* Keep the last usable catalog; the explicit refresh remains available. */}
+      finally{if(active&&request===sequence)setCatalogSyncing(false);}
+    };
+    window.addEventListener('nowro-saved',sync);
+    if(tab==='ROUTES')void sync();
+    return()=>{active=false;window.removeEventListener('nowro-saved',sync);};
+  },[tab]);
   useEffect(() => {
     recommendationSeq.current++;
     setRoutes(null);
@@ -460,7 +473,7 @@ export default function App() {
   }
   async function planSaved(items: any[]) {
     if (!items.length || items.length > 4) return false;
-    const missing = items.filter(item => savedRouteStatus(item, catalog?.places || []).reason);
+    const missing = items.filter(item => {const reason=savedRouteStatus(item,catalog?.places||[]).reason;return reason&&reason!=='upcoming';});
     const refreshed = await (missing.length ? recheckSaved(missing) : api("catalog")).catch(() => catalog);
     if (refreshed) setCatalog(refreshed);
     const savedNow=readSavedPlaces();
@@ -468,11 +481,11 @@ export default function App() {
     const points=chosen.flatMap(result=>result.place?[result.place]:[]);
     if (chosen.some(result=>result.reason)) {
       if (points.length && !window.confirm(visitorText(lang,
-        `${items.length-points.length}곳의 위치나 일정을 확인할 수 없습니다. 선택한 장소는 보관됩니다. 확인된 ${points.length}곳만으로 진행할까요?`,
-        `${items.length-points.length} stops have unverified locations or dates. All places remain saved. Continue with only the ${points.length} verified stops?`))) return false;
+        `${items.length-points.length}곳은 행사 시작 전이거나 위치·일정 확인이 필요해 지금 방문할 수 없습니다. 지금 가능한 ${points.length}곳만으로 진행할까요?`,
+        `${items.length-points.length} stops are not available now (upcoming events or unverified details). Continue with the ${points.length} available stops?`))) return false;
     }
     if (!points.length) {
-      setToast(visitorText(lang, "선택한 장소의 위치나 일정을 확인할 수 없어요. 다른 장소를 선택해주세요.", "These stops have no verified location or schedule. Choose another place."));
+      setToast(chosen.some(r=>r.reason==='upcoming')?visitorText(lang,'선택한 행사는 아직 시작 전입니다. 카드에 표시된 시작일을 확인해주세요. 현재 동선은 지금 방문 가능한 장소로 만듭니다.','These events have not started yet. Check the start dates on the cards. This itinerary is for visiting now.'):visitorText(lang, "선택한 장소의 코스용 위치나 일정을 확인할 수 없어요. 다른 장소를 선택해주세요.", "These stops have no verified location or schedule. Choose another place."));
       return false;
     }
     const conditions:Conditions={...c,mode:'selected',startAt:new Date().toISOString(),areaId:points[0].areaId,origin:points[0].point,requiredPlaceId:undefined,requiredPlaceIds:[...new Set(points.map(p=>p.id))],returnPoint:null,deadline:null,tripStart:'',tripEnd:'',children:false,accessible:false,diet:''};
@@ -1856,7 +1869,7 @@ export default function App() {
                     {visitorText(lang, "코스 확인·저장", "Review and save")}
                   </li>
                 </ol>
-                {c.mode==='selected'&&<section id="route-library"><label>{visitorText(lang,'장소 사이 이동수단','Transport between stops')}<select value={c.transport} onChange={e=>setC(old=>({...old,transport:e.target.value as Conditions['transport']}))}><option value="walk">{T('walk')}</option><option value="transit">{T('transit')}</option><option value="car">{T('car')}</option></select></label><SavedPlaces lang={lang} onPlan={planSaved} places={catalog.places} onRefresh={async items => { await recheckSaved(items); }} /></section>}
+                {c.mode==='selected'&&<section id="route-library"><label>{visitorText(lang,'장소 사이 이동수단','Transport between stops')}<select value={c.transport} onChange={e=>setC(old=>({...old,transport:e.target.value as Conditions['transport']}))}><option value="walk">{T('walk')}</option><option value="transit">{T('transit')}</option><option value="car">{T('car')}</option></select></label><SavedPlaces syncing={catalogSyncing} lang={lang} onPlan={planSaved} places={catalog.places} onRefresh={async items => { await recheckSaved(items); }} /></section>}
                 {c.mode!=="selected"&&<details className="route-conditions" open={routeSettingsOpen} onToggle={e=>setRouteSettingsOpen(e.currentTarget.open)}><summary>{visitorText(lang,'시간·예산·이동수단 설정','Set time, budget and transport')}</summary>{plannerView}</details>}
                 {routes !== null && (
                   <section id="results" className="section">

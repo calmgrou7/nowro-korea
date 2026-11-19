@@ -54,7 +54,9 @@ export function SavedPlaces({
   onPlan,
   places,
   onRefresh,
+  syncing=false,
 }: {
+  syncing?:boolean;
   lang: string;
   onPlan: (items: any[]) => Promise<boolean>;
   places: Place[];
@@ -78,6 +80,7 @@ export function SavedPlaces({
   const selectedItems=items.filter(item=>checked.includes(savedPlaceId(item)));
   const readyItems=selectedItems.filter(item=>!savedRouteStatus(item,places).reason);
   const excluded=selectedItems.length-readyItems.length;
+  const upcoming=selectedItems.filter(item=>savedRouteStatus(item,places).reason==='upcoming').length;
   return (
     <section className="panel">
       <h2>
@@ -103,7 +106,7 @@ export function SavedPlaces({
       )}
       <div className="saved-places-grid">{items.map((item) => {
         const id = savedPlaceId(item);
-        const reason=savedRouteStatus(item,places).reason;
+        const status=savedRouteStatus(item,places);const reason=status.reason;
         return (
           <div className={"saved-place-row"+(checked.includes(id)?" is-selected":"")} key={id}>
             <label>
@@ -123,7 +126,7 @@ export function SavedPlaces({
                 <small>{item.SUBTITLE || item.ADDR1 || item.addr1}</small>
                 {reason && (
                   <small className="event-ended">
-                    {reason==='ended'?L('종료된 행사 · 코스 제외','Event ended · excluded from route'):reason==='location'?L('위치 확인 필요 · 코스 제외','Location needs verification · excluded'):reason==='schedule'?L('행사 일정 확인 필요 · 코스 제외','Event dates need verification · excluded'):L('최신 장소 정보 확인 필요 · 코스 제외','Updated place information needed · excluded')}
+                    {syncing?L('코스 정보 연결 중…','Connecting route information…'):reason==='upcoming'?L(`${status.startDate} 시작 · 지금 방문 불가`,`Starts ${status.startDate} · not available now`):reason==='ended'?L('종료된 행사 · 코스 제외','Event ended · excluded from route'):reason==='location'?L('위치 확인 필요 · 코스 제외','Location needs verification · excluded'):reason==='schedule'?L('행사 일정 확인 필요 · 코스 제외','Event dates need verification · excluded'):L('코스용 위치 연결 필요','Route location not connected')}
                   </small>
                 )}
               </span>
@@ -140,16 +143,17 @@ export function SavedPlaces({
           </div>
         );
       })}</div>
-      {excluded>0&&<p className="notice" role="status">{L(`선택한 ${selectedItems.length}곳 중 ${excluded}곳은 확인이 필요합니다. 코스 만들기를 누르면 최신 정보를 다시 조회합니다.`,`Of ${selectedItems.length} selected places, ${excluded} need verification. We will check the latest information before planning.`)}</p>}
+      {upcoming>0&&<p className="notice">{L(`선택한 행사 ${upcoming}곳은 시작 전입니다. 주소 오류가 아니며, 행사 시작일 이후에 방문할 수 있습니다.`,`${upcoming} selected events have not started yet. Their addresses are available; check the start dates.`)}</p>}
+      {excluded>upcoming&&<p className="notice" role="status">{L(`선택한 ${selectedItems.length}곳 중 ${excluded}곳은 확인이 필요합니다. 코스 만들기를 누르면 최신 정보를 다시 조회합니다.`,`Of ${selectedItems.length} selected places, ${excluded} need verification. We will check the latest information before planning.`)}</p>}
       <button
         className="primary"
-        disabled={refreshing || !selectedItems.length}
+        disabled={refreshing || syncing || !selectedItems.length}
         onClick={async () => {
           setRefreshing(true);
           try { await onPlan(selectedItems); } catch { setRefreshMessage(L('정보를 확인하지 못했습니다. 선택은 유지됩니다. 다시 시도해주세요.', 'Could not verify these places. Your selection is unchanged. Please try again.')); } finally { setRefreshing(false); }
         }}
       >
-        {refreshing?L('확인 중…','Checking…'):excluded?L('다시 확인하고 코스 만들기','Check stops and plan'):L("내 장소 동선 만들기", "Order my selected stops")} (
+        {refreshing||syncing?L('확인 중…','Checking…'):upcoming===selectedItems.length&&upcoming>0?L('행사 시작일 확인','Check event start dates'):excluded?L('다시 확인하고 코스 만들기','Check stops and plan'):L("내 장소 동선 만들기", "Order my selected stops")} (
         {selectedItems.length}/4)
       </button>
     </section>
