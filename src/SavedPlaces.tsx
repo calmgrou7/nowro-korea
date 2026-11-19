@@ -3,7 +3,13 @@ import {track} from './analytics';
 import { useEffect, useState } from "react";
 import {savedRouteStatus} from '../shared/saved-route';
 import type {Place} from '../shared/types';
-const KEY = "nowro-saved-places-v1";
+let currentPlaces:any[]=[];
+let currentOwner='guest';
+try{localStorage.removeItem('nowro-saved-places-v1');localStorage.removeItem('nowro-saved-places-v1-backup');}catch{/* Private browsing may block storage. This visit uses memory only. */}
+export function resetSavedPlaceSession(owner:string){
+ if(currentOwner===undefined){currentOwner=owner;return false;}
+ if(currentOwner!==owner){currentOwner=owner;writeSavedPlaces([]);return true;}return false;
+}
 export function savedPlaceId(item: any): string {
   const legacy = String(item.UC_SEQ || "").match(
     /^(festivals|ocean|exhibitions)-(\d+)$/,
@@ -18,36 +24,10 @@ export function savedPlaceId(item: any): string {
           "",
   );
 }
-export function readSavedPlaces(): any[] {
-  try {
-    const value = JSON.parse(localStorage.getItem(KEY) || "[]");
-    return Array.isArray(value)
-      ? [
-          ...new Map(
-            value
-              .filter((p) => p && typeof p === "object" && savedPlaceId(p))
-              .map((p) => [savedPlaceId(p), p]),
-          ).values(),
-        ]
-      : [];
-  } catch {
-    return [];
-  }
-}
-// Bookmark buttons toggle membership and notify every visible saved-place view.
-export function writeSavedPlaces(next: any[]): boolean {
-  try {
-    const original = localStorage.getItem(KEY);
-    // Preserve malformed originals rather than interpreting them as an empty collection.
-    if (original !== null && !Array.isArray(JSON.parse(original))) throw new Error('INVALID_SAVED_DATA');
-    if (original !== null) localStorage.setItem(KEY + '-backup', original);
-    localStorage.setItem(KEY, JSON.stringify(next));
-    window.dispatchEvent(new Event('nowro-saved'));
-    return true;
-  } catch {
-    window.dispatchEvent(new Event('nowro-storage-error'));
-    return false;
-  }
+export function readSavedPlaces():any[]{return [...currentPlaces];}
+export function writeSavedPlaces(next:any[]):boolean {
+ currentPlaces=[...new Map(next.filter(p=>p&&savedPlaceId(p)).map(p=>[savedPlaceId(p),p])).values()];
+ window.dispatchEvent(new Event('nowro-saved'));return true;
 }
 export function savePlace(item: any) {
   const id = savedPlaceId(item);
@@ -108,8 +88,8 @@ export function SavedPlaces({
       </h2>
       <p className="muted">
         {L(
-          "이 기기에 저장됩니다. 가까운 장소를 최대 4개 선택하세요. 인접 구·군도 함께 코스로 만들 수 있습니다.",
-          "Saved on this device. Select up to four nearby places, including stops across district boundaries.",
+          "이번 방문에 담은 장소입니다. 최대 4곳을 고르면 지금부터 방문할 이동 순서를 비교합니다. 새로고침·재접속·로그인·로그아웃하면 목록이 초기화됩니다.",
+          "Pick up to four places from this visit. We compare visit orders starting now. Refreshing, returning or signing in/out clears this list.",
         )}
       </p>
       {!!items.length&&<><button className="secondary" disabled={refreshing} onClick={async()=>{setRefreshing(true);try{await onRefresh(items);setRefreshMessage(L('공식 자료 조회를 마쳤습니다. 확인되지 않은 항목은 계속 보관되며, 아래 카드에서 상태를 확인하세요.','Official lookup completed. Unverified items remain saved; check each card for its current status.'));}catch{setRefreshMessage(L('정보를 다시 확인하지 못했습니다. 잠시 후 다시 시도해주세요.','Could not refresh information. Please try again shortly.'));}finally{setRefreshing(false);}}}>{refreshing?L('확인 중…','Checking…'):L('공식 정보 다시 확인','Recheck official information')}</button><p className="muted" role="status">{refreshMessage}</p></>}
@@ -169,7 +149,7 @@ export function SavedPlaces({
           try { await onPlan(selectedItems); } catch { setRefreshMessage(L('정보를 확인하지 못했습니다. 선택은 유지됩니다. 다시 시도해주세요.', 'Could not verify these places. Your selection is unchanged. Please try again.')); } finally { setRefreshing(false); }
         }}
       >
-        {refreshing?L('확인 중…','Checking…'):excluded?L('다시 확인하고 코스 만들기','Check stops and plan'):L("선택한 장소로 코스 만들기", "Plan with selected places")} (
+        {refreshing?L('확인 중…','Checking…'):excluded?L('다시 확인하고 코스 만들기','Check stops and plan'):L("내 장소 동선 만들기", "Order my selected stops")} (
         {selectedItems.length}/4)
       </button>
     </section>

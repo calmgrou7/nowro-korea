@@ -66,7 +66,7 @@ import { starterStampAreaIds } from "../shared/catalog";
 import { AdminDashboard } from "./AdminDashboard";
 import { AdminWorkspace, type AdminPage } from './AdminWorkspace';
 import { OfficialPlaces } from "./OfficialPlaces";
-import { SavedPlaces, readSavedPlaces, writeSavedPlaces, savedPlaceId } from "./SavedPlaces";
+import { SavedPlaces, resetSavedPlaceSession, readSavedPlaces, writeSavedPlaces, savedPlaceId } from "./SavedPlaces";
 import {savedRouteStatus} from '../shared/saved-route';
 import {shortenTrip} from '../shared/trip-edit';
 import { Boards } from "./Boards";
@@ -188,7 +188,7 @@ export default function App() {
     [c, setC] = useState<Conditions>(() => {
       try {
         const v = sessionStorage.getItem("nowro-conditions");
-        return v ? { ...defaults, ...JSON.parse(v) } : defaults;
+        return v ? { ...defaults, ...JSON.parse(v),requiredPlaceId:undefined,requiredPlaceIds:undefined } : defaults;
       } catch {
         return defaults;
       }
@@ -293,6 +293,7 @@ export default function App() {
             ).point,
           },
     );
+    if(resetSavedPlaceSession(st.session.authenticated?st.session.email||'member':'guest')){setRoutes(null);setC(old=>({...old,requiredPlaceId:undefined,requiredPlaceIds:undefined}));}
     setStatus(st);
     setRole((old) =>
       old === "traveler" && st.session.role === "partner" && st.canTravel
@@ -324,12 +325,14 @@ export default function App() {
   }, [lang]);
   useEffect(()=>{const restore=()=>{const next=urlLanguage(new URL(location.href));if(next)setLang(next);};addEventListener('popstate',restore);return()=>removeEventListener('popstate',restore);},[]);
   const recommendationSeq = useRef(0);
+  const selectedRequest = useRef<Conditions|null>(null);
   useEffect(() => {
     recommendationSeq.current++;
     setRoutes(null);
     setEmptyReason("");
     setRouteFeedback("");
     try { sessionStorage.setItem("nowro-conditions", JSON.stringify(c)); } catch {}
+    if(selectedRequest.current===c){selectedRequest.current=null;void generate(c);}
   }, [c]);
   useEffect(() => {
     if (!toast) return;
@@ -401,6 +404,7 @@ export default function App() {
           visitorText(lang, "공식 API 장소 기반 예상 코스입니다. 운영시간·요금·예약 여부는 방문 전 확인해주세요.", "Route uses official API places. Hours, fees and reservations require venue confirmation."),
         );
       setRoutes(data.routes);
+      if(!data.routes.length&&conditions.mode==='selected')setRouteFeedback(visitorText(lang,'지금 방문할 수 있는 동선을 만들지 못했습니다. 행사 시작·종료일과 영업시간을 확인하고 장소를 다시 골라주세요.','No feasible itinerary for now. Check event dates and opening hours, then adjust your stops.'));
       if(data.routes.length)track('generate_route');
       setEmptyReason(data.diagnostic || "conditions_too_restrictive");
       setTab("ROUTES");
@@ -417,32 +421,9 @@ export default function App() {
         setRouteFeedback(recommendationMessage(error instanceof Error && error.message === "INVALID_CONDITIONS" ? "invalid_conditions" : "connection_error", lang));
     } finally { setBusy(false); }
   }
-  async function openPlanner(item?: any) {
-    if (item?.UC_SEQ) {
-      const refreshed = await api("catalog").catch(() => catalog);
-      if (refreshed) setCatalog(refreshed);
-      const chosen = refreshed?.places.find(
-        (p: Place) => p.id === item.routePlaceId,
-      );
-      if (!chosen) {
-        setToast(
-          visitorText(lang, "이 장소는 위치 정보 확인 후 코스에 추가할 수 있습니다. 현재는 지도에서 위치를 확인해주세요.", "This place is not available for route planning yet. Please check its location on the map."),
-        );
-        return false;
-      }
-      setC((old) => ({
-        ...old,
-        areaId: chosen.areaId,
-        origin: chosen.point,
-        requiredPlaceId: chosen.id,
-        requiredPlaceIds: undefined,
-      }));
-      track('add_to_route',chosen.id);
-      setRoutes(null);
-    }
-    setTab("ROUTES");
-    window.scrollTo({ top: 0, behavior: "instant" });
-    setRouteSettingsOpen(true);
+  async function openPlanner(item?:any){
+    if(item?.UC_SEQ||item?.contentid||item?.kopisId||item?.res_no)return planSaved([item]);
+    setC(old=>({...old,mode:'recommended'}));setTab('ROUTES');setRouteSettingsOpen(true);
     requestAnimationFrame(()=>requestAnimationFrame(()=>document.getElementById('planner')?.scrollIntoView({behavior:'smooth',block:'start'})));
     return true;
   }
@@ -494,28 +475,14 @@ export default function App() {
       setToast(visitorText(lang, "선택한 장소의 위치나 일정을 확인할 수 없어요. 다른 장소를 선택해주세요.", "These stops have no verified location or schedule. Choose another place."));
       return false;
     }
-    const from = points.map(p => p.availableFrom || "").sort().at(-1) || "";
-    const until = points.map(p => p.availableUntil || "9999-12-31").sort()[0];
-    if (from > until) {
-      setToast(visitorText(lang, "선택한 행사들의 기간이 겹치지 않아요. 함께 방문할 수 있는 행사만 선택해주세요.", "These events have no dates in common. Choose events you can visit on the same day."));
-      return false;
+    const conditions:Conditions={...c,mode:'selected',startAt:new Date().toISOString(),areaId:points[0].areaId,origin:points[0].point,requiredPlaceId:undefined,requiredPlaceIds:[...new Set(points.map(p=>p.id))],returnPoint:null,deadline:null,tripStart:'',tripEnd:'',children:false,accessible:false,diet:''};
+    if(points.some(p=>p.planningEstimate)&&!conditions.allowPlanningEstimates){
+      if(!window.confirm(visitorText(lang,'영업시간·요금 미확인 장소가 포함됩니다. 예상 동선으로 진행할까요?','Some stops have unverified hours and fees. Continue with an estimated itinerary?')))return false;
+      conditions.allowPlanningEstimates=true;
     }
-    const currentDate = koreaInput(c.startAt).slice(0, 10);
-    const suggestedDate = currentDate < from ? from : currentDate > until ? until : currentDate;
-    const adjustDate = suggestedDate !== currentDate && !c.deadline;
-    if (adjustDate && !window.confirm(visitorText(lang, `선택한 행사들은 ${currentDate}에 함께 방문할 수 없습니다. 여행 날짜를 ${suggestedDate}로 변경할까요?`, `These events cannot all be visited on ${currentDate}. Change your travel date to ${suggestedDate}?`))) return false;
-    setRouteFeedback("");
-    setC((old) => ({
-      ...old,
-      startAt: adjustDate ? koreaISO(suggestedDate + koreaInput(old.startAt).slice(10)) || old.startAt : old.startAt,
-      areaId: points[0].areaId,
-      origin: points[0].point,
-      requiredPlaceId: undefined,
-      requiredPlaceIds: [...new Set(points.map(p => p.id))],
-    }));
-    setRoutes(null);
-    return openPlanner();
+    selectedRequest.current=conditions;setC(conditions);setRouteSettingsOpen(false);setTab('ROUTES');return true;
   }
+
   function gps() {
     if (!consent.location) {
       setAccountView('preferences'); setSettings(true);
@@ -614,10 +581,11 @@ export default function App() {
     ++recommendationSeq.current;
     setRoutes(null);
     setRouteFeedback("");
-    setC(old => ({ ...old, requiredPlaceId: undefined, requiredPlaceIds: undefined }));
+    setC(old => ({ ...old, mode: "recommended", requiredPlaceId: undefined, requiredPlaceIds: undefined }));
     void openPlanner();
   }
   function openRouteLibrary() {
+    setC(old=>({...old,mode:"selected"}));setRoutes(null);
     setRouteSettingsOpen(false);
     setTab("ROUTES");
     requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById("route-library")?.scrollIntoView({behavior:"smooth",block:"start"})));
@@ -667,7 +635,7 @@ export default function App() {
           .map((s) => { const place = catalog!.places.find((p) => p.id === s.placeId) || r.placeSnapshots?.find(p => p.id === s.placeId); return place ? name(place) : (visitorText(lang, "장소 정보 확인 필요", "Place details unavailable")); })
           .join(" → ")}
       </h3>
-      <p>{T("reason")}</p>
+      <p>{r.conditions.mode==='selected'?visitorText(lang,'선택한 장소만 연결 · 예상 이동시간이 가장 짧은 방문 순서 · 첫 장소까지 이동 제외','Only your chosen stops · shortest estimated travel order · excludes travel to first stop'):T('reason')}</p>
       <div className="route-metrics">
         <span>
           <Clock size={17} />
@@ -1662,14 +1630,14 @@ export default function App() {
                   <div className="route-choice-grid">
                     <article>
                       <RouteIcon aria-hidden="true" />
-                      <h3>{visitorText(lang, "갈 곳을 추천받고 싶어요", "Suggest places for me")}</h3>
+                      <h3>{visitorText(lang, "내 조건으로 추천받기", "Recommend for my time and budget")}</h3>
                       <p>{visitorText(lang, "출발지와 남은 시간, 예산을 정하면 나우로가 방문할 장소와 순서를 추천해요.", "Set your starting point, time and budget. NOWRO suggests where to go and in what order.")}</p>
                       <button className="primary" onClick={startRecommendedRoute}>{visitorText(lang, "추천 조건 설정", "Set route preferences")}</button>
                     </article>
                     <article>
                       <Bookmark aria-hidden="true" />
-                      <h3>{visitorText(lang, "가고 싶은 곳이 있어요", "I have places in mind")}</h3>
-                      <p>{visitorText(lang, "저장한 장소 중 함께 방문할 곳을 최대 4개 고른 뒤 코스를 만들어요.", "Choose up to four nearby saved places to include in your route.")}</p>
+                      <h3>{visitorText(lang, "내가 고른 장소로 동선 만들기", "Plan around my chosen places")}</h3>
+                      <p>{visitorText(lang, "이번에 담은 장소 최대 4곳만 연결합니다. 현재 위치·남은 시간·예산으로 제한하지 않고, 지금 출발하는 장소 간 예상 이동 순서를 비교해요.", "Connect only your chosen stops, starting now. We compare travel order without your current-location, time-limit or budget filters.")}</p>
                       <button className="secondary" onClick={openRouteLibrary}>{visitorText(lang, "저장한 장소 고르기", "Choose saved places")}</button>
                     </article>
                   </div>
@@ -1866,7 +1834,7 @@ export default function App() {
                       {visitorText(lang, "나만의 여행코스", "Your travel route")}
                     </h1>
                     <p className="muted">
-                      {visitorText(lang, "장소를 선택하고 시간·예산을 맞춘 뒤 코스를 확인하세요.", "Choose your stops, set your time and budget, then review your route.")}
+                      {visitorText(lang, "추천을 받거나, 내가 고른 장소만 연결하세요. 두 방식 중 하나를 선택해주세요.", "Choose recommendations for your conditions or an itinerary using only your chosen stops.")}
                     </p>
                   </div>
                   <button
@@ -1877,21 +1845,22 @@ export default function App() {
                     {visitorText(lang, "저장한 장소에서 선택", "Choose saved places")}
                   </button>
                 </div>
+                <div className="inline"><button className="secondary" aria-pressed={c.mode!=='selected'} onClick={startRecommendedRoute}>{visitorText(lang,'내 조건으로 추천받기','Recommendations for me')}</button><button className="secondary" aria-pressed={c.mode==='selected'} onClick={openRouteLibrary}>{visitorText(lang,'내 장소 동선 만들기','My chosen stops')}</button></div>
                 <ol className="journey-steps">
-                  <li>{visitorText(lang, "장소 선택", "Choose places")}</li>
-                  <li>{visitorText(lang, "조건 설정", "Set preferences")}</li>
+                  <li>{c.mode==='selected'?visitorText(lang,"이번 장소 선택","Choose stops for this visit"):visitorText(lang,"내 위치·시간·예산","My location, time and budget")}</li>
+                  <li>{c.mode==='selected'?visitorText(lang,"이동수단 선택","Choose transport"):visitorText(lang,"맞춤 장소 추천","Suggested places")}</li>
                   <li>
                     {visitorText(lang, "코스 확인·저장", "Review and save")}
                   </li>
                 </ol>
-                <section id="route-library"><SavedPlaces lang={lang} onPlan={planSaved} places={catalog.places} onRefresh={async items => { await recheckSaved(items); }} /></section>
-                <details className="route-conditions" open={routeSettingsOpen} onToggle={e=>setRouteSettingsOpen(e.currentTarget.open)}><summary>{visitorText(lang,'시간·예산·이동수단 설정','Set time, budget and transport')}</summary>{plannerView}</details>
+                {c.mode==='selected'&&<section id="route-library"><label>{visitorText(lang,'장소 사이 이동수단','Transport between stops')}<select value={c.transport} onChange={e=>setC(old=>({...old,transport:e.target.value as Conditions['transport']}))}><option value="walk">{T('walk')}</option><option value="transit">{T('transit')}</option><option value="car">{T('car')}</option></select></label><SavedPlaces lang={lang} onPlan={planSaved} places={catalog.places} onRefresh={async items => { await recheckSaved(items); }} /></section>}
+                {c.mode!=="selected"&&<details className="route-conditions" open={routeSettingsOpen} onToggle={e=>setRouteSettingsOpen(e.currentTarget.open)}><summary>{visitorText(lang,'시간·예산·이동수단 설정','Set time, budget and transport')}</summary>{plannerView}</details>}
                 {routes !== null && (
                   <section id="results" className="section">
                     <div className="section-heading">
                       <div>
                         <span className="eyebrow">MADE FOR YOUR NOW</span>
-                        <h2>{T("routes")}</h2>
+                        <h2>{c.mode==='selected'?visitorText(lang,'내 장소 이동 순서','Your stops in travel order'):T('routes')}</h2>
                       </div>
                       <span className="muted">{T("estimated")}</span>
                     </div>

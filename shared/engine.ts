@@ -38,6 +38,7 @@ const pointOK = (p: unknown): p is Point =>
 export function validateConditions(c: Conditions) {
   if (
     !c ||
+    (c.mode !== undefined && !["recommended","selected"].includes(c.mode)) ||
     typeof c.areaId !== "string" ||
     (c.requiredPlaceId !== undefined && typeof c.requiredPlaceId !== 'string') ||
     (c.requiredPlaceIds !== undefined && (!Array.isArray(c.requiredPlaceIds) || c.requiredPlaceIds.length > 4 || c.requiredPlaceIds.some(id => typeof id !== 'string'))) ||
@@ -106,6 +107,7 @@ export function calculate(
     ids.length > 8
   )
     return null;
+  if(c.mode==='selected')c={...c,origin:catalog.find(p=>p.id===ids[0])?.point||c.origin,returnPoint:null,deadline:null};
   const start = new Date(c.startAt),
     limit = Math.min(
       c.minutes,
@@ -183,7 +185,7 @@ export function calculate(
     (now.getTime() - start.getTime()) / 60000 + returnMinutes + buffer;
   costMin += transportCost;
   costMax += transportCost;
-  if (minutes > limit || costMax > c.budget) return null;
+  if (c.mode!=="selected" && (minutes > limit || costMax > c.budget)) return null;
   return {
     unknownPriceCount,
     venueCostMin:costMin-transportCost,
@@ -205,6 +207,17 @@ export function calculate(
 }
 export function recommend(c: Conditions, catalog: Place[]): Route[] {
   validateConditions(c);
+  if(c.mode==='selected'){
+    const ids=[...new Set(c.requiredPlaceIds||[])];
+    if(!ids.length||ids.length>4)return [];
+    const routes:Route[]=[];
+    function order(prefix:string[],remaining:string[]){
+      if(!remaining.length){const r=calculate(prefix,c,catalog);if(r)routes.push(r);return;}
+      for(const id of remaining)order([...prefix,id],remaining.filter(x=>x!==id));
+    }
+    order([],ids);
+    return routes.sort((a,b)=>a.stops.reduce((n,s)=>n+s.travel,0)-b.stops.reduce((n,s)=>n+s.travel,0)||a.id.localeCompare(b.id)).slice(0,1);
+  }
   const firstDate=new Date(Date.parse(c.startAt)+9*3600000).toISOString().slice(0,10);
   const lastDate=new Date(Date.parse(c.startAt)+(c.minutes+9*60)*60000).toISOString().slice(0,10);
   const candidates = catalog

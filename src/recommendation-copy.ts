@@ -1,5 +1,6 @@
 export function recommendationMessage(code:string,lang:string) {
  const messages:Record<string,[string,string]>={
+ selected_visit_unavailable:['지금 방문할 수 있는 동선을 만들지 못했습니다. 선택한 장소의 행사 날짜·영업시간·예약 여부를 확인해주세요.','No feasible itinerary for now. Check your chosen stops’ event dates, opening hours and reservation requirements.'],
  planning_confirmation_required:['계획용 예상 코스 안내를 확인한 후 체크해주세요.','Please review and check the planning-estimate notice.'],
  selected_event_unconfirmed:['선택한 행사의 개최 일정이 확인되지 않았습니다. 일정을 확인하거나 다른 장소를 선택해주세요.','A selected event has no confirmed schedule. Verify the dates or choose another place.'],
  selected_place_unavailable:['선택한 장소의 최신 위치 자료가 없습니다. 해당 장소를 다시 열어 위치를 확인하거나 선택을 해제해주세요.','A selected place has no current location data. Reopen its details or remove it from your selection.'],

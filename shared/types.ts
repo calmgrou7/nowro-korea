@@ -42,6 +42,7 @@ export type Place = {
   published: boolean;
 };
 export type Conditions = {
+  mode?: 'recommended'|'selected';
   allowPlanningEstimates?: boolean;
   requiredPlaceId?: string;
   requiredPlaceIds?: string[];
