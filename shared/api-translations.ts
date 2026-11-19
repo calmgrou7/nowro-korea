@@ -231,6 +231,13 @@ const rows: string[][] = [
     "釜山",
     "釜山"
   ]
+,
+["광안리 M(Marvelous) 드론 × 레이저쇼","Gwangalli M (Marvelous) Drone × Laser Show","広安里M（Marvelous）ドローン×レーザーショー","广安里M（Marvelous）无人机×激光秀","廣安里M（Marvelous）無人機×雷射秀"],
+["부산국제매직페스티벌","Busan International Magic Festival","釜山国際マジックフェスティバル","釜山国际魔术节","釜山國際魔術節"],
+["게임문화축제","Game Culture Festival","ゲーム文化フェスティバル","游戏文化节","遊戲文化節"],
+["부산광역시 수영구 광안해변로 219 (광안동)","219 Gwanganhaebyeon-ro, Suyeong-gu, Busan (Gwangan-dong)","釜山市水営区広安海辺路219（広安洞）","釜山市水营区广安海边路219（广安洞）","釜山市水營區廣安海邊路219（廣安洞）"],
+["부산광역시 해운대구 수영강변대로 120 (우동)","120 Suyeonggangbyeon-daero, Haeundae-gu, Busan (U-dong)","釜山市海雲台区水営江辺大路120（佑洞）","釜山市海云台区水营江边大路120（佑洞）","釜山市海雲台區水營江邊大路120（佑洞）"],
+["부산광역시 해운대구 APEC로 30 (우동)","30 APEC-ro, Haeundae-gu, Busan (U-dong)","釜山市海雲台区APEC路30（佑洞）","釜山市海云台区APEC路30（佑洞）","釜山市海雲台區APEC路30（佑洞）"]
 ];
 export function cleanApiText(value:unknown){return String(value||'').replace(/&lt;?/g,'<').replace(/&gt;?/g,'>').replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();}
 export function apiTranslation(value:unknown,lang:string,enabled=true):string{
