@@ -12,6 +12,7 @@ import {
   cities,
 } from "../shared/catalog.ts";
 import { calculate } from "../shared/engine.ts";
+import { initializeListingRoutes, listingRouteCatalog } from "./listing-routes.mjs";
 import { initializeListings } from "./listings.mjs";
 import { initializeRewards, paidReceipt } from "./rewards.mjs";
 import { initializeBusinesses } from "./businesses.mjs";
@@ -47,6 +48,7 @@ export class Store {
     );`);
     this.db.prepare("INSERT OR IGNORE INTO site_content(id,updated) VALUES(1,?)").run(new Date().toISOString());
     initializeListings(this.db);
+    initializeListingRoutes(this.db);
     initializeRewards(this.db);
     initializeBusinesses(this.db);
     for (const p of fixtures)
@@ -95,6 +97,9 @@ export class Store {
     }
   }
   catalog() {
+    return listingRouteCatalog(this.db, this.baseCatalog());
+  }
+  baseCatalog() {
     const official = JSON.parse(this.db.prepare("SELECT value FROM config WHERE key='tourism_catalog'").get()?.value || '[]').map(p=>p.planningEstimate&&!p.priceStatus?{...p,costMin:0,costMax:0,priceStatus:'unknown'}:p);
     const local = this.db
       .prepare("SELECT data FROM places")

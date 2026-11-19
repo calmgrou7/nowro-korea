@@ -2402,7 +2402,9 @@ export default function App() {
         <Modal title={name(place)} close={() => setPlace(null)}>
           {art(place)}
           <p className="media-caption">
-            {placeMedia(place).generated ? (
+            {place.source === 'NOWRO partner' ? (
+              visitorText(lang, '나우로 파트너 제공 정보', 'Information provided by a NOWRO partner')
+            ) : placeMedia(place).generated ? (
               T("representativeImage")
             ) : (
               <>
@@ -2431,6 +2433,11 @@ export default function App() {
           <p>{place.name.ko}</p><PlaceMaps item={place} lang={lang} />
           <LocalizedDescription text={place.description[lang]} lang={lang}/>
           <AffiliateOffers lang={lang} placeIds={[place.id]}/>
+          {!!place.partnerListingIds?.length && catalog.places.find(p => p.id === place.id)?.partnerListingIds?.map((id, i) => (
+            <a key={id} className="action-link" href={`?listing=${encodeURIComponent(id)}`}>
+              {visitorText(lang, '파트너 매장·체험 상세', 'Partner shop or experience')}{place.partnerListingIds!.length > 1 ? ` ${i + 1}` : ''}
+            </a>
+          ))}
           <dl className="place-details">
             <div>
               <dt>{T("address")}</dt>
@@ -2463,9 +2470,9 @@ export default function App() {
             <div>
               <dt>{T("hours")}</dt>
               <dd>
-                09:00–22:00 · {T("sample")}
-                <br />
-                {T("unknown")}
+                {place.source === 'NOWRO partner'
+                  ? visitorText(lang, '방문 전 파트너 상세에서 운영시간을 확인하세요.', 'Confirm opening hours in the partner details before visiting.')
+                  : <>{T("unknown")}</>}
               </dd>
             </div>
             <div>
