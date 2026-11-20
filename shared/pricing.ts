@@ -9,10 +9,12 @@ export function officialPricing(item: Record<string, unknown>): Pricing {
  if(!priceText||/무료|할인|부터|이상|별도|문의|단체|패키지|대여|시간당|시간 당|인 기준|인권|변동|free|discount|from|group|package/i.test(priceText))return unknown;
  const amounts=[...priceText.matchAll(/(?<![\d.,])(?:\d{1,3}(?:,\d{3})+|\d+)\s*원/g)].map(m=>Number(m[0].replace(/[^\d]/g,'')));
  const remainder=priceText.replace(/(?:\d{1,3}(?:,\d{3})+|\d+)\s*원/g,'').replace(/VIP석|[RSAB]석|전석|성인|일반|대인|청소년|어린이|소인|입장료|관람료|이용료|티켓|가격|요금|좌석/gi,'').replace(/[\s:：,;/()\[\]~–—-]/g,'');
- if(remainder||!amounts.length||amounts.some(n=>!Number.isFinite(n)||n<0||n>10000000))return unknown;
+ if(remainder||!amounts.some(n=>n>0)||amounts.some(n=>!Number.isFinite(n)||n<0||n>10000000))return unknown;
  return {priceStatus:'published',priceText,costMin:Math.min(...amounts),costMax:Math.max(...amounts)};
 }
-export function placePricing(p:{planningEstimate?:boolean;priceStatus?:string;costMin:number;costMax:number}) {
- const unknown=p.priceStatus==='unknown'||(!p.priceStatus&&!!p.planningEstimate);
- return {unknown,costMin:unknown?0:p.costMin,costMax:unknown?0:p.costMax};
+export type PriceEvidence = {planningEstimate?:boolean;sample?:boolean;priceStatus?:string;costMin:number;costMax:number};
+export function placePricing(p: PriceEvidence) {
+ const valid=Number.isFinite(p.costMin)&&Number.isFinite(p.costMax)&&p.costMin>=0&&p.costMax>=p.costMin;
+ const known=valid&&(p.priceStatus==='free'?p.costMax===0:p.priceStatus==='published'?p.costMax>0:!p.priceStatus&&p.sample===true&&!p.planningEstimate);
+ return {unknown:!known,costMin:known?p.costMin:0,costMax:known?p.costMax:0};
 }

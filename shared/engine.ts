@@ -1,5 +1,6 @@
 import type { Conditions, Place, Point, Route, Stop } from "./types.ts";
 import {placePricing} from './pricing.ts';
+import {allowsUnverifiedVisit,validVisitWindows,visitHoursStatus} from './visit-hours.ts';
 export function distance(a: Point, b: Point) {
   const r = Math.PI / 180;
   const dlat = (b.lat - a.lat) * r,
@@ -126,7 +127,6 @@ export function calculate(
     const p = catalog.find((p) => p.id === id && p.published);
     if (
       !p ||
-      (p.planningEstimate && c.allowPlanningEstimates !== true) ||
       (!p.sample && p.category === 'event' && !p.availableUntil) ||
       p.reservation ||
       (c.children && p.children !== true) ||
@@ -141,20 +141,20 @@ export function calculate(
     const arrival = now.toISOString();
     const visitDate=new Date(now.getTime()+9*3600000).toISOString().slice(0,10);
     if((p.availableFrom&&visitDate<p.availableFrom)||(p.availableUntil&&visitDate>p.availableUntil))return null;
-    const lt = localTime(now),
-      h = p.hours.find((h) => h.day === lt.day);
-    if (!p.planningEstimate && (
-      !h ||
-      lt.minute < h.open ||
-      lt.minute > h.lastEntry ||
-      lt.minute + p.stay + p.wait > h.close
-    ))
-      return null;
-    now = new Date(now.getTime() + (p.stay + p.wait) * 60000);
+    const hoursStatus = visitHoursStatus(p), visitMinutes = p.stay + p.wait;
+    if (hoursStatus === 'unknown') {
+      if (c.allowPlanningEstimates !== true || !allowsUnverifiedVisit(now, visitMinutes)) return null;
+    } else {
+      const lt = localTime(now);
+      if (!validVisitWindows(p).some(h => h.day === lt.day && h.open <= lt.minute && lt.minute <= h.lastEntry && lt.minute + visitMinutes <= h.close)) return null;
+    }
+    now = new Date(now.getTime() + visitMinutes * 60000);
     if(p.availableUntil&&new Date(now.getTime()+9*3600000).toISOString().slice(0,10)>p.availableUntil)return null;
     const price=placePricing(p);
     if(price.unknown)unknownPriceCount++;
     stops.push({
+      hoursStatus,
+      sample: p.sample,
       priceStatus:price.unknown?'unknown':p.priceStatus,
       priceText:p.priceText,
       placeId: id,
@@ -224,7 +224,7 @@ export function recommend(c: Conditions, catalog: Place[]): Route[] {
     .filter(
       (p) =>
         p.published &&
-        (!p.planningEstimate||c.allowPlanningEstimates===true) &&
+        (visitHoursStatus(p)!=='unknown' || c.allowPlanningEstimates===true) &&
         (p.sample || p.category !== 'event' || !!p.availableUntil) &&
         (!p.availableUntil||p.availableUntil>=firstDate) &&
         (!p.availableFrom||p.availableFrom<=lastDate) &&
@@ -237,6 +237,8 @@ export function recommend(c: Conditions, catalog: Place[]): Route[] {
     .sort(
       (a, b) =>
         Number(b.id === c.requiredPlaceId || c.requiredPlaceIds?.includes(b.id)) - Number(a.id === c.requiredPlaceId || c.requiredPlaceIds?.includes(a.id)) ||
+        Number(visitHoursStatus(a)==='unknown') - Number(visitHoursStatus(b)==='unknown') ||
+        Number(placePricing(a).unknown) - Number(placePricing(b).unknown) ||
         Number(c.interests.includes(b.category)) -
           Number(c.interests.includes(a.category)) ||
         distance(c.origin, a.point) - distance(c.origin, b.point),
@@ -254,7 +256,7 @@ export function recommend(c: Conditions, catalog: Place[]): Route[] {
   return result
     .filter(r => !c.requiredPlaceId || r.stops.some(s => s.placeId === c.requiredPlaceId))
     .filter(r => !c.requiredPlaceIds?.length || c.requiredPlaceIds.every(id => r.stops.some(s => s.placeId === id)))
-    .sort((a, b) => score(b) - score(a))
+    .sort((a, b) => unverifiedHours(a) - unverifiedHours(b) || (a.unknownPriceCount ?? 0) - (b.unknownPriceCount ?? 0) || score(b) - score(a))
     .filter(
       (r, i, all) =>
         all.findIndex(
@@ -264,6 +266,7 @@ export function recommend(c: Conditions, catalog: Place[]): Route[] {
         ) === i,
     )
     .slice(0, 3);
+  function unverifiedHours(r: Route) { return r.stops.filter(s=>s.hoursStatus==='unknown').length; }
   function score(r: Route) {
     return (
       r.stops.reduce(

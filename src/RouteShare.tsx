@@ -1,6 +1,7 @@
 import { useState } from "react";
-import type { Route, Place } from "../shared/types";
+import type { Route, Place, Lang } from "../shared/types";
 import { track } from "./analytics";
+import { itineraryCostText, itineraryPlaceTitle } from "./itinerary-display";
 export function RouteShare({
   route,
   places,
@@ -12,6 +13,7 @@ export function RouteShare({
 }) {
   const [status, setStatus] = useState("");
   const ko = lang === "ko";
+  const costs = itineraryCostText(route,lang);
   const text = [
     ko ? "NOWRO 나의 부산 여행코스" : "My Busan route · NOWRO",
     new Intl.DateTimeFormat(lang, {
@@ -21,10 +23,10 @@ export function RouteShare({
     }).format(new Date(route.startAt)) + " (Korea / UTC+9)",
     ...route.stops.map((s, i) => {
       const p = places.find((p) => p.id === s.placeId) || route.placeSnapshots?.find(p => p.id === s.placeId);
-      return `${i + 1}. ${p?.name[lang as keyof typeof p.name] || p?.name.en || s.placeId}\n${p?.address || ""}`;
+      return `${i + 1}. ${itineraryPlaceTitle(p?.name || {},lang as Lang)}\n${p?.address || ""}`;
     }),
-    `${route.minutes} min · ${route.unknownPriceCount===undefined?(ko?'이전 계산 금액 · 재계산 필요':'Previous estimate · recalculate'):`${ko?'확인 요금 + 예상 이동비':'Listed fees + estimated transport'} KRW ${route.costMin}–${route.costMax}`}`,
-    route.unknownPriceCount ? (ko?`요금 미확인 ${route.unknownPriceCount}곳 별도 · 예산 내 방문 보장 아님`:`${route.unknownPriceCount} unpriced stops excluded · budget not guaranteed`):'',
+    `${route.minutes} min · ${costs.summary}`,
+    costs.warning,
     ko
       ? "방문 전 운영시간·요금·예약 여부를 확인하세요."
       : "Confirm hours, prices and reservations before visiting.",

@@ -72,6 +72,9 @@ import {shortenTrip} from '../shared/trip-edit';
 import { Boards } from "./Boards";
 import { RouteBenefits } from "./RouteBenefits";
 import {RouteCost,feeLabel} from './RouteCost';
+import {itineraryHoursText,itineraryPlaceTitle} from './itinerary-display';
+import {visitHoursStatus} from '../shared/visit-hours';
+import {placePricing} from '../shared/pricing';
 import { eventExpired } from "../shared/event-dates";
 import type { Listing } from "../shared/listings.ts";
 const LiveMap = lazy(() => import("./MapView"));
@@ -393,14 +396,6 @@ export default function App() {
   }
   async function generate(conditions = c) {
     if (busy) return;
-    if (
-      catalog?.places.some((p) => p.planningEstimate) &&
-      !conditions.allowPlanningEstimates
-    ) {
-      setRouteFeedback(recommendationMessage("planning_confirmation_required", lang));
-      document.getElementById("planning-estimates")?.focus();
-      return;
-    }
     const attempt = ++recommendationSeq.current;
     setBusy(true);
     setRouteFeedback("");
@@ -413,11 +408,8 @@ export default function App() {
         setCatalog(previous => previous ? {...previous, places: [...previous.places.filter(p => !data.places.some((next:Place) => next.id === p.id)), ...data.places]} : previous);
       }
       if (data.routes.length)
-        setToast(
-          visitorText(lang, "공식 API 장소 기반 예상 코스입니다. 운영시간·요금·예약 여부는 방문 전 확인해주세요.", "Route uses official API places. Hours, fees and reservations require venue confirmation."),
-        );
+        setToast(visitorText(lang, "예상 코스입니다. 미확인 요금과 운영시간은 각 장소에서 확인해주세요.", "This is a planning estimate. Check any unverified hours or fees with each venue."));
       setRoutes(data.routes);
-      if(!data.routes.length&&conditions.mode==='selected')setRouteFeedback(visitorText(lang,'지금 방문할 수 있는 동선을 만들지 못했습니다. 행사 시작·종료일과 영업시간을 확인하고 장소를 다시 골라주세요.','No feasible itinerary for now. Check event dates and opening hours, then adjust your stops.'));
       if(data.routes.length)track('generate_route');
       setEmptyReason(data.diagnostic || "conditions_too_restrictive");
       setTab("ROUTES");
@@ -634,6 +626,18 @@ export default function App() {
       </div>
     </button>
   );
+  const routePlace = (r: Route, id: string) => catalog?.places.find(p=>p.id===id) || r.placeSnapshots?.find(p=>p.id===id);
+  const stopHours = (r: Route, s: Route['stops'][number]) => {
+    const p = routePlace(r,s.placeId);
+    return s.hoursStatus || (p ? visitHoursStatus(p) : 'unknown');
+  };
+  const routeHoursLabel = (r: Route) => {
+    if (r.sample) return T('sample');
+    const unknown=r.stops.filter(s=>stopHours(r,s)==='unknown').length;
+    return unknown
+      ? visitorText(lang,`운영시간 미확인 ${unknown}곳 · 방문 전 확인`,`${unknown} ${unknown===1?'stop has':'stops have'} unverified hours · check before visiting`)
+      : visitorText(lang,'공개 운영시간에 맞춘 예상 코스','Planning estimate matched to published hours');
+  };
   const routeCard = (r: Route, i: number) => (
     <article className="route-card" key={r.id}>
       <div className="route-top">
@@ -645,7 +649,7 @@ export default function App() {
       </div>
       <h3>
         {r.stops
-          .map((s) => { const place = catalog!.places.find((p) => p.id === s.placeId) || r.placeSnapshots?.find(p => p.id === s.placeId); return place ? name(place) : (visitorText(lang, "장소 정보 확인 필요", "Place details unavailable")); })
+          .map((s) => { const p = routePlace(r,s.placeId); return itineraryPlaceTitle(p?.name || {},lang); })
           .join(" → ")}
       </h3>
       <p>{r.conditions.mode==='selected'?visitorText(lang,'선택한 장소만 연결 · 예상 이동시간이 가장 짧은 방문 순서 · 첫 장소까지 이동 제외','Only your chosen stops · shortest estimated travel order · excludes travel to first stop'):T('reason')}</p>
@@ -664,9 +668,7 @@ export default function App() {
       </div>
       <small>
         {clock(r.startAt)}–{clock(r.endAt)} · {T(r.conditions.transport)} ·{" "}
-        {r.sample
-          ? T("sample")
-          : visitorText(lang, "계획용 예상 · 영업·요금 미확인", "Planning estimate · hours and fees unverified")}
+        {routeHoursLabel(r)}
       </small>
       <button className="secondary full" onClick={() => setSelected(r)}>
         {T("view")}
@@ -724,8 +726,7 @@ export default function App() {
       {c.requiredPlaceId && (
         <p className="notice">
           {visitorText(lang, "포함할 장소: ", "Include: ")}
-          {catalog.places.find((p) => p.id === c.requiredPlaceId)?.name[lang] ||
-            c.requiredPlaceId}
+          {itineraryPlaceTitle(catalog.places.find(p=>p.id===c.requiredPlaceId)?.name || {},lang)}
           <button
             className="text-btn"
             onClick={() => update("requiredPlaceId", undefined)}
@@ -739,7 +740,7 @@ export default function App() {
           {visitorText(lang, "선택한 장소: ", "Selected places: ")}
           {c.requiredPlaceIds
             .map(
-              (id) => catalog.places.find((p) => p.id === id)?.name[lang] || id,
+              (id) => itineraryPlaceTitle(catalog.places.find(p=>p.id===id)?.name || {},lang),
             )
             .join(" · ")}
           <button
@@ -877,7 +878,7 @@ export default function App() {
             checked={!!c.allowPlanningEstimates}
             onChange={(e) => update("allowPlanningEstimates", e.target.checked)}
           />
-          {visitorText(lang, "운영시간·요금·예약 여부 미확인 장소를 계획용 코스에 포함합니다. 방문 가능 여부와 실제 비용은 직접 확인해야 합니다.", "Include places with unverified hours, fees and reservations in a planning-only route. Confirm availability and actual costs before visiting.")}
+          {visitorText(lang, "운영시간을 확인하지 못한 장소는 낮 시간(06:00~20:00)에만 계획용 후보로 포함합니다. 방문 가능 여부와 미확인 비용은 직접 확인해주세요.", "Include stops with unverified hours for daytime planning only (06:00–20:00 Busan time). Confirm availability and any unverified fees before visiting.")}
         </label>
       )}
           <button className="primary main-cta" disabled={busy}>
@@ -2252,9 +2253,7 @@ export default function App() {
       {selected && (
         <Modal title={T("view")} close={() => setSelected(null)}>
           <p className="notice">
-            {selected.sample
-              ? T("sample")
-              : visitorText(lang, "계획용 예상 코스 · 영업시간·요금·예약 여부 미확인", "Planning estimate · hours, fees and reservations are unverified")}{" "}
+            {routeHoursLabel(selected)}{" "}
             · {T("estimated")}
           </p>
           <div className="detail-metrics">
@@ -2281,14 +2280,15 @@ export default function App() {
                       {clock(s.departure)}
                     </small>
                     <button className="title-link" onClick={() => openPlace(p)}>
-                      {name(p)}
+                      {itineraryPlaceTitle(p.name,lang)}
                       <ArrowUpRight size={15} />
                     </button>
                     <p>
-                      {p.name.ko} · {T("stay")} {s.stay} min + {s.wait} min ·{" "}
-                      {selected.unknownPriceCount===undefined?visitorText(lang,'이전 계산 요금','Previous estimate'):feeLabel(s,lang)}
+                      {T("stay")} {s.stay} min + {s.wait} min ·{" "}
+                      {selected.unknownPriceCount===undefined?visitorText(lang,'이전 계산 요금','Previous estimate'):feeLabel({...s,sample:s.sample??p.sample},lang)}
                     </p>
-                    {s.priceText&&<p className="muted">{visitorText(lang,'공식 요금 안내','Official fee information')}: {s.priceText}</p>}
+                    {stopHours(selected,s)==='unknown'&&<p className="muted">{visitorText(lang,'운영시간 미확인 · 방문 가능 여부 확인 필요','Hours unverified · confirm before visiting')}</p>}
+                    {s.priceText&&!placePricing(s).unknown&&<p className="muted">{visitorText(lang,'공식 요금 안내','Official fee information')}: {s.priceText}</p>}
                     <AffiliateOffers lang={lang} placeIds={[p.id]} page="route"/>
                     <div className="stop-actions">
                       <select
@@ -2312,7 +2312,7 @@ export default function App() {
                           )
                           .map((x) => (
                             <option value={x.id} key={x.id}>
-                              {name(x)}
+                              {itineraryPlaceTitle(x.name,lang)}
                             </option>
                           ))}
                       </select>
@@ -2399,7 +2399,7 @@ export default function App() {
         </Modal>
       )}
       {place && (
-        <Modal title={name(place)} close={() => setPlace(null)}>
+        <Modal title={itineraryPlaceTitle(place.name,lang)} close={() => setPlace(null)}>
           {art(place)}
           <p className="media-caption">
             {placeMedia(place).generated ? (
@@ -2428,7 +2428,7 @@ export default function App() {
             )}
           </p>
           {place.sample && <span className="sample-label">{T("sample")}</span>}
-          <p>{place.name.ko}</p><PlaceMaps item={place} lang={lang} />
+          <PlaceMaps item={place} lang={lang} />
           <LocalizedDescription text={place.description[lang]} lang={lang}/>
           <AffiliateOffers lang={lang} placeIds={[place.id]}/>
           <dl className="place-details">
@@ -2463,9 +2463,7 @@ export default function App() {
             <div>
               <dt>{T("hours")}</dt>
               <dd>
-                09:00–22:00 · {T("sample")}
-                <br />
-                {T("unknown")}
+                {itineraryHoursText(place,lang)}
               </dd>
             </div>
             <div>

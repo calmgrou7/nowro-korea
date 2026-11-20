@@ -12,6 +12,7 @@ export type Area = {
 export type Place = {
   priceStatus?: 'free'|'published'|'unknown';
   priceText?: string;
+  hoursStatus?: "published" | "unknown";
   image?: string;
   planningEstimate?: boolean;
   availableFrom?: string;
@@ -63,6 +64,8 @@ export type Conditions = {
   tripEnd: string;
 };
 export type Stop = {
+  sample?: boolean;
+  hoursStatus?: "published" | "sample" | "unknown";
   priceStatus?: 'free'|'published'|'unknown';
   priceText?: string;
   placeId: string;
